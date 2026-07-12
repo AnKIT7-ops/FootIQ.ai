@@ -2,6 +2,17 @@
 
 Total monthly cost target: **$0** until validated demand.
 
+## Live deployment (since 2026-07-12)
+
+| Piece | URL / state |
+|---|---|
+| Frontend | https://footiq-omega.vercel.app (Vercel project `footiq`, SPA rewrites via vercel.json) |
+| API | https://footiq-api.footiq.workers.dev (Workers, demo mode, cron */30 for sync jobs) |
+| GitHub | https://github.com/AnKIT7-ops/FootIQ.ai (private) |
+| Supabase / AI keys / Upstash | not yet configured — demo tier serving (see step 1 + ENVIRONMENT.md mode matrix) |
+
+Env wiring: Vercel prod has `VITE_API_URL` + `VITE_SITE_URL`; worker `[vars]` carries `CORS_ORIGINS` (Vercel domain + localhost).
+
 ## 1. Database — Supabase (free: 500MB, 50k MAU auth)
 1. Create project → SQL editor → run `supabase/migrations/0001_init.sql`.
 2. Follow the post-migration checklist in `docs/DATABASE.md` (providers, redirect URLs, buckets).

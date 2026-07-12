@@ -19,3 +19,9 @@ scripts/shots/
 coverage/
 .DS_Store
 Thumbs.db
+
+.vercel
+.env*
+# templates stay in the repo
+!.env.example
+!server/.env.example
