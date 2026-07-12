@@ -19,4 +19,5 @@ crons = ["*/30 * * * *"]
 [vars]
 NODE_ENV = "production"
 CORS_ORIGINS = "https://footiq-omega.vercel.app,http://localhost:5173"
+SUPABASE_URL = "https://zcemnioniooyyhpjpwbn.supabase.co"
 # Non-secret config only. Secrets go via `wrangler secret put`.
