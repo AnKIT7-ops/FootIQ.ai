@@ -138,6 +138,60 @@ export function adminRoutes() {
     return ok(c, data ?? []);
   });
 
+  // --- data platform operations (cache/registry-backed — work in demo mode too)
+  r.get("/jobs", async (c) => {
+    const { jobs } = c.get("services");
+    return ok(c, { registered: jobs.names(), lastRuns: await jobs.lastRuns() });
+  });
+
+  r.post(
+    "/jobs/:name/run",
+    validate("param", z.object({ name: z.string().min(1).max(60).regex(/^[a-z_]+$/) })),
+    async (c) => {
+      const { jobs, audit } = c.get("services");
+      const { name } = c.req.valid("param");
+      if (!jobs.names().includes(name)) throw ApiError.notFound("Job");
+      const run = await jobs.runJob(name);
+      audit.log({ actorId: c.get("user")!.id, action: "admin.job.run", target: `job/${name}`, detail: { status: run.status } });
+      return ok(c, run);
+    },
+  );
+
+  r.post(
+    "/cache/purge",
+    validate("json", z.object({ target: z.enum(["teams", "matches", "flags"]) })),
+    async (c) => {
+      const { snapshots, cache, audit } = c.get("services");
+      const { target } = c.req.valid("json");
+      if (target === "flags") await cache.delete(cacheKeys.flags());
+      else await snapshots.invalidate(target);
+      audit.log({ actorId: c.get("user")!.id, action: "admin.cache.purge", target: `cache/${target}`, detail: {} });
+      return ok(c, { purged: target });
+    },
+  );
+
+  r.get("/providers", (c) => {
+    const { dataProvider, ai, env } = c.get("services");
+    return ok(c, {
+      data: {
+        active: dataProvider.name,
+        available: dataProvider.available(),
+        selected: env.DATA_PROVIDER,
+        configured: {
+          "football-data": Boolean(env.FOOTBALL_DATA_API_KEY),
+          "api-football": Boolean(env.API_FOOTBALL_KEY),
+        },
+      },
+      ai: { active: ai.providerName, selected: env.AI_PROVIDER },
+      switching: "set DATA_PROVIDER / AI_PROVIDER env and redeploy — config, not code",
+    });
+  });
+
+  r.get("/prompts", async (c) => {
+    const { promptCatalog } = await import("../ai/prompts");
+    return ok(c, promptCatalog);
+  });
+
   // --- feature flags
   r.get("/flags", async (c) => {
     const db = needDb(c);

@@ -1,0 +1,41 @@
+{
+  "description": "Golden evaluation set for FootIQ AI tasks. Offline mode checks prompt construction (grounding data present, injection containment, structure asked for). Live mode (EVAL_LIVE=1 + a configured provider) additionally scores the completions against `expect`.",
+  "cases": [
+    {
+      "task": "scout_report",
+      "input": { "playerId": "saka" },
+      "promptMustInclude": ["Bukayo Saka", "seasonStats", "injuryHistory", "suitability rating"],
+      "expect": { "minWords": 120, "mustMention": ["Saka"], "mustNotMention": ["as an AI", "I cannot"] }
+    },
+    {
+      "task": "scout_report",
+      "input": { "playerId": "haaland" },
+      "promptMustInclude": ["Erling Haaland", "attributes", "marketValueEUR"],
+      "expect": { "minWords": 120, "mustMention": ["Haaland"], "mustNotMention": ["as an AI"] }
+    },
+    {
+      "task": "news_summary",
+      "input": { "articleId": "n1" },
+      "promptMustInclude": ["exactly 3 bullet points", "Why it matters"],
+      "expect": { "minWords": 30, "mustMention": [], "mustNotMention": ["as an AI"] }
+    },
+    {
+      "task": "prediction_explanation",
+      "input": { "matchId": "mci-che" },
+      "promptMustInclude": ["probabilities"],
+      "expect": { "minWords": 60, "mustMention": [], "mustNotMention": ["guarantee"] }
+    },
+    {
+      "task": "player_comparison",
+      "input": { "playerIds": ["saka", "yamal"] },
+      "promptMustInclude": ["Bukayo Saka", "Lamine Yamal", "Pick X if"],
+      "expect": { "minWords": 100, "mustMention": ["Saka", "Yamal"], "mustNotMention": ["as an AI"] }
+    },
+    {
+      "task": "scout_report_variant_b",
+      "input": { "playerId": "saka" },
+      "promptMustInclude": ["headline verdict", "contrarian consideration"],
+      "expect": { "minWords": 120, "mustMention": ["Saka"], "mustNotMention": ["as an AI"] }
+    }
+  ]
+}

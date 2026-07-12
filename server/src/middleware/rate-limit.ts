@@ -19,10 +19,23 @@ export interface RateLimitOptions {
  * per request keeps free-tier cache command budgets intact, and the worst
  * case (2x burst at a window boundary) is acceptable for our thresholds.
  */
+/** Env override per scope (RATE_LIMIT_API=600 etc.); unset = preset default. */
+function effectiveLimit(scope: string, preset: number, env: { RATE_LIMIT_API?: number; RATE_LIMIT_WRITES?: number; RATE_LIMIT_AUTH?: number; RATE_LIMIT_AI?: number; RATE_LIMIT_FORMS?: number }): number {
+  switch (scope) {
+    case "api": return env.RATE_LIMIT_API ?? preset;
+    case "write": return env.RATE_LIMIT_WRITES ?? preset;
+    case "auth": return env.RATE_LIMIT_AUTH ?? preset;
+    case "ai": return env.RATE_LIMIT_AI ?? preset;
+    case "form": return env.RATE_LIMIT_FORMS ?? preset;
+    default: return preset;
+  }
+}
+
 export function rateLimit(opts: RateLimitOptions): MiddlewareHandler<AppEnv> {
   return async (c, next) => {
     const { cache, env } = c.get("services");
     if (env.RATE_LIMIT_DISABLED) return next();
+    const limit = effectiveLimit(opts.scope, opts.limit, env);
 
     const user = c.get("user");
     const ip =
@@ -35,10 +48,10 @@ export function rateLimit(opts: RateLimitOptions): MiddlewareHandler<AppEnv> {
     const key = cacheKeys.rate(opts.scope, id, windowStart);
     const count = await cache.increment(key, opts.windowSeconds);
 
-    c.header("X-RateLimit-Limit", String(opts.limit));
-    c.header("X-RateLimit-Remaining", String(Math.max(0, opts.limit - count)));
+    c.header("X-RateLimit-Limit", String(limit));
+    c.header("X-RateLimit-Remaining", String(Math.max(0, limit - count)));
 
-    if (count > opts.limit) {
+    if (count > limit) {
       c.get("logger").warn("rate_limit.exceeded", { scope: opts.scope, id, count });
       c.header("Retry-After", String(opts.windowSeconds));
       throw ApiError.rateLimited();

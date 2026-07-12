@@ -43,10 +43,28 @@ export const envSchema = z.object({
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
 
+  // --- Football data provider (all optional: absent => demo catalog)
+  DATA_PROVIDER: z.enum(["football-data", "api-football", "demo"]).default("demo"),
+  FOOTBALL_DATA_API_KEY: z.string().optional(),
+  /** football-data.org competition code. */
+  FOOTBALL_DATA_COMPETITION: z.string().default("PL"),
+  API_FOOTBALL_KEY: z.string().optional(),
+  /** API-Football league id (39 = Premier League). */
+  API_FOOTBALL_LEAGUE: z.coerce.number().int().default(39),
+  /** Node runtime: run sync jobs on an interval. Workers use the cron trigger instead. */
+  SYNC_ENABLED: boolFromString,
+  SYNC_INTERVAL_MINUTES: z.coerce.number().int().min(1).max(24 * 60).default(30),
+
   // --- Security
   /** Salt for hashing IPs in logs/audit — never store raw IPs. */
   IP_HASH_SALT: z.string().default("footiq-dev-salt-change-in-prod"),
   RATE_LIMIT_DISABLED: boolFromString,
+  // Per-scope overrides (requests/minute); unset = built-in defaults.
+  RATE_LIMIT_API: z.coerce.number().int().min(1).optional(),
+  RATE_LIMIT_WRITES: z.coerce.number().int().min(1).optional(),
+  RATE_LIMIT_AUTH: z.coerce.number().int().min(1).optional(),
+  RATE_LIMIT_AI: z.coerce.number().int().min(1).optional(),
+  RATE_LIMIT_FORMS: z.coerce.number().int().min(1).optional(),
 
   // --- Observability
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),

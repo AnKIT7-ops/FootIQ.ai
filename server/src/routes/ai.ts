@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import type { AppEnv, Services } from "../types";
 import type { CatalogService } from "../services/catalog";
-import { prompts } from "../ai/prompts";
+import { prompts, promptVariants } from "../ai/prompts";
 import { ok } from "../lib/respond";
 import { validate } from "../middleware/validate";
 import { requireUser } from "../middleware/auth";
@@ -37,11 +37,16 @@ export function aiRoutes(catalog: CatalogService) {
     validate("param", z.object({ id })),
     consumeQuota("ai_requests"),
     async (c) => {
-      await gate(c.get("services"), "ai_scout");
+      const services = c.get("services");
+      await gate(services, "ai_scout");
       const player = catalog.player(c.req.valid("param").id);
-      const team = safe(() => catalog.team(player.teamId));
-      const result = await c.get("services").ai.run(prompts.scout_report(player, team));
-      return ok(c, result);
+      const team = await teamOrNull(catalog, player.teamId);
+      // A/B: users inside the prompt_experiments rollout cohort get variant B;
+      // variant versions are distinct so cached A/B results never mix.
+      const inExperiment = await services.flags.isEnabled("prompt_experiments", c.get("user")?.id);
+      const rendered = inExperiment ? promptVariants.scout_report(player, team) : prompts.scout_report(player, team);
+      const result = await services.ai.run(rendered);
+      return ok(c, { ...result, promptVersion: rendered.version });
     },
   );
 
@@ -65,8 +70,8 @@ export function aiRoutes(catalog: CatalogService) {
       const rumor = catalog.transfers().find((t) => t.id === c.req.valid("param").id);
       if (!rumor) throw ApiError.notFound("Transfer rumour");
       const player = catalog.player(rumor.playerId);
-      const from = safe(() => catalog.team(rumor.fromId));
-      const to = safe(() => catalog.team(rumor.toId));
+      const from = await teamOrNull(catalog, rumor.fromId);
+      const to = await teamOrNull(catalog, rumor.toId);
       return ok(c, await c.get("services").ai.run(prompts.transfer_analysis(rumor, player, from, to)));
     },
   );
@@ -78,9 +83,9 @@ export function aiRoutes(catalog: CatalogService) {
     async (c) => {
       await gate(c.get("services"), "ai_scout");
       const prediction = catalog.prediction(c.req.valid("param").id);
-      const match = catalog.match(prediction.matchId);
-      const home = safe(() => catalog.team(match.homeId));
-      const away = safe(() => catalog.team(match.awayId));
+      const match = (await catalog.match(prediction.matchId)).data;
+      const home = await teamOrNull(catalog, match.homeId);
+      const away = await teamOrNull(catalog, match.awayId);
       return ok(c, await c.get("services").ai.run(prompts.prediction_explanation(prediction, home, away)));
     },
   );
@@ -116,7 +121,7 @@ export function aiRoutes(catalog: CatalogService) {
     async (c) => {
       await gate(c.get("services"), "ai_scout");
       const body = c.req.valid("json");
-      const team = body.teamId ? safe(() => catalog.team(body.teamId!)) : null;
+      const team = body.teamId ? await teamOrNull(catalog, body.teamId) : null;
       return ok(
         c,
         await c.get("services").ai.run(
@@ -145,9 +150,9 @@ export function aiRoutes(catalog: CatalogService) {
   return r;
 }
 
-function safe<T>(fn: () => T): T | null {
+async function teamOrNull(catalog: CatalogService, id: string) {
   try {
-    return fn();
+    return (await catalog.team(id)).data;
   } catch {
     return null;
   }

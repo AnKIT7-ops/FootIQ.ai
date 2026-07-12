@@ -1,7 +1,9 @@
 /** Matches repository — see players.ts for the pattern. */
 import {
   matches as seed,
+  matchById as demoMatchById,
   matchDetail as demoMatchDetail,
+  matchDetailFor,
 } from "@/data/matches";
 import type { Match, MatchDetail } from "@/data/types";
 import { createRepoStore } from "./store";
@@ -37,13 +39,16 @@ store.onChange((next) => {
 });
 
 /**
- * Match detail stays demo-derived for now: the backend serves the same
- * dataset, and events/lineups are deterministic derivations of the match id.
- * When a live data provider lands, this becomes a per-id fetch against
- * /api/matches/:id (endpoint already exists) — call sites won't change shape.
+ * Match detail: demo ids use the bundled generator; synced (provider) ids —
+ * present only in the hydrated list — synthesize detail from their Match
+ * object with the same deterministic generators. A per-id fetch against
+ * /api/matches/:id can still replace this body without changing call sites.
  */
 export function matchDetail(id: string): MatchDetail {
-  return demoMatchDetail(id);
+  if (demoMatchById.has(id)) return demoMatchDetail(id);
+  const synced = matchById.get(id);
+  if (synced) return matchDetailFor(synced);
+  return demoMatchDetail(id); // unknown id: keep the original throwing behavior (pages catch)
 }
 
 export function teamMatches(teamId: string): { fixtures: Match[]; results: Match[] } {

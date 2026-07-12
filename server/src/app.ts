@@ -5,10 +5,14 @@ import { bodyLimit } from "hono/body-limit";
 import type { Env } from "./config/env";
 import type { AppEnv, Services } from "./types";
 import { createLogger } from "./lib/logger";
-import { createCache } from "./cache";
+import { cacheBackendName, createCache } from "./cache";
 import type { KVNamespaceLike } from "./cache/kv";
 import { createServiceClient } from "./db/supabase";
 import { AiService, createAiProvider } from "./ai/service";
+import { createDataProvider } from "./providers";
+import { SnapshotStore } from "./services/snapshots";
+import { JobRegistry } from "./jobs/registry";
+import { registerJobs } from "./jobs";
 import { FlagService } from "./services/flags";
 import { QuotaService } from "./services/quota";
 import { AuditService } from "./services/audit";
@@ -25,6 +29,9 @@ import { optionalAuth } from "./middleware/auth";
 import { rateLimit, rateLimits } from "./middleware/rate-limit";
 import { metaRoutes } from "./routes/meta";
 import { catalogRoutes } from "./routes/catalog";
+import { recommendRoutes } from "./routes/recommend";
+import { exportRoutes } from "./routes/export";
+import { RecommendService } from "./services/recommend";
 import { aiRoutes } from "./routes/ai";
 import { authRoutes } from "./routes/auth";
 import { settingsRoutes, userRoutes } from "./routes/users";
@@ -38,10 +45,20 @@ import { adminRoutes } from "./routes/admin";
  * and tests (tests pass a doctored env + mock services overrides).
  */
 export function createApp(env: Env, opts?: { kv?: KVNamespaceLike; services?: Partial<Services> }) {
+  return createServer(env, opts).app;
+}
+
+/** Full factory — app + the service container (worker cron and the Node sync loop need the job registry). */
+export function createServer(env: Env, opts?: { kv?: KVNamespaceLike; services?: Partial<Services> }) {
   const logger = createLogger(env.LOG_LEVEL);
   const cache = opts?.services?.cache ?? createCache(env, opts?.kv);
   const db = opts?.services?.db !== undefined ? opts.services.db : createServiceClient(env);
   const email = opts?.services?.email ?? new ConsoleEmailProvider(logger);
+  const dataProvider = opts?.services?.dataProvider ?? createDataProvider(env, logger);
+  const snapshots = opts?.services?.snapshots ?? new SnapshotStore(cache, db, logger);
+  const ai = opts?.services?.ai ?? new AiService(createAiProvider(env, logger), cache, logger);
+  const jobs = opts?.services?.jobs ?? new JobRegistry(cache, db, logger);
+  if (!opts?.services?.jobs) registerJobs(jobs, { provider: dataProvider, snapshots, ai });
 
   const services: Services = {
     env,
@@ -49,16 +66,19 @@ export function createApp(env: Env, opts?: { kv?: KVNamespaceLike; services?: Pa
     cache,
     db,
     email,
-    ai: opts?.services?.ai ?? new AiService(createAiProvider(env, logger), cache, logger),
+    ai,
     flags: opts?.services?.flags ?? new FlagService(env, cache, db),
     quota: opts?.services?.quota ?? new QuotaService(db, cache),
     audit: opts?.services?.audit ?? new AuditService(db, logger),
     storage:
       opts?.services?.storage ?? (db ? new SupabaseStorageProvider(db) : new NoopStorageProvider()),
     errors: opts?.services?.errors ?? createErrorReporter(env, logger),
+    dataProvider,
+    snapshots,
+    jobs,
   };
 
-  const catalog = new CatalogService(cache);
+  const catalog = new CatalogService(cache, snapshots);
   const users = new UserDataService(db);
   const notifications = new NotificationService(db, email, logger);
   const community = new CommunityService(db, logger);
@@ -121,17 +141,25 @@ export function createApp(env: Env, opts?: { kv?: KVNamespaceLike; services?: Pa
   app.use("/api/*", rateLimit(rateLimits.api));
 
   // ---- routes --------------------------------------------------------------
+  // Mounted at /api AND /api/v1: v1 is the stable versioned surface for
+  // external clients; the unversioned mount stays as its alias so nothing
+  // breaks. A future /api/v2 mounts breaking changes without touching v1.
 
   const startedAt = Date.now();
-  app.route("/api", metaRoutes(startedAt));
-  app.route("/api", catalogRoutes(catalog));
-  app.route("/api/ai", aiRoutes(catalog));
-  app.route("/api/auth", authRoutes());
-  app.route("/api/users", userRoutes(users));
-  app.route("/api/settings", settingsRoutes(users));
-  app.route("/api/notifications", notificationRoutes(notifications));
-  app.route("/api", communityRoutes(community));
-  app.route("/api/admin", adminRoutes());
+  const recommend = new RecommendService();
+  for (const base of ["/api", "/api/v1"]) {
+    app.route(base, metaRoutes(startedAt, cacheBackendName(env, opts?.kv)));
+    app.route(base, catalogRoutes(catalog));
+    app.route(`${base}/recommendations`, recommendRoutes(recommend));
+    app.route(`${base}/export`, exportRoutes(catalog));
+    app.route(`${base}/ai`, aiRoutes(catalog));
+    app.route(`${base}/auth`, authRoutes());
+    app.route(`${base}/users`, userRoutes(users));
+    app.route(`${base}/settings`, settingsRoutes(users));
+    app.route(`${base}/notifications`, notificationRoutes(notifications));
+    app.route(base, communityRoutes(community));
+    app.route(`${base}/admin`, adminRoutes());
+  }
 
   app.notFound((c) => fail(c, ApiError.notFound("Endpoint"), c.get("requestId")));
 
@@ -153,5 +181,5 @@ export function createApp(env: Env, opts?: { kv?: KVNamespaceLike; services?: Pa
     return fail(c, new ApiError("internal_error", "Something went wrong on our side."), requestId);
   });
 
-  return app;
+  return { app, services };
 }

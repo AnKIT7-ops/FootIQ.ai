@@ -6,6 +6,10 @@ main = "src/worker.ts"
 compatibility_date = "2026-07-01"
 compatibility_flags = ["nodejs_compat"]
 
+# Sync jobs (standings, fixtures, AI cache warm) — every 30 minutes.
+[triggers]
+crons = ["*/30 * * * *"]
+
 # Optional KV cache binding — create with `wrangler kv namespace create CACHE`,
 # then paste the id here. Without it the Worker uses in-memory caching.
 # [[kv_namespaces]]

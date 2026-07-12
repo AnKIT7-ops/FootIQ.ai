@@ -107,7 +107,8 @@ export type FeatureFlagKey =
   | "ai_scout"
   | "ai_concierge"
   | "notifications"
-  | "newsletter";
+  | "newsletter"
+  | "prompt_experiments";
 
 export type FeatureFlags = Record<FeatureFlagKey, boolean>;
 
@@ -121,6 +122,8 @@ export const DEFAULT_FLAGS: FeatureFlags = {
   ai_concierge: true,
   notifications: true,
   newsletter: true,
+  /** A/B prompt experiments — off until an experiment is actually running; use rollout_pct as the cohort size. */
+  prompt_experiments: false,
 };
 
 // ---------------------------------------------------------------------------
@@ -201,7 +204,7 @@ export interface SavedComparisonDto {
 }
 
 export interface SearchResultDto {
-  kind: "player" | "team" | "news";
+  kind: "player" | "team" | "manager" | "news";
   id: string;
   title: string;
   subtitle: string;

@@ -9,53 +9,70 @@ const idParam = z.object({ id: z.string().min(1).max(64).regex(/^[\w.-]+$/) });
 
 /**
  * Read-only football catalog. Public (the product's read surface is free);
- * global + per-scope rate limits applied in app.ts. One service instance per
- * app; `source` metadata tells clients/ops where data came from.
+ * global + per-scope rate limits applied in app.ts. Snapshot-backed domains
+ * report their true source per response ("provider" after a sync, "demo"
+ * otherwise) so ops can always tell what served a payload.
  */
 export function catalogRoutes(catalog: CatalogService) {
   const r = new Hono<AppEnv>();
-  const meta = { source: catalog.source };
+  const demoMeta = { source: "demo" as const };
 
-  r.get("/players", (c) => ok(c, catalog.players(), meta));
+  r.get("/players", (c) => ok(c, catalog.players(), demoMeta));
   r.get("/players/:id", validate("param", idParam), (c) =>
-    ok(c, catalog.player(c.req.valid("param").id), meta),
+    ok(c, catalog.player(c.req.valid("param").id), demoMeta),
   );
   r.get("/players/:id/similar", validate("param", idParam), (c) =>
-    ok(c, catalog.similarPlayers(c.req.valid("param").id), meta),
+    ok(c, catalog.similarPlayers(c.req.valid("param").id), demoMeta),
   );
 
-  r.get("/teams", (c) => ok(c, catalog.teams(), meta));
-  r.get("/teams/table", (c) => ok(c, catalog.leagueTable(), meta));
-  r.get("/teams/:id", validate("param", idParam), (c) =>
-    ok(c, catalog.team(c.req.valid("param").id), meta),
-  );
-  r.get("/teams/:id/players", validate("param", idParam), (c) =>
-    ok(c, catalog.teamPlayers(c.req.valid("param").id), meta),
+  r.get("/teams", async (c) => {
+    const { data, source } = await catalog.teams();
+    return ok(c, data, { source });
+  });
+  r.get("/teams/table", async (c) => {
+    const { data, source } = await catalog.leagueTable();
+    return ok(c, data, { source });
+  });
+  r.get("/teams/:id", validate("param", idParam), async (c) => {
+    const { data, source } = await catalog.team(c.req.valid("param").id);
+    return ok(c, data, { source });
+  });
+  r.get("/teams/:id/players", validate("param", idParam), async (c) =>
+    ok(c, await catalog.teamPlayers(c.req.valid("param").id), demoMeta),
   );
 
-  r.get("/matches", (c) => ok(c, catalog.matches(), meta));
-  r.get("/matches/:id", validate("param", idParam), (c) =>
-    ok(c, catalog.match(c.req.valid("param").id), meta),
-  );
+  r.get("/matches", async (c) => {
+    const { data, source } = await catalog.matches();
+    return ok(c, data, { source });
+  });
+  r.get("/matches/:id", validate("param", idParam), async (c) => {
+    const { data, source } = await catalog.match(c.req.valid("param").id);
+    return ok(c, data, { source });
+  });
 
-  r.get("/news", (c) => ok(c, catalog.news(), meta));
+  r.get("/news", (c) => ok(c, catalog.news(), demoMeta));
   r.get("/news/:id", validate("param", idParam), (c) =>
-    ok(c, catalog.article(c.req.valid("param").id), meta),
+    ok(c, catalog.article(c.req.valid("param").id), demoMeta),
   );
 
-  r.get("/transfers", (c) => ok(c, catalog.transfers(), meta));
-  r.get("/predictions", (c) => ok(c, catalog.predictions(), meta));
+  r.get("/transfers", (c) => ok(c, catalog.transfers(), demoMeta));
+  r.get("/predictions", (c) => ok(c, catalog.predictions(), demoMeta));
   r.get("/predictions/:id", validate("param", idParam), (c) =>
-    ok(c, catalog.prediction(c.req.valid("param").id), meta),
+    ok(c, catalog.prediction(c.req.valid("param").id), demoMeta),
   );
-  r.get("/clips", (c) => ok(c, catalog.clips(), meta));
-  r.get("/history", (c) => ok(c, catalog.history(), meta));
-  r.get("/fantasy", (c) => ok(c, catalog.fantasy(), meta));
+  r.get("/clips", (c) => ok(c, catalog.clips(), demoMeta));
+  r.get("/history", (c) => ok(c, catalog.history(), demoMeta));
+  r.get("/fantasy", (c) => ok(c, catalog.fantasy(), demoMeta));
 
   r.get(
     "/search",
     validate("query", z.object({ q: z.string().min(1).max(120) })),
-    async (c) => ok(c, await catalog.search(c.req.valid("query").q), meta),
+    async (c) => ok(c, await catalog.search(c.req.valid("query").q)),
+  );
+  r.get(
+    "/search/suggest",
+    validate("query", z.object({ q: z.string().min(1).max(60) })),
+    async (c) => ok(c, await catalog.suggest(c.req.valid("query").q)),
   );
 
   return r;

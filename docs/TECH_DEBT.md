@@ -2,6 +2,17 @@
 
 Honest list, ordered by risk × effort-to-fix-later. None block beta.
 
+## Added in Phase 4 (data platform)
+
+20. **Snapshots are whole-collection JSONB** (`catalog_snapshots`) — right for collection reads at this scale; per-entity queries need relational catalog tables (`ponytail:` note in services/snapshots.ts).
+21. **Synced-only teams have no squad** — teamPlayers returns [], generators fall back to placeholder lineups, and client-side visuals for unknown team ids use the first demo team's look. Resolves when a squad-capable provider tier lands.
+22. **Provider matches carry no predictions** — the demo prediction set stays keyed to demo match ids; live-fixture predictions arrive with the Poisson/Elo engine (Phase 4 roadmap #4 → now Phase 5 pre-flight).
+23. **Search index (frontend) and content library still snapshot at chunk load** (extends #15) — server search/suggest are live; the Ctrl+K index rebuild on hydration remains open.
+24. **Live evals are manual** (`EVAL_LIVE=1`) — fine while prompt changes are rare; wire a scheduled eval run when they aren't.
+25. **A/B measurement is client-blind** — `promptVersion` is returned but nothing logs exposure→outcome yet; add an analytics event when the first real experiment runs.
+
+## From Phase 3
+
 ## Added in Phase 3 (growth layer)
 
 14. **SPA-only rendering limits SEO reach.** Meta/JSON-LD/sitemap are complete, but non-JS crawlers see the shell. Fix = build-time prerender (Phase 4 #2); the route list already exists in the sitemap plugin.

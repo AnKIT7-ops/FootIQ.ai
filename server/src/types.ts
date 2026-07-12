@@ -10,6 +10,9 @@ import type { AuditService } from "./services/audit";
 import type { EmailProvider } from "./platform/email/types";
 import type { StorageProvider } from "./platform/storage/types";
 import type { ErrorReporter } from "./platform/observability";
+import type { FootballDataProvider } from "./providers";
+import type { SnapshotStore } from "./services/snapshots";
+import type { JobRegistry } from "./jobs/registry";
 
 /**
  * Dependency container built once per process (Node) or per isolate (Workers)
@@ -29,6 +32,9 @@ export interface Services {
   email: EmailProvider;
   storage: StorageProvider;
   errors: ErrorReporter;
+  dataProvider: FootballDataProvider;
+  snapshots: SnapshotStore;
+  jobs: JobRegistry;
 }
 
 /** Hono generic bindings: per-request variables. */

@@ -1,6 +1,7 @@
 # FootIQ API Reference
 
 Base URL: `http://localhost:8787` (dev) · your Workers/Render URL (prod).
+Versioning: every route below is also mounted at `/api/v1/*` — external clients should use v1 (see docs/DATA.md, which also documents the Phase 4 endpoints: suggest, recommendations, export, admin ops).
 Every response is the shared envelope from `shared/contracts.ts`:
 
 ```jsonc

@@ -25,9 +25,14 @@ All optional — validated by zod at boot (`server/src/config/env.ts`); a malfor
 | AI_MODEL | claude-opus-4-8 | model id passed to the provider |
 | AI_MAX_TOKENS | 2048 | per-completion cap (prompts define their own lower caps) |
 | ANTHROPIC_API_KEY / OPENAI_API_KEY / GEMINI_API_KEY / OLLAMA_BASE_URL | — | credentials per provider; missing key ⇒ mock fallback + warning log |
-| UPSTASH_REDIS_REST_URL + _TOKEN | — | shared cache/rate-limit backend; unset ⇒ in-memory |
+| UPSTASH_REDIS_REST_URL + _TOKEN | — | shared cache/rate-limit backend; unset ⇒ in-memory (remote backends get a 30s memory front) |
+| DATA_PROVIDER | demo | football-data · api-football · demo — live football data source |
+| FOOTBALL_DATA_API_KEY / FOOTBALL_DATA_COMPETITION | — / PL | football-data.org (free 10 req/min; attribution required) |
+| API_FOOTBALL_KEY / API_FOOTBALL_LEAGUE | — / 39 | api-sports.io (free 100 req/day; league 39 = Premier League) |
+| SYNC_ENABLED / SYNC_INTERVAL_MINUTES | false / 30 | Node-runtime sync loop (Workers use the wrangler cron instead) |
 | IP_HASH_SALT | dev value | REQUIRED to change in prod — salts IP hashes in logs/audit |
 | RATE_LIMIT_DISABLED | false | tests only |
+| RATE_LIMIT_API/_WRITES/_AUTH/_AI/_FORMS | presets | per-scope requests/minute overrides |
 | SENTRY_DSN | — | reserved hook for the error-reporter adapter |
 | FLAG_* | — | e.g. `FLAG_AI_SCOUT=false` — ops kill-switch, beats DB and defaults |
 
@@ -40,3 +45,4 @@ All optional — validated by zod at boot (`server/src/config/env.ts`); a malfor
 | + Supabase (both sides) | real accounts, saved data, quotas, admin, audit |
 | + ANTHROPIC_API_KEY & AI_PROVIDER=claude | real scout reports/analysis (cached) |
 | + Upstash | cache/limits survive restarts and scale past one instance |
+| + FOOTBALL_DATA_API_KEY & DATA_PROVIDER=football-data (+cron) | real standings/fixtures merged into the catalog, meta.source="provider" |

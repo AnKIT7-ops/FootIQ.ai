@@ -1,0 +1,249 @@
+import { describe, expect, it, vi } from "vitest";
+import { loadEnv } from "./config/env";
+import { createApp, createServer } from "./app";
+import { FootballDataOrgProvider } from "./providers/football-data";
+import { MockProvider } from "./providers/demo";
+import { mergeMatches, mergeStandings } from "./jobs/normalize";
+import { JobRegistry } from "./jobs/registry";
+import { MemoryCache } from "./cache/memory";
+import { TieredCache } from "./cache/tiered";
+import { createLogger } from "./lib/logger";
+import * as demo from "./data/demo";
+
+const testEnv = (extra: Record<string, string> = {}) =>
+  loadEnv({ NODE_ENV: "test", CORS_ORIGINS: "http://localhost:5173", RATE_LIMIT_DISABLED: "true", ...extra });
+
+const silent = createLogger("error");
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const json = async (r: Response): Promise<{ ok: boolean; data: any; meta?: any }> =>
+  (await r.json()) as { ok: boolean; data: any; meta?: any };
+
+// ---- provider normalization --------------------------------------------------
+
+describe("FootballDataOrgProvider", () => {
+  const rawStandings = {
+    standings: [
+      {
+        type: "TOTAL",
+        table: [
+          {
+            position: 1,
+            team: { id: 57, name: "Arsenal FC", shortName: "Arsenal", tla: "ARS", crest: "https://x/57.png" },
+            playedGames: 30,
+            won: 22,
+            draw: 5,
+            lost: 3,
+            points: 71,
+            goalsFor: 70,
+            goalsAgainst: 24,
+            form: "W,W,D,W,L",
+          },
+        ],
+      },
+    ],
+  };
+
+  it("normalizes standings and validates the raw schema", async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify(rawStandings), { status: 200 }));
+    const p = new FootballDataOrgProvider("key", "PL", fetchImpl as unknown as typeof fetch);
+    const rows = await p.fetchStandings();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ name: "Arsenal FC", tla: "ARS", position: 1, points: 71, form: "WWDWL" });
+    expect(fetchImpl).toHaveBeenCalledOnce();
+  });
+
+  it("throws ProviderError on schema drift instead of passing garbage", async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ standings: [{ nope: true }] }), { status: 200 }));
+    const p = new FootballDataOrgProvider("key", "PL", fetchImpl as unknown as typeof fetch);
+    await expect(p.fetchStandings()).rejects.toThrow(/schema drift/);
+  });
+
+  it("is unavailable without a key", () => {
+    expect(new FootballDataOrgProvider(undefined, "PL").available()).toBe(false);
+  });
+});
+
+describe("normalize merge", () => {
+  it("overlays provider numbers onto a name-matched demo team, keeping its identity", () => {
+    const merged = mergeStandings([
+      { extId: "fd-57", name: "Arsenal FC", tla: "ARS", position: 4, played: 30, won: 20, drawn: 6, lost: 4, gf: 66, ga: 30, points: 66, form: "WWLDW" },
+    ]);
+    const ars = merged.find((t) => t.id === "ars")!;
+    expect(ars.position).toBe(4);
+    expect(ars.points).toBe(66);
+    expect(ars.name).toBe(demo.teamById.get("ars")!.name); // identity kept
+    expect(ars.aiReport.length).toBeGreaterThan(0); // FootIQ depth kept
+  });
+
+  it("synthesizes a full Team for provider teams the demo has never seen", () => {
+    const merged = mergeStandings([
+      { extId: "fd-999", name: "Ipswich Town FC", position: 18, played: 30, won: 5, drawn: 6, lost: 19, gf: 25, ga: 60, points: 21 },
+    ]);
+    const ipswich = merged.find((t) => t.name === "Ipswich Town FC")!;
+    expect(ipswich.id).toBe("fd-999");
+    expect(ipswich.style.tempo).toBeGreaterThan(0); // deterministic dials present
+    expect(merged.filter((t) => t.id === "ars")).toHaveLength(1); // demo teams still present
+  });
+
+  it("maps matches to merged team ids and skips unresolvable sides", () => {
+    const teams = mergeStandings([]);
+    const grouped = mergeMatches(
+      [
+        { extId: "fd-1", homeName: "Arsenal FC", awayName: "Liverpool FC", competition: "PL", status: "finished", kickoffIso: "2026-07-05T16:30:00Z", homeScore: 2, awayScore: 1 },
+        { extId: "fd-2", homeName: "Unknown XI", awayName: "Mystery FC", competition: "PL", status: "upcoming", kickoffIso: "2026-07-20T14:00:00Z" },
+      ],
+      teams,
+    );
+    expect(grouped.finished).toHaveLength(1);
+    expect(grouped.finished[0]).toMatchObject({ homeId: "ars", awayId: "liv", homeScore: 2 });
+    expect(grouped.upcoming).toHaveLength(0); // both sides unresolvable — skipped
+  });
+
+  it("empty provider rows fall back to the full demo dataset", () => {
+    expect(mergeStandings([])).toHaveLength(demo.teams.length);
+    const g = mergeMatches([], demo.teams);
+    expect(g.upcoming.length).toBe(demo.upcomingMatches.length);
+  });
+});
+
+// ---- job registry --------------------------------------------------------------
+
+describe("JobRegistry", () => {
+  it("retries with backoff and records the failure after exhausting attempts", async () => {
+    vi.useFakeTimers();
+    const registry = new JobRegistry(new MemoryCache(), null, silent);
+    let attempts = 0;
+    registry.register({
+      name: "flaky",
+      description: "test",
+      async run() {
+        attempts++;
+        throw new Error(`boom ${attempts}`);
+      },
+    });
+    const promise = registry.runJob("flaky");
+    await vi.runAllTimersAsync();
+    const run = await promise;
+    vi.useRealTimers();
+
+    expect(attempts).toBe(3);
+    expect(run.status).toBe("failed");
+    expect(run.attempts).toBe(3);
+    expect(run.detail).toContain("boom 3");
+    expect((await registry.lastRuns())[0]?.status).toBe("failed");
+  });
+
+  it("succeeds on a later attempt and reports ok", async () => {
+    vi.useFakeTimers();
+    const registry = new JobRegistry(new MemoryCache(), null, silent);
+    let attempts = 0;
+    registry.register({
+      name: "recovers",
+      description: "test",
+      async run() {
+        attempts++;
+        if (attempts < 2) throw new Error("transient");
+        return "done";
+      },
+    });
+    const promise = registry.runJob("recovers");
+    await vi.runAllTimersAsync();
+    const run = await promise;
+    vi.useRealTimers();
+    expect(run).toMatchObject({ status: "ok", attempts: 2, detail: "done" });
+  });
+});
+
+// ---- tiered cache ---------------------------------------------------------------
+
+describe("TieredCache", () => {
+  it("serves repeat reads from the memory front without hitting the back", async () => {
+    const back = new MemoryCache();
+    const spy = vi.spyOn(back, "get");
+    const tiered = new TieredCache(back);
+    await tiered.set("k", { v: 1 }, 300);
+    expect(await tiered.get("k")).toEqual({ v: 1 });
+    expect(await tiered.get("k")).toEqual({ v: 1 });
+    expect(spy).not.toHaveBeenCalled(); // front absorbed both reads
+  });
+
+  it("sends increments straight to the shared back (rate limiting correctness)", async () => {
+    const back = new MemoryCache();
+    const tiered = new TieredCache(back);
+    await tiered.increment("rl", 60);
+    expect(await back.increment("rl", 60)).toBe(2); // same counter
+  });
+});
+
+// ---- pipeline end-to-end through the API -----------------------------------------
+
+describe("sync pipeline → API", () => {
+  it("serves provider-sourced teams after a sync, demo before", async () => {
+    const provider = new MockProvider({
+      standings: [
+        { extId: "m-1", name: "Arsenal FC", tla: "ARS", position: 9, played: 30, won: 10, drawn: 9, lost: 11, gf: 40, ga: 41, points: 39 },
+      ],
+    });
+    const { app, services } = createServer(testEnv(), { services: { dataProvider: provider } });
+
+    const before = await json(await app.request("/api/teams"));
+    expect(before.meta.source).toBe("demo");
+
+    const runs = await services.jobs.runAll();
+    expect(runs.every((r) => r.status === "ok")).toBe(true);
+
+    const after = await json(await app.request("/api/teams"));
+    expect(after.meta.source).toBe("provider");
+    expect(after.data.find((t: { id: string }) => t.id === "ars").position).toBe(9);
+  });
+});
+
+// ---- new API surface ----------------------------------------------------------------
+
+describe("v1 alias + suggest + recommendations + export", () => {
+  const app = createApp(testEnv());
+
+  it("serves identical payloads at /api and /api/v1", async () => {
+    const a = await json(await app.request("/api/players/saka"));
+    const b = await json(await app.request("/api/v1/players/saka"));
+    expect(a.data.id).toBe("saka");
+    expect(b.data).toEqual(a.data);
+  });
+
+  it("suggest returns prefix matches including managers", async () => {
+    const res = await json(await app.request("/api/search/suggest?q=art"));
+    expect(res.ok).toBe(true);
+    expect(res.data.some((r: { kind: string }) => r.kind === "manager")).toBe(true);
+  });
+
+  it("related articles come with reasons", async () => {
+    const res = await json(await app.request("/api/recommendations/articles/n1"));
+    expect(res.ok).toBe(true);
+    expect(res.data.length).toBeGreaterThan(0);
+    expect(res.data[0].reason.length).toBeGreaterThan(3);
+  });
+
+  it("suggested comparisons stay within the player's position", async () => {
+    const res = await json(await app.request("/api/recommendations/comparisons/saka"));
+    const base = demo.playerById.get("saka")!;
+    for (const r of res.data) expect(r.player.position).toBe(base.position);
+  });
+
+  it("export returns a JSON attachment with provenance", async () => {
+    const res = await app.request("/api/export/players/saka");
+    expect(res.headers.get("content-disposition")).toContain("footiq-player-saka.json");
+    const body = JSON.parse(await res.text());
+    expect(body.kind).toBe("player-report");
+    expect(body.disclaimer).toContain("AI");
+    expect(body.data.id).toBe("saka");
+  });
+
+  it("health v2 reports provider, cache backend and job state", async () => {
+    const res = await json(await app.request("/api/health"));
+    expect(res.data.dataProvider.name).toBe("demo");
+    expect(res.data.cache).toBe("memory");
+    expect(res.data.apiVersion).toBe("v1");
+    expect(Array.isArray(res.data.jobs)).toBe(true);
+  });
+});

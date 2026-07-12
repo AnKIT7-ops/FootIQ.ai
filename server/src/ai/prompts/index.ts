@@ -198,3 +198,40 @@ Finish with "Pick X if ... / Pick Y if ...".`,
     };
   },
 } as const;
+
+/**
+ * Prompt catalog — admin/observability view of the registry: what exists,
+ * which version is live, which tasks have an A/B variant. Maintained next to
+ * the prompts so a new prompt without a catalog row fails review, not prod.
+ */
+export const promptCatalog = [
+  { task: "scout_report", version: 2, hasVariant: true, description: "Player scouting report (profile, assessment, risks, verdict)" },
+  { task: "news_summary", version: 1, hasVariant: false, description: "3-bullet article summary + why it matters" },
+  { task: "transfer_analysis", version: 1, hasVariant: false, description: "Rumour probability, package, fit and fallout" },
+  { task: "prediction_explanation", version: 1, hasVariant: false, description: "Reasoning behind match outcome probabilities" },
+  { task: "fantasy_advice", version: 1, hasVariant: false, description: "Gameweek captaincy/differential advice" },
+  { task: "tactical_feedback", version: 1, hasVariant: false, description: "Formation critique with team context" },
+  { task: "player_comparison", version: 1, hasVariant: false, description: "Multi-player data-grounded comparison" },
+] as const;
+
+/**
+ * A/B variants — an experimental rendering of a task's prompt, selected at
+ * runtime by the `prompt_experiments` flag (see AiService.runTask). Variants
+ * carry their own version so cached A and B results never collide.
+ */
+export const promptVariants = {
+  scout_report(player: Player, team: Team | null): RenderedPrompt {
+    const base = prompts.scout_report(player, team);
+    return {
+      ...base,
+      version: 102, // variant versions live in the 100+ range
+      prompt: `${base.prompt}
+
+ADDITIONAL INSTRUCTIONS (variant B): Lead with a single-sentence "headline verdict"
+before the profile summary, and end with one contrarian consideration the market
+is likely mispricing about this player.`,
+    };
+  },
+} as const;
+
+export type VariantTask = keyof typeof promptVariants;

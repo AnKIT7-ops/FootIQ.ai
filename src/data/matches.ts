@@ -100,11 +100,19 @@ function proceduralEvents(m: Match): MatchEvent[] {
   const scorers = (lineup: typeof homeLineup) => lineup.players.filter((p) => p.pos !== "GK").slice(5);
 
   const addGoals = (n: number, teamId: string, lineup: typeof homeLineup) => {
+    const side = teamId === m.homeId ? homeName : awayName;
     for (let i = 0; i < n; i++) {
       const min = Math.floor(rnd() * (minute - 6)) + 4;
       const cand = scorers(lineup);
-      const scorer = cand[Math.floor(rnd() * cand.length)];
-      events.push({ minute: min, type: "goal", teamId, player: scorer.name, detail: `${scorer.name} finishes for ${teamId === m.homeId ? homeName : awayName}.` });
+      // synced teams without a demo squad have empty lineups — generic line instead of a named scorer
+      const scorer = cand.length ? cand[Math.floor(rnd() * cand.length)] : null;
+      events.push({
+        minute: min,
+        type: "goal",
+        teamId,
+        player: scorer?.name,
+        detail: scorer ? `${scorer.name} finishes for ${side}.` : `Goal for ${side}.`,
+      });
     }
   };
   addGoals(m.homeScore ?? 0, m.homeId, homeLineup);
@@ -112,6 +120,7 @@ function proceduralEvents(m: Match): MatchEvent[] {
 
   const extras = 3 + Math.floor(rnd() * 3);
   for (let i = 0; i < extras; i++) {
+    if (homeLineup.players.length < 11 || awayLineup.players.length < 11) break;
     const min = Math.floor(rnd() * (minute - 4)) + 3;
     const homeSide = rnd() < 0.5;
     const lineup = homeSide ? homeLineup : awayLineup;
@@ -129,6 +138,15 @@ function proceduralEvents(m: Match): MatchEvent[] {
 export function matchDetail(id: string): MatchDetail {
   const m = matchById.get(id);
   if (!m) throw new Error(`Unknown match: ${id}`);
+  return matchDetailFor(m);
+}
+
+/**
+ * Detail from a Match object directly — the path for synced (non-demo)
+ * matches, whose ids aren't in the bundled dataset. Events/lineups/momentum
+ * are deterministic derivations of the id, same as demo matches.
+ */
+export function matchDetailFor(m: Match): MatchDetail {
   const home = getTeam(m.homeId);
   const away = getTeam(m.awayId);
   const homeAtk = (home.gf / Math.max(1, home.played)) / 2.6;
