@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta
+      name="description"
+      content="FootIQ is the AI intelligence layer for football — match predictions, natural-language scouting, tactical analysis and transfer probabilities, all clearly labeled as model inference."
+    />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0e16" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f3ef" />
+    <title>FootIQ — AI Football Intelligence</title>
+    <link rel="canonical" href="https://footiq.ai/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="FootIQ" />
+    <meta property="og:title" content="FootIQ — AI Football Intelligence" />
+    <meta
+      property="og:description"
+      content="The AI intelligence layer for football: predictions, scouting, tactics and transfer probabilities — probabilities, not promises."
+    />
+    <meta property="og:url" content="https://footiq.ai/" />
+    <meta property="og:image" content="https://footiq.ai/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="FootIQ — AI Football Intelligence" />
+    <meta
+      name="twitter:description"
+      content="The AI intelligence layer for football: predictions, scouting, tactics and transfer probabilities."
+    />
+    <meta name="twitter:image" content="https://footiq.ai/og.png" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "FootIQ",
+        "url": "https://footiq.ai/",
+        "description": "The AI intelligence layer for football — predictions, scouting, tactics and transfer intelligence."
+      }
+    </script>
+
+    <script>
+      // Set theme before paint to avoid flash
+      (function () {
+        var t = localStorage.getItem("footiq-theme");
+        if (t === "light") document.documentElement.classList.add("light");
+        else document.documentElement.classList.add("dark");
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

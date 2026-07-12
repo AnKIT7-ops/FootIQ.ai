@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /profile
+Disallow: /insights
+
+Sitemap: https://footiq.ai/sitemap.xml

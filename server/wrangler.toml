@@ -1,0 +1,17 @@
+# Cloudflare Workers deployment (free tier: 100k requests/day).
+# Deploy: cd server && npx wrangler deploy
+# Secrets: npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY  (etc.)
+name = "footiq-api"
+main = "src/worker.ts"
+compatibility_date = "2026-07-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Optional KV cache binding — create with `wrangler kv namespace create CACHE`,
+# then paste the id here. Without it the Worker uses in-memory caching.
+# [[kv_namespaces]]
+# binding = "CACHE"
+# id = "..."
+
+[vars]
+NODE_ENV = "production"
+# Non-secret config only. Secrets go via `wrangler secret put`.

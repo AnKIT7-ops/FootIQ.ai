@@ -1,0 +1,197 @@
+import type { TransferRumor } from "./types";
+
+export const transferRumors: TransferRumor[] = [
+  {
+    id: "t1",
+    playerId: "doue",
+    fromId: "psg",
+    toId: "mun",
+    fee: 95_000_000,
+    wages: 250_000,
+    probability: 24,
+    reliability: 3,
+    stage: "Fee structure talks",
+    trend: "rising",
+    timeline: [
+      { date: "Mar 14", event: "United scouts attend PSG's league fixture — third watch this season." },
+      { date: "Mar 29", event: "French media report initial contact between clubs." },
+      { date: "Apr 06", event: "Structured proposal discussed: €60M + €35M in triggers." },
+      { date: "Apr 08", event: "PSG insist on 70% up front; talks continue." },
+    ],
+    finances: [
+      { label: "Proposed fee", value: "€95M (€60M + €35M add-ons)" },
+      { label: "Wages", value: "€250K/week × 5 years" },
+      { label: "Amortised annual cost", value: "€31.5M" },
+      { label: "FFP headroom after sale window", value: "€48M" },
+    ],
+    replacements: ["kudus", "olise", "gordon"],
+    sentiment: {
+      positive: 71,
+      sample: [
+        { handle: "@UtdTacticsRoom", text: "Doué is exactly the two-footed chaos agent this attack has lacked since prime Rashford. Pay it.", mood: "for" },
+        { handle: "@RedDevilLedger", text: "€95M for a rotation player at PSG while the midfield needs two starters? Priorities.", mood: "against" },
+        { handle: "@StretfordAnalytics", text: "His U21 output matches Saka's at the same age. This is the asset class you overpay for.", mood: "for" },
+      ],
+    },
+    aiNote: "Player intent is the binding constraint: Doué is settled and PSG hold all leverage. Probability rises materially only if PSG land a marquee wide signing first.",
+  },
+  {
+    id: "t2",
+    playerId: "gordon",
+    fromId: "new",
+    toId: "bay",
+    fee: 70_000_000,
+    wages: 200_000,
+    probability: 18,
+    reliability: 2,
+    stage: "Interest registered",
+    trend: "stable",
+    timeline: [
+      { date: "Feb 20", event: "Bayern scouts log fourth in-person watch of the season." },
+      { date: "Apr 07", event: "Local report claims £70M release clause in renewal terms — uncorroborated." },
+      { date: "Apr 08", event: "Newcastle open improved contract talks." },
+    ],
+    finances: [
+      { label: "Reported valuation", value: "€70M (unverified clause)" },
+      { label: "Current deal", value: "€160K/week to 2029" },
+      { label: "Newcastle stance", value: "Not for sale; no clause policy" },
+    ],
+    replacements: ["doue", "kudus", "raphinha"],
+    sentiment: {
+      positive: 34,
+      sample: [
+        { handle: "@ToonArmyData", text: "Selling our best presser the season we make top four would be peak old Newcastle. No.", mood: "against" },
+        { handle: "@BavarianFootballWorks", text: "Gordon + Olise on the wings with Kane's drop-off passing is a cheat code.", mood: "for" },
+      ],
+    },
+    aiNote: "Reliability model flags the clause figure as low-confidence. Newcastle's Champions League qualification probability (81%) further suppresses sale likelihood.",
+  },
+  {
+    id: "t3",
+    playerId: "kudus",
+    fromId: "tot",
+    toId: "bar",
+    fee: 75_000_000,
+    wages: 190_000,
+    probability: 12,
+    reliability: 2,
+    stage: "Speculation",
+    trend: "cooling",
+    timeline: [
+      { date: "Mar 02", event: "Spanish outlet links Barcelona with a 'Premier League dribbler'." },
+      { date: "Mar 22", event: "Kudus's agent photographed in Barcelona — later confirmed unrelated." },
+      { date: "Apr 01", event: "Flick prioritises a left-back and a pivot; wide interest cools." },
+    ],
+    finances: [
+      { label: "Speculative fee", value: "€75M" },
+      { label: "Barcelona wage structure fit", value: "Requires two exits" },
+      { label: "Spurs stance", value: "€90M valuation, no urgency" },
+    ],
+    replacements: ["doue", "olise", "saka"],
+    sentiment: {
+      positive: 45,
+      sample: [
+        { handle: "@SpursSituation", text: "One elite season and half of Europe is circling. Renew him yesterday.", mood: "against" },
+        { handle: "@CulerNumbers", text: "Kudus on the left with Yamal on the right beats every low block in Spain.", mood: "for" },
+      ],
+    },
+    aiNote: "Squad-build logic argues against this: Barcelona's constraint is wage room and defensive depth, not wide creativity. Model reads the links as agent-driven.",
+  },
+  {
+    id: "t4",
+    playerId: "watkins",
+    fromId: "avl",
+    toId: "new",
+    fee: 48_000_000,
+    wages: 160_000,
+    probability: 41,
+    reliability: 4,
+    stage: "Club-to-club valuation exchange",
+    trend: "rising",
+    timeline: [
+      { date: "Jan 28", event: "Newcastle sound out Villa over summer availability." },
+      { date: "Mar 18", event: "Villa open to sale at the right number as PSR planning begins." },
+      { date: "Apr 05", event: "Clubs exchange valuations: €48M asked, €40M offered." },
+    ],
+    finances: [
+      { label: "Villa ask", value: "€48M" },
+      { label: "Newcastle offer", value: "€40M + €5M add-ons" },
+      { label: "PSR context", value: "Villa need €55M profit before June 30" },
+    ],
+    replacements: ["isak", "kane", "haaland"],
+    sentiment: {
+      positive: 62,
+      sample: [
+        { handle: "@GeordieXG", text: "Elite pressing nine who wins the trap battle? He's made for Howe-ball.", mood: "for" },
+        { handle: "@VillaParkView", text: "Selling our record PL scorer to a rival for less than we'd pay to replace him. Make it make sense.", mood: "against" },
+      ],
+    },
+    aiNote: "PSR deadlines make this the window's most probability-volatile deal: expect a jump toward 65% if Villa exit Europe early, collapse to 15% if they reach the final.",
+  },
+  {
+    id: "t5",
+    playerId: "vinicius",
+    fromId: "rma",
+    toId: "psg",
+    fee: 200_000_000,
+    wages: 600_000,
+    probability: 7,
+    reliability: 1,
+    stage: "Speculation",
+    trend: "cooling",
+    timeline: [
+      { date: "Feb 10", event: "Contract renewal talks with Madrid pause over image-rights split." },
+      { date: "Mar 15", event: "PSG links resurface via secondary outlets." },
+      { date: "Apr 03", event: "Renewal talks resume; player's camp signals intent to stay." },
+    ],
+    finances: [
+      { label: "Speculative fee", value: "€200M+" },
+      { label: "Contract", value: "Expires 2027 — leverage window open" },
+      { label: "PSG structure", value: "Post-Mbappé wage room exists" },
+    ],
+    replacements: ["yamal", "doue", "mbappe"],
+    sentiment: {
+      positive: 22,
+      sample: [
+        { handle: "@MadridistaModel", text: "Renewal noise is normal negotiation. He retires at the Bernabéu.", mood: "against" },
+        { handle: "@ParisUltra75", text: "Imagine the front three. Enrique would make it work in a week.", mood: "for" },
+      ],
+    },
+    aiNote: "Classic leverage rumor: timing correlates perfectly with renewal negotiation pauses. Tier-1 sources uniformly report intent to stay.",
+  },
+  {
+    id: "t6",
+    playerId: "mainoo",
+    fromId: "mun",
+    toId: "rma",
+    fee: 85_000_000,
+    wages: 220_000,
+    probability: 15,
+    reliability: 3,
+    stage: "Long-term monitoring",
+    trend: "stable",
+    timeline: [
+      { date: "Dec 12", event: "Madrid include Mainoo in 2027 midfield succession file." },
+      { date: "Mar 25", event: "United open renewal talks with significant uplift." },
+      { date: "Apr 04", event: "Player wants assurances on role under Amorim before signing." },
+    ],
+    finances: [
+      { label: "Madrid internal valuation", value: "€85M" },
+      { label: "United renewal offer", value: "€220K/week to 2030" },
+      { label: "Release clause", value: "None" },
+    ],
+    replacements: ["pedri", "vitinha", "tonali"],
+    sentiment: {
+      positive: 18,
+      sample: [
+        { handle: "@CarringtonWatch", text: "Academy heartbeat of the rebuild. Selling him would be unforgivable.", mood: "against" },
+        { handle: "@BernabeuSource", text: "Bellingham, Mainoo, Camavinga by 2027. That's a decade of midfield sorted.", mood: "for" },
+      ],
+    },
+    aiNote: "Madrid's interest is real but patient — structured for 2027, not now. The renewal's role-assurance clause is the detail to watch.",
+  },
+];
+
+export const rumorById = new Map(transferRumors.map((r) => [r.id, r]));
+
+export const trendingTransfers = [...transferRumors].sort((a, b) => b.probability - a.probability);

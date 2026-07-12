@@ -1,0 +1,35 @@
+{
+  "name": "footiq",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "verify": "node scripts/check-imports.mjs && node scripts/verify.mjs",
+    "check:imports": "node scripts/check-imports.mjs",
+    "og": "node scripts/og.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.50.0",
+    "@fontsource-variable/archivo": "^5.2.5",
+    "@fontsource-variable/instrument-sans": "^5.2.5",
+    "@fontsource/ibm-plex-mono": "^5.2.5",
+    "lucide-react": "^0.525.0",
+    "motion": "^12.19.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.6.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.11",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.6.0",
+    "puppeteer-core": "^25.3.0",
+    "tailwindcss": "^4.1.11",
+    "typescript": "~5.8.3",
+    "vite": "^7.0.0"
+  }
+}

@@ -1,0 +1,21 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+*.tsbuildinfo
+
+# environment — real secrets never enter the repo (.env.example is committed)
+.env
+.env.local
+.env.*.local
+server/.env
+
+# verification artifacts
+scripts/shots/
+
+# platform/tooling
+.wrangler/
+coverage/
+.DS_Store
+Thumbs.db

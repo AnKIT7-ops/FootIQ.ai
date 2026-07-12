@@ -1,0 +1,17 @@
+{
+  "name": "FootIQ — AI Football Intelligence",
+  "short_name": "FootIQ",
+  "description": "The AI intelligence layer for football: predictions, scouting, tactics and transfer intelligence.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0e16",
+  "theme_color": "#0a0e16",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
