@@ -1,9 +1,8 @@
-import { trackEvent } from "@/lib/analytics";
-
 /**
  * Local product metrics — privacy-friendly usage counters in localStorage.
- * Powers the /insights dashboard without any backend; every bump also mirrors
- * to GA4 (when configured) so real analytics accumulate in parallel.
+ * Powers the /insights dashboard without any backend. GA4 events are emitted
+ * separately via analytics.track() at the action site (bump used to mirror
+ * every count to GA, which double-fired route views next to page_view).
  * ponytail: device-local only; server-side aggregation is a Phase 4 item.
  */
 
@@ -44,7 +43,6 @@ export function bump(category: MetricCategory, key: string): void {
     for (const k of keys.sort((a, b) => bucket[a] - bucket[b]).slice(0, keys.length - MAX_KEYS)) delete bucket[k];
   }
   write(state);
-  trackEvent(category, { key });
 }
 
 /** Top-n entries for a category, hottest first. */

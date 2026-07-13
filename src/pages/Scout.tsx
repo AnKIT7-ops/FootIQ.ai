@@ -14,6 +14,7 @@ import { useVoiceInput } from "@/lib/hooks";
 import { cn, money } from "@/lib/utils";
 import { usePageMeta } from "@/lib/seo";
 import { bump } from "@/lib/metrics";
+import { track } from "@/lib/analytics";
 import type { Player } from "@/data/types";
 
 interface ParsedQuery {
@@ -125,7 +126,10 @@ export default function Scout() {
   }, [params]);
 
   useEffect(() => {
-    if (submitted.trim()) bump("ai_use", "scout");
+    if (submitted.trim()) {
+      bump("ai_use", "scout");
+      track("ai_scout_generated", { query_length: submitted.trim().length });
+    }
   }, [submitted]);
 
   const parsed = useMemo(() => parse(submitted), [submitted]);

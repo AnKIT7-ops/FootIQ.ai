@@ -1,5 +1,6 @@
 import { SITE_URL } from "@/lib/seo";
 import { bump } from "@/lib/metrics";
+import { track } from "@/lib/analytics";
 
 /**
  * Share layer — copy link, native share sheet, and downloadable 1200×630
@@ -25,6 +26,7 @@ export async function copyLink(path: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(url);
     bump("share", path);
+    track("share_clicked", { channel: "copy", path });
     return true;
   } catch {
     return false;
@@ -38,6 +40,7 @@ export async function webShare(title: string, path: string): Promise<"shared" | 
     try {
       await navigator.share({ title: `${title} · FootIQ`, url });
       bump("share", path);
+      track("share_clicked", { channel: "native", path });
       return "shared";
     } catch {
       return "failed"; // user dismissed the sheet — don't double-fire the clipboard
@@ -127,6 +130,7 @@ export async function downloadShareCard(opts: ShareCardOpts): Promise<boolean> {
     a.click();
     URL.revokeObjectURL(a.href);
     bump("share", opts.path);
+    track("share_image_exported", { path: opts.path });
     return true;
   } catch {
     return false;

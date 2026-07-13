@@ -2,6 +2,7 @@ import { useSyncExternalStore } from "react";
 import { api } from "@/lib/api/client";
 import { backendConfigured } from "@/lib/config";
 import { bump } from "@/lib/metrics";
+import { track } from "@/lib/analytics";
 
 /**
  * User data store — favorites, bookmarks, prediction history, notification
@@ -92,6 +93,7 @@ export function toggleFavorite(kind: FavoriteKind, refId: string): boolean {
   });
   mirror(() => (on ? api.put("/api/users/favorites", { kind, refId }) : api.delete("/api/users/favorites", { kind, refId })));
   bump("entity_view", `favorite:${kind}:${refId}`);
+  track(on ? "favorite_added" : "favorite_removed", { kind, refId });
   return on;
 }
 
@@ -111,7 +113,10 @@ export function toggleBookmark(b: Omit<Bookmark, "savedAt">): boolean {
       : data.bookmarks.filter((x) => x.refId !== b.refId),
   });
   // ponytail: remote bookmark removal needs the server row id — mirror adds only; full sync lands with the auth UI phase
-  if (on) mirror(() => api.put("/api/users/bookmarks", { kind: b.kind, refId: b.refId }));
+  if (on) {
+    mirror(() => api.put("/api/users/bookmarks", { kind: b.kind, refId: b.refId }));
+    track("bookmark_added", { kind: b.kind, refId: b.refId });
+  }
   return on;
 }
 

@@ -5,6 +5,7 @@ import { contentLibrary, contentKindLabels } from "@/lib/repositories/content";
 import { legalEntries, pageEntries } from "@/lib/nav";
 import { managerPathFor, newsPathFor, playerPathFor, teamPathFor } from "@/lib/slug-builders";
 import { bump, top } from "@/lib/metrics";
+import { track } from "@/lib/analytics";
 
 export interface SearchItem {
   id: string;
@@ -146,6 +147,7 @@ export function recordSearch(query: string): void {
     /* best-effort */
   }
   bump("search", q.toLowerCase());
+  track("search_used", { query_length: q.length });
 }
 
 /**

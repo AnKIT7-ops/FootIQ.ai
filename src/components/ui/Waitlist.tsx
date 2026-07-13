@@ -2,7 +2,7 @@ import { useState } from "react";
 import { CheckCircle2, Loader2, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isValidEmail, waitlist } from "@/lib/waitlist";
-import { trackEvent } from "@/lib/analytics";
+import { track } from "@/lib/analytics";
 import { bump } from "@/lib/metrics";
 
 type Status = "idle" | "loading" | "success" | "error";
@@ -34,7 +34,7 @@ export function WaitlistForm({ className, compact = false }: { className?: strin
       await waitlist.join(value);
       setStatus("success");
       setMessage(already ? "You're already on the list — we've got you." : "You're in. We'll email you when live data lands.");
-      trackEvent("waitlist_join");
+      track("newsletter_signup");
       bump("newsletter", "signup");
       setEmail("");
     } catch (err) {

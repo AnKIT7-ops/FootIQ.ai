@@ -58,8 +58,34 @@ export function trackPageView(path: string): void {
   });
 }
 
-/** Generic event helper for future funnels (waitlist joins, searches). */
+/** Generic event helper — prefer `track()` with a typed ProductEvent name. */
 export function trackEvent(name: string, params?: Record<string, string | number | boolean>): void {
   if (!GA_ID || !window.gtag) return;
   window.gtag("event", name, params ?? {});
+}
+
+/**
+ * Product event catalog — the single funnel vocabulary. Every meaningful user
+ * action goes through track() exactly once; page views are handled separately
+ * by trackPageView. Adding an event = extend this union (typo-proof).
+ */
+export type ProductEvent =
+  | "onboarding_completed"
+  | "onboarding_skipped"
+  | "ai_scout_generated"
+  | "ai_report_generated"
+  | "prediction_viewed"
+  | "comparison_created"
+  | "favorite_added"
+  | "favorite_removed"
+  | "bookmark_added"
+  | "newsletter_signup"
+  | "share_clicked"
+  | "share_image_exported"
+  | "feedback_submitted"
+  | "search_used"
+  | "tactic_saved";
+
+export function track(event: ProductEvent, params?: Record<string, string | number | boolean>): void {
+  trackEvent(event, params);
 }
