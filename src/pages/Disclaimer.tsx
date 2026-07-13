@@ -23,10 +23,10 @@ export default function Disclaimer() {
 
       <ProseSection title="1. Demo platform">
         <p>
-          FootIQ is currently a product demonstration. During the beta, the platform runs on a curated, locally generated dataset rather
-          than live feeds. Player statistics, match data, league tables, transfer probabilities, fantasy projections and news items may be{" "}
-          <strong className="text-ink">simulated, delayed or fictionalized</strong> for demonstration purposes, even where real player and
-          club names appear.
+          FootIQ is in public beta. League standings and fixtures sync from live football data (football-data.org) where available — the
+          provenance chip in the top bar tells you which mode you're in. Everything else — player statistics, transfer probabilities,
+          fantasy projections and news items — may be <strong className="text-ink">simulated, delayed or fictionalized</strong> for
+          demonstration purposes, even where real player and club names appear.
         </p>
       </ProseSection>
 
@@ -38,14 +38,23 @@ export default function Disclaimer() {
         </p>
       </ProseSection>
 
-      <ProseSection title="3. Predictions are informational only">
+      <ProseSection title="3. Confidence scores">
+        <p>
+          Every substantial AI block carries a confidence value: <strong className="text-ink">High (75%+)</strong> means strong statistical
+          support, <strong className="text-ink">Medium (55–74%)</strong> means meaningful but incomplete signal, and{" "}
+          <strong className="text-ink">Low (below 55%)</strong> means the model is closer to guessing than knowing. Confidence measures the
+          model's internal consistency — it is <em>not</em> a probability that the statement is true.
+        </p>
+      </ProseSection>
+
+      <ProseSection title="4. Predictions are informational only">
         <p>
           Match predictions are probability estimates for <strong className="text-ink">entertainment and analysis</strong>. A 70% favourite
           still loses three times out of ten. Predictions must not be treated as a promise, forecast guarantee or recommendation to act.
         </p>
       </ProseSection>
 
-      <ProseSection title="4. Not betting advice">
+      <ProseSection title="5. Not betting advice">
         <ProseList
           items={[
             "FootIQ does not provide betting, gambling or wagering advice of any kind.",
@@ -56,7 +65,7 @@ export default function Disclaimer() {
         />
       </ProseSection>
 
-      <ProseSection title="5. No affiliation">
+      <ProseSection title="6. No affiliation">
         <p>
           FootIQ is not affiliated with, endorsed by or connected to any football club, league, federation or player featured in the demo.
           Club and player names appear for demonstration context only. Crests and portraits load from public CDNs and remain the property
@@ -64,7 +73,7 @@ export default function Disclaimer() {
         </p>
       </ProseSection>
 
-      <ProseSection title="6. No liability">
+      <ProseSection title="7. No liability">
         <p>
           The platform is provided "as is" without warranties of any kind. To the maximum extent permitted by law, FootIQ accepts no
           liability for decisions made, or losses incurred, in reliance on any content shown here.

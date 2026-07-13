@@ -4,6 +4,7 @@ import { Bell, HelpCircle, Moon, Search, Sun } from "lucide-react";
 import { useTheme } from "@/lib/hooks";
 import { Logo } from "./Logo";
 import { Avatar } from "@/components/ui/Avatar";
+import { DataFreshness } from "@/components/ui/DataFreshness";
 
 // the notification feed derives from the dataset — keep it out of the shell
 // chunk and hydrate the bell after first paint (same idea as CommandPalette)
@@ -36,6 +37,7 @@ export function TopBar({ onOpenSearch }: { onOpenSearch: () => void }) {
         </button>
 
         <div className="ml-auto flex shrink-0 items-center gap-1.5">
+          <DataFreshness className="mr-1 hidden md:inline-flex" />
           {bellReady ? (
             <Suspense
               fallback={

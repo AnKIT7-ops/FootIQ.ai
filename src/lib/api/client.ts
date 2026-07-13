@@ -1,5 +1,6 @@
 import type { ApiErrorCode, ApiResponse } from "@shared/contracts";
 import { backendConfigured, config } from "@/lib/config";
+import { noteMeta } from "@/lib/freshness";
 
 /**
  * The frontend's only HTTP door to the backend. Repositories call this;
@@ -77,6 +78,7 @@ export async function apiFetch<T>(
     if (res.status >= 500) throw new ApiUnavailableError(body.error.message);
     throw new ApiRequestError(body.error.code, body.error.message, res.status, body.error.details);
   }
+  noteMeta(body.meta);
   return body.data;
 }
 
