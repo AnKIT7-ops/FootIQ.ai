@@ -12,7 +12,9 @@ export class UpstashCache implements CacheStore {
   constructor(
     private url: string,
     private token: string,
-    private fetchImpl: typeof fetch = fetch,
+    // wrapped: calling a stored bare `fetch` as `this.fetchImpl()` rebinds `this`
+    // to the class instance — Workers rejects that with "Illegal invocation"
+    private fetchImpl: typeof fetch = (input, init) => fetch(input, init),
   ) {}
 
   private async command<T>(cmd: unknown[]): Promise<T | null> {

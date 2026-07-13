@@ -63,7 +63,9 @@ export class ApiFootballProvider implements FootballDataProvider {
     /** League id (39 = Premier League) and season start year. */
     private league: number,
     private season: number,
-    private fetchImpl: typeof fetch = fetch,
+    // wrapped: calling a stored bare `fetch` as `this.fetchImpl()` rebinds `this`
+    // to the provider — Workers rejects that with "Illegal invocation"
+    private fetchImpl: typeof fetch = (input, init) => fetch(input, init),
   ) {}
 
   available(): boolean {

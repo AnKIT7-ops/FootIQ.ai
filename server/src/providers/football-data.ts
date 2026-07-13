@@ -67,7 +67,9 @@ export class FootballDataOrgProvider implements FootballDataProvider {
     private apiKey: string | undefined,
     /** Competition code, e.g. "PL". */
     private competition: string,
-    private fetchImpl: typeof fetch = fetch,
+    // wrapped: calling a stored bare `fetch` as `this.fetchImpl()` rebinds `this`
+    // to the provider — Workers rejects that with "Illegal invocation"
+    private fetchImpl: typeof fetch = (input, init) => fetch(input, init),
   ) {}
 
   available(): boolean {
