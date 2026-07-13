@@ -148,7 +148,7 @@ export function createServer(env: Env, opts?: { kv?: KVNamespaceLike; services?:
   const startedAt = Date.now();
   const recommend = new RecommendService();
   for (const base of ["/api", "/api/v1"]) {
-    app.route(base, metaRoutes(startedAt, cacheBackendName(env, opts?.kv)));
+    app.route(base, metaRoutes(startedAt, cacheBackendName(env, opts?.kv), community));
     app.route(base, catalogRoutes(catalog));
     app.route(`${base}/recommendations`, recommendRoutes(recommend));
     app.route(`${base}/export`, exportRoutes(catalog));

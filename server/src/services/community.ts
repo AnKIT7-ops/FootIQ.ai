@@ -27,6 +27,17 @@ export class CommunityService {
     if (error) throw new ApiError("upstream_error", "Couldn't subscribe right now.", { internal: error });
   }
 
+  /** Safe public aggregates for /stats — counts only, no rows, no PII. */
+  async stats(): Promise<{ newsletterSubscribers: number; feedbackEntries: number } | null> {
+    if (!this.db) return null;
+    const [subs, fb] = await Promise.all([
+      this.db.from("newsletter_subscribers").select("*", { count: "exact", head: true }).is("unsubscribed_at", null),
+      this.db.from("feedback").select("*", { count: "exact", head: true }),
+    ]);
+    if (subs.error || fb.error) return null; // stats are best-effort — never fail the endpoint over them
+    return { newsletterSubscribers: subs.count ?? 0, feedbackEntries: fb.count ?? 0 };
+  }
+
   async unsubscribe(emailRaw: string): Promise<void> {
     if (!this.db) return;
     await this.db

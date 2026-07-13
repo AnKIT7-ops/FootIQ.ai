@@ -1,10 +1,55 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, Globe2 } from "lucide-react";
 import { Card, SectionHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { top, totals, type MetricCategory } from "@/lib/metrics";
 import { usePageMeta } from "@/lib/seo";
+import { api } from "@/lib/api/client";
+import { backendConfigured } from "@/lib/config";
+
+interface FleetStats {
+  newsletterSubscribers: number | null;
+  feedbackEntries: number | null;
+  dataProvider: string;
+  lastStandingsSyncAt: string | null;
+}
+
+/** Fleet-wide beta aggregates (counts only) from GET /api/stats. */
+function FleetCard() {
+  const [stats, setStats] = useState<FleetStats | null>(null);
+  useEffect(() => {
+    if (!backendConfigured) return;
+    api.get<FleetStats>("/api/stats").then(setStats).catch(() => {});
+  }, []);
+  if (!stats) return null;
+  return (
+    <Card className="p-5">
+      <SectionHeader eyebrow="Fleet-wide (all users)" title="Beta pulse" />
+      <div className="grid grid-cols-3 gap-3 text-center">
+        <div>
+          <p className="font-mono text-2xl font-bold text-ink">{stats.newsletterSubscribers ?? "—"}</p>
+          <p className="font-mono text-[10px] uppercase tracking-wider text-ink-3">Subscribers</p>
+        </div>
+        <div>
+          <p className="font-mono text-2xl font-bold text-ink">{stats.feedbackEntries ?? "—"}</p>
+          <p className="font-mono text-[10px] uppercase tracking-wider text-ink-3">Feedback</p>
+        </div>
+        <div>
+          <p className="truncate font-mono text-[13px] font-bold leading-8 text-ink" title={stats.dataProvider}>
+            {stats.dataProvider}
+          </p>
+          <p className="font-mono text-[10px] uppercase tracking-wider text-ink-3">
+            {stats.lastStandingsSyncAt ? `synced ${stats.lastStandingsSyncAt.slice(0, 10)}` : "data source"}
+          </p>
+        </div>
+      </div>
+      <p className="mt-3 flex items-center gap-1.5 text-[11.5px] text-ink-3">
+        <Globe2 className="size-3.5" aria-hidden /> Aggregate counts only — no rows, no PII leave the server.
+      </p>
+    </Card>
+  );
+}
 
 /**
  * Product metrics dashboard — device-local counters (see lib/metrics.ts).
@@ -87,14 +132,15 @@ export default function Insights() {
           </Card>
         ))}
       </div>
+      <FleetCard />
       <div className="grid gap-4 lg:grid-cols-2">
         {PANELS.map((p) => (
           <MetricPanel key={p.category} {...p} />
         ))}
       </div>
       <p className="text-[12px] leading-relaxed text-ink-3">
-        Counters are stored in this browser only — no fingerprinting, no cross-device tracking. Fleet-wide analytics run through GA4
-        when configured; server-side aggregation is a Phase 4 item.
+        Device counters are stored in this browser only — no fingerprinting, no cross-device tracking. Fleet-wide numbers are safe
+        aggregates from the API; full analytics run through GA4 when configured.
       </p>
     </div>
   );

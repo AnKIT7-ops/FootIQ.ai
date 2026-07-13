@@ -256,3 +256,19 @@ describe("CORS", () => {
     expect(res.headers.get("Access-Control-Allow-Origin")).toBeNull();
   });
 });
+
+describe("meta stats", () => {
+  const app = makeApp();
+
+  it("GET /api/stats returns safe aggregates (nulls in demo mode, no PII)", async () => {
+    const res = await app.request("/api/stats");
+    expect(res.status).toBe(200);
+    const body = await asJson<
+      ApiSuccess<{ newsletterSubscribers: number | null; feedbackEntries: number | null; dataProvider: string; lastStandingsSyncAt: string | null }>
+    >(res);
+    expect(body.ok).toBe(true);
+    expect(body.data.newsletterSubscribers).toBeNull();
+    expect(body.data.feedbackEntries).toBeNull();
+    expect(typeof body.data.dataProvider).toBe("string");
+  });
+});
