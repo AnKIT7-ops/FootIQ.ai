@@ -215,7 +215,7 @@ export default function TeamPage() {
       {tab === "tactics" && (
         <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
           <div className="space-y-4">
-            <IQInsight title="AI tactical report">
+            <IQInsight title="AI tactical report" feedback="Team tactical report">
               <ul className="space-y-2">
                 {team.aiReport.map((r, i) => (
                   <li key={i} className="flex gap-2">

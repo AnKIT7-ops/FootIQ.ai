@@ -2,6 +2,7 @@ import { Mail, MessageSquareText, Bug, Handshake } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { ProsePage, ProseSection } from "@/components/ui/Prose";
 import { WaitlistForm } from "@/components/ui/Waitlist";
+import { FeedbackForm } from "@/components/ui/FeedbackWidget";
 import { usePageMeta } from "@/lib/seo";
 
 const CONTACT_EMAIL = "hello@footiq.ai";
@@ -57,8 +58,13 @@ export default function Contact() {
         ))}
       </div>
 
-      <ProseSection title="Prefer to wait for launch?">
-        <p>Join the waitlist and we'll email you exactly once — when live data goes live.</p>
+      <ProseSection title="Send it right here">
+        <p>Fastest path during the beta — lands straight in the product queue, no inbox detour.</p>
+        <FeedbackForm className="mt-3 max-w-lg" />
+      </ProseSection>
+
+      <ProseSection title="Want the briefing instead?">
+        <p>Join the newsletter for weekly AI football intelligence and product updates.</p>
         <WaitlistForm className="mt-3 max-w-lg" />
       </ProseSection>
     </ProsePage>

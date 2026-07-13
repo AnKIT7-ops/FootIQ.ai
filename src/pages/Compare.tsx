@@ -131,7 +131,7 @@ function PlayerCompare() {
               ]}
             />
           </Card>
-          <IQInsight title="Key differences">
+          <IQInsight title="Key differences" feedback="Player comparison — key differences">
             <ul className="space-y-1.5">
               {diffs.map(({ k, d }) => (
                 <li key={k}>
@@ -263,7 +263,7 @@ function ManagerCompare() {
         ))}
       </div>
 
-      <IQInsight title="Touchline verdict">
+      <IQInsight title="Touchline verdict" feedback="Manager comparison verdict">
         {a.manager} ({ppg(a)} points per game) versus {b.manager} ({ppg(b)}): {Number(ppg(a)) > Number(ppg(b)) ? a.manager : b.manager} holds the
         results edge this season, but style contrast is the story — {a.style.tempo > b.style.tempo ? `${a.manager} plays the faster game` : `${b.manager} plays the faster game`}{" "}
         while the other trades tempo for control. In a one-off, the higher press ({a.style.pressIntensity > b.style.pressIntensity ? a.manager : b.manager}) usually

@@ -214,7 +214,7 @@ export default function Fantasy() {
         <p className="mt-2 font-mono text-[10.5px] uppercase tracking-wider text-ink-3">1 = easiest · 5 = hardest · FootIQ difficulty blends opponent strength, venue and rest days</p>
       </section>
 
-      <IQInsight title="This week's chip call">
+      <IQInsight title="This week's chip call" feedback="Fantasy chip call">
         Hold the Bench Boost. GW34 doubles for six of your eight assets and the fixture-difficulty average drops from 3.1 to 2.2 — model
         expects +11 points from waiting two weeks. Patience is a differential too.
       </IQInsight>

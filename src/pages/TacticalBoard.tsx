@@ -372,7 +372,7 @@ export default function TacticalBoard() {
             )}
           </Card>
 
-          <IQInsight title={mode === "h2h" ? "Matchup read" : "Coach's feedback"}>
+          <IQInsight title={mode === "h2h" ? "Matchup read" : "Coach's feedback"} feedback="Tactical board coaching">
             <ul className="space-y-2.5">
               {notes.map((n, i) => (
                 <li key={i} className="flex gap-2">

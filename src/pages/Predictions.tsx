@@ -121,7 +121,7 @@ export default function Predictions() {
           </Card>
 
           {/* reasoning */}
-          <IQInsight title="Why the model thinks this">
+          <IQInsight title="Why the model thinks this" feedback="Prediction reasoning">
             <ul className="space-y-2.5">
               {active.reasoning.map((r, i) => (
                 <li key={i} className="flex gap-2.5">

@@ -260,7 +260,7 @@ export default function PlayerPage() {
                 </ul>
               </Card>
             </div>
-            <IQInsight title="Scout's verdict">{player.style}</IQInsight>
+            <IQInsight title="Scout's verdict" feedback="Player scout verdict">{player.style}</IQInsight>
           </div>
           <Card className="p-4 md:p-5">
             <SectionHeader

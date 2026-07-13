@@ -205,7 +205,7 @@ export default function SimilarPlayers() {
               </div>
             </Card>
 
-            <IQInsight compact title="Why they match">
+            <IQInsight compact title="Why they match" feedback="Similarity explanation">
               {selected.p.name}'s profile overlaps {base.name}'s strongest axes ({axes
                 .map((a) => ({ a, d: Math.abs(base.attributes[a] - selected.p.attributes[a]) }))
                 .sort((x, y) => x.d - y.d)

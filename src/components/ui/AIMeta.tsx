@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Sparkles } from "lucide-react";
+import { FeedbackWidget } from "@/components/ui/FeedbackWidget";
 import { cn } from "@/lib/utils";
 
 /**
@@ -11,6 +12,7 @@ export function AIMeta({
   confidence,
   generatedAt,
   sources,
+  feedbackSubject,
   className,
 }: {
   /** 0–100. */
@@ -18,6 +20,8 @@ export function AIMeta({
   /** ISO date or datetime. */
   generatedAt: string;
   sources?: { label: string; path: string }[];
+  /** Labels the 👍/👎 signal, e.g. the report title. Widget always renders. */
+  feedbackSubject?: string;
   className?: string;
 }) {
   const level = confidence >= 75 ? "High" : confidence >= 55 ? "Medium" : "Low";
@@ -56,6 +60,7 @@ export function AIMeta({
       <p className="mt-2 text-[11.5px] leading-relaxed text-ink-3">
         Model inference from structured performance data — speculative analysis, not verified reporting. Not betting advice.
       </p>
+      <FeedbackWidget subject={feedbackSubject} className="mt-3 border-t border-iq/15 pt-3" />
     </div>
   );
 }

@@ -59,7 +59,7 @@ export default function NewsArticle() {
         <h1 className="mt-3 text-2xl font-bold leading-tight text-ink md:text-[1.8rem]">{article.title}</h1>
       </header>
 
-      <IQInsight title={`Read it in ${article.readSeconds} seconds`}>
+      <IQInsight title={`Read it in ${article.readSeconds} seconds`} feedback="News TL;DR">
         <ul className="space-y-1.5">
           {article.aiSummary.map((s, i) => (
             <li key={i} className="flex gap-2">

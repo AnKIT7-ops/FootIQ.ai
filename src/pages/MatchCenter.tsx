@@ -276,7 +276,7 @@ export default function MatchCenter() {
       {tab === "iq" && (
         <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
           <div className="space-y-4">
-            <IQInsight title="Tactical read">{detail.tacticalNote}</IQInsight>
+            <IQInsight title="Tactical read" feedback="Match tactical read">{detail.tacticalNote}</IQInsight>
             <Card className="p-4 md:p-5">
               <SectionHeader eyebrow="Live model feed" title="AI Commentary" className="mb-3" />
               <ol className="space-y-4">

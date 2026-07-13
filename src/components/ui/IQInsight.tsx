@@ -1,5 +1,6 @@
 import { type ReactNode } from "react";
 import { Sparkles } from "lucide-react";
+import { FeedbackWidget } from "@/components/ui/FeedbackWidget";
 import { cn } from "@/lib/utils";
 
 /**
@@ -11,11 +12,14 @@ export function IQInsight({
   title = "FootIQ Insight",
   className,
   compact = false,
+  feedback,
 }: {
   children: ReactNode;
   title?: string;
   className?: string;
   compact?: boolean;
+  /** Set to a subject label to render 👍/👎 under the insight (substantial blocks only). */
+  feedback?: string;
 }) {
   return (
     <div
@@ -35,6 +39,7 @@ export function IQInsight({
         {title}
       </p>
       <div className={cn("text-ink", compact ? "text-[13px] leading-relaxed" : "text-sm leading-relaxed")}>{children}</div>
+      {feedback && <FeedbackWidget subject={feedback} className="mt-3 border-t border-iq/15 pt-3" />}
     </div>
   );
 }
