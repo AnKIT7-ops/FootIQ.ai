@@ -2,6 +2,13 @@
 
 Honest list, ordered by risk × effort-to-fix-later. None block beta.
 
+## Added in Phase 5 (beta readiness)
+
+26. **Feedback re-votes aren't deduped across reloads** — widget state is per-mount; a reload lets the same device vote again. Fine for directional beta signal; add a sessionStorage/user guard if counts start driving decisions.
+27. **Comparison URL sync covers players only** — teams/managers modes keep local state; their shares land on the default pair. Extend the same `?a=&b=` pattern when those modes earn traffic.
+28. **Fixture sync window misses the off-season** — provider returns 0 fixtures in July (correct), so the fixtures rail stays demo until the season starts. Consider widening the provider date window to "next 30 days with fixtures".
+29. **Onboarding flag is per-device** (`footiq-onboarded` in localStorage) — signed-in users see the tour again on a new device. Sync to profile settings when the auth UI phase lands.
+
 ## Added in Phase 4 (data platform)
 
 20. **Snapshots are whole-collection JSONB** (`catalog_snapshots`) — right for collection reads at this scale; per-entity queries need relational catalog tables (`ponytail:` note in services/snapshots.ts).
