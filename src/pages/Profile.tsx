@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
-import { BellRing, Bookmark, Crown, Eye, GitCompareArrows, Star, TrendingUp } from "lucide-react";
+import { BellRing, Bookmark, Crown, Eye, GitCompareArrows, Star, TrendingUp, UserRoundSearch } from "lucide-react";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Card, SectionHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
@@ -120,7 +121,26 @@ export default function Profile() {
                   </button>
                 </div>
               ))}
-            {favPlayers.length === 0 && <p className="p-5 text-sm text-ink-3">Your watchlist is empty — follow players from any profile page.</p>}
+            {favPlayers.length === 0 && (
+              <EmptyState
+                icon={UserRoundSearch}
+                title="Your watchlist is empty"
+                body="Follow players to get AI reports, transfer alerts and a personalized home feed. Popular right now:"
+              >
+                {[...players]
+                  .sort((a, b) => b.form.slice(-3).reduce((x, y) => x + y, 0) - a.form.slice(-3).reduce((x, y) => x + y, 0))
+                  .slice(0, 4)
+                  .map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => toggleFavorite("player", p.id)}
+                      className="rounded-full border border-line bg-surface px-3 py-1.5 text-xs text-ink-2 transition-colors hover:border-accent/40 hover:text-ink"
+                    >
+                      + {p.name}
+                    </button>
+                  ))}
+              </EmptyState>
+            )}
           </Card>
           <div className="mt-3 flex flex-wrap gap-1.5">
             {players
@@ -160,9 +180,18 @@ export default function Profile() {
               </div>
             ))}
             {user.bookmarks.length === 0 && (
-              <p className="p-5 text-sm text-ink-3">
-                Nothing saved yet — bookmark any news story or <Link to="/intelligence" className="underline">Intelligence report</Link>.
-              </p>
+              <EmptyState
+                icon={Bookmark}
+                title="Nothing saved for later"
+                body="Bookmark any news story or Intelligence report and it waits for you here — and under Continue reading on the home page."
+              >
+                <Link to="/intelligence" className="rounded-full border border-iq/35 bg-iq-soft px-3 py-1.5 text-xs font-medium text-iq-ink transition-colors hover:border-iq/60">
+                  Browse Intelligence reports
+                </Link>
+                <Link to="/news" className="rounded-full border border-line bg-surface px-3 py-1.5 text-xs text-ink-2 transition-colors hover:border-line-strong hover:text-ink">
+                  Latest news
+                </Link>
+              </EmptyState>
             )}
           </Card>
         </section>
@@ -184,9 +213,15 @@ export default function Profile() {
               </Link>
             ))}
             {user.predictionViews.length === 0 && (
-              <p className="p-5 text-sm text-ink-3">
-                No predictions tracked yet — open any <Link to="/predictions" className="underline">match prediction</Link> to log it here.
-              </p>
+              <EmptyState
+                icon={TrendingUp}
+                title="No predictions tracked yet"
+                body="Open any match prediction and FootIQ logs the model's call here, so you can check it against what actually happened."
+              >
+                <Link to="/predictions" className="rounded-full border border-iq/35 bg-iq-soft px-3 py-1.5 text-xs font-medium text-iq-ink transition-colors hover:border-iq/60">
+                  See this week's predictions
+                </Link>
+              </EmptyState>
             )}
           </Card>
         </section>

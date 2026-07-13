@@ -1,5 +1,7 @@
 import { useMemo, useRef, useState } from "react";
-import { RotateCcw, Swords } from "lucide-react";
+import { ClipboardList, FolderOpen, RotateCcw, Save, Swords, Trash2 } from "lucide-react";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { track } from "@/lib/analytics";
 import { Card, SectionHeader } from "@/components/ui/Card";
 import { Tabs } from "@/components/ui/Tabs";
 import { Crest } from "@/components/ui/Crest";
@@ -19,6 +21,37 @@ interface Chip {
   team: TeamKey;
   x: number; // absolute % across pitch length (0 = left goal line)
   y: number; // absolute % across pitch width (0 = top)
+}
+
+interface SavedBoard {
+  id: string;
+  name: string;
+  savedAt: string;
+  mode: "single" | "h2h";
+  formation: string;
+  teamAId: string;
+  teamBId: string;
+  chips: Chip[];
+  ball: { x: number; y: number };
+}
+
+const BOARDS_KEY = "footiq-boards";
+
+function readBoards(): SavedBoard[] {
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(BOARDS_KEY) ?? "[]");
+    return Array.isArray(parsed) ? (parsed as SavedBoard[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeBoards(boards: SavedBoard[]): void {
+  try {
+    localStorage.setItem(BOARDS_KEY, JSON.stringify(boards));
+  } catch {
+    /* best-effort */
+  }
 }
 
 /* ---------- formations (team frame: tx = depth toward opponent, ty = width) ---------- */
@@ -186,6 +219,36 @@ export default function TacticalBoard() {
   const [ball, setBall] = useState({ x: 50, y: 50 });
   const boardRef = useRef<HTMLDivElement>(null);
   const dragId = useRef<string | null>(null);
+  const [boards, setBoards] = useState<SavedBoard[]>(readBoards);
+
+  const saveBoard = () => {
+    const name =
+      mode === "single"
+        ? `${formation} formation`
+        : `${getTeam(teamAId).short} vs ${getTeam(teamBId).short}`;
+    const next = [
+      { id: `b${Date.now()}`, name, savedAt: new Date().toISOString(), mode, formation, teamAId, teamBId, chips, ball },
+      ...boards,
+    ].slice(0, 12);
+    setBoards(next);
+    writeBoards(next);
+    track("tactic_saved", { mode });
+  };
+
+  const loadBoard = (b: SavedBoard) => {
+    setMode(b.mode);
+    setFormation(b.formation);
+    setTeamAId(b.teamAId);
+    setTeamBId(b.teamBId);
+    setChips(b.chips);
+    setBall(b.ball);
+  };
+
+  const deleteBoard = (id: string) => {
+    const next = boards.filter((b) => b.id !== id);
+    setBoards(next);
+    writeBoards(next);
+  };
 
   const teamA = getTeam(teamAId);
   const teamB = getTeam(teamBId);
@@ -224,6 +287,14 @@ export default function TacticalBoard() {
         eyebrow="Drag. Drop. Get judged by the model."
         title="Tactical Board"
         action={
+          <span className="flex items-center gap-1.5">
+          <button
+            onClick={saveBoard}
+            className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent-soft px-3.5 py-1.5 font-mono text-[11px] uppercase tracking-wider text-accent-ink transition-colors hover:border-accent/70"
+          >
+            <Save className="size-3.5" aria-hidden />
+            Save board
+          </button>
           <button
             onClick={reset}
             className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3.5 py-1.5 font-mono text-[11px] uppercase tracking-wider text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
@@ -231,6 +302,7 @@ export default function TacticalBoard() {
             <RotateCcw className="size-3.5" aria-hidden />
             Reset
           </button>
+          </span>
         }
       />
 
@@ -405,6 +477,41 @@ export default function TacticalBoard() {
                 ))}
                 <span className="inline-flex items-center gap-1.5 text-xs text-ink-2">⚽ ball — drag it too</span>
               </div>
+            )}
+          </Card>
+
+          <Card className="p-4">
+            <p className="eyebrow mb-2.5">Saved boards</p>
+            {boards.length === 0 ? (
+              <EmptyState
+                icon={ClipboardList}
+                title="No saved boards yet"
+                body="Shape a formation you like and hit Save board — it'll wait here for your next visit."
+                className="py-5"
+              />
+            ) : (
+              <ul className="space-y-1.5">
+                {boards.map((b) => (
+                  <li key={b.id} className="flex items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2">
+                    <button onClick={() => loadBoard(b)} className="group min-w-0 flex-1 text-left" aria-label={`Load board ${b.name}`}>
+                      <span className="flex items-center gap-1.5 truncate text-[12.5px] font-semibold text-ink group-hover:underline">
+                        <FolderOpen className="size-3.5 shrink-0 text-ink-3" aria-hidden />
+                        {b.name}
+                      </span>
+                      <span className="block pl-5 font-mono text-[9.5px] uppercase tracking-wider text-ink-3">
+                        {b.mode === "single" ? "Formation lab" : "Head to head"} · {b.savedAt.slice(0, 10)}
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => deleteBoard(b.id)}
+                      className="flex size-7 shrink-0 items-center justify-center rounded-full text-ink-3 transition-colors hover:bg-surface-2 hover:text-bad"
+                      aria-label={`Delete board ${b.name}`}
+                    >
+                      <Trash2 className="size-3.5" aria-hidden />
+                    </button>
+                  </li>
+                ))}
+              </ul>
             )}
           </Card>
         </div>
