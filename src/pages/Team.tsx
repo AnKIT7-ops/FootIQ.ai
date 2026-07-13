@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "motion/react";
 import { Activity, BriefcaseMedical } from "lucide-react";
@@ -22,6 +22,7 @@ import { sportsTeamJsonLd, usePageMeta } from "@/lib/seo";
 import { managerPath, resolveTeam, teamPath } from "@/lib/slugs";
 import { FavoriteButton } from "@/components/ui/FavoriteButton";
 import { ShareBar } from "@/components/ui/ShareBar";
+import { recordView } from "@/lib/recent";
 
 export default function TeamPage() {
   const { id } = useParams();
@@ -34,6 +35,9 @@ export default function TeamPage() {
     }
   }, [id]);
   const [tab, setTab] = useState("squad");
+  useEffect(() => {
+    recordView({ kind: "team", id: team.id, label: team.name, sub: team.league, path: teamPath(team) });
+  }, [team]);
   usePageMeta({
     title: `${team.name} — Squad, Tactics & AI Analysis`,
     description: `${team.name}: squad depth, fixtures and results, tactical style DNA, transfer threads and the AI tactical report.`,

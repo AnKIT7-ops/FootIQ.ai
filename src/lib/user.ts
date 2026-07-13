@@ -124,6 +124,7 @@ export function toggleBookmark(b: Omit<Bookmark, "savedAt">): boolean {
 
 export function recordPredictionView(v: Omit<PredictionView, "viewedAt">): void {
   if (data.predictionViews[0]?.matchId === v.matchId) return; // collapse repeat views
+  track("prediction_viewed", { matchId: v.matchId });
   commit({
     ...data,
     predictionViews: [{ ...v, viewedAt: new Date().toISOString() }, ...data.predictionViews.filter((x) => x.matchId !== v.matchId)].slice(0, 50),

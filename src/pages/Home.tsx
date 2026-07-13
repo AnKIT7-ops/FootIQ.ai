@@ -8,6 +8,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { MatchCard } from "@/components/ui/MatchCard";
 import { IQInsight } from "@/components/ui/IQInsight";
 import { WaitlistForm } from "@/components/ui/Waitlist";
+import { PersonalRows } from "@/components/ui/PersonalRows";
 import { MomentumRiver } from "@/components/charts/MomentumRiver";
 import { Sparkline } from "@/components/charts/Sparkline";
 import { liveMatches, upcomingMatches, matchDetail } from "@/lib/repositories/matches";
@@ -93,6 +94,9 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* personalization — invisible until the user follows/browses something */}
+      <PersonalRows />
 
       {/* hero: featured live match */}
       <section aria-label="Featured live match">

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "motion/react";
 import { ArrowRight, BriefcaseMedical, CheckCircle2, ShieldAlert, Sparkles } from "lucide-react";
@@ -24,6 +24,7 @@ import { playerPath, playerSlug, resolvePlayer, teamPath } from "@/lib/slugs";
 import { contentBySlug } from "@/lib/repositories/content";
 import { FavoriteButton } from "@/components/ui/FavoriteButton";
 import { ShareBar } from "@/components/ui/ShareBar";
+import { recordView } from "@/lib/recent";
 
 export default function PlayerPage() {
   const { id } = useParams();
@@ -37,6 +38,9 @@ export default function PlayerPage() {
   }, [id]);
   const team = getTeam(player.teamId);
   const [tab, setTab] = useState("overview");
+  useEffect(() => {
+    recordView({ kind: "player", id: player.id, label: player.name, sub: player.role, path: playerPath(player) });
+  }, [player]);
   usePageMeta({
     title: `${player.name} — Stats, Heatmaps & AI Scouting`,
     description: `${player.name} (${player.role}, ${team.name}): season stats, attribute radar, pitch maps, injury and transfer history with an AI scouting verdict.`,

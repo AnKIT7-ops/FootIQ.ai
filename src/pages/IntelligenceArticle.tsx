@@ -9,10 +9,16 @@ import { ShareBar } from "@/components/ui/ShareBar";
 import { WaitlistForm } from "@/components/ui/Waitlist";
 import { contentBySlug, contentKindLabels, contentLibrary } from "@/lib/repositories/content";
 import { articleJsonLd, usePageMeta } from "@/lib/seo";
+import { useEffect } from "react";
+import { recordView } from "@/lib/recent";
 
 export default function IntelligenceArticle() {
   const { slug } = useParams();
   const article = slug ? contentBySlug(slug) : undefined;
+  useEffect(() => {
+    if (!article) return;
+    recordView({ kind: "intel", id: article.slug, label: article.title.length > 48 ? article.title.slice(0, 45) + "…" : article.title, sub: "Intelligence", path: `/intelligence/${article.slug}` });
+  }, [article]);
 
   usePageMeta(
     article

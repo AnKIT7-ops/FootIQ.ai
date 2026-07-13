@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { motion } from "motion/react";
 import { ArrowLeftRight, CircleAlert, Goal, RectangleVertical, Repeat, Sparkles, Timer } from "lucide-react";
@@ -21,6 +21,7 @@ import { sportsEventJsonLd, usePageMeta } from "@/lib/seo";
 import { matchPath, predictionPath, resolveMatch } from "@/lib/slugs";
 import { ShareBar } from "@/components/ui/ShareBar";
 import type { MatchEvent } from "@/data/types";
+import { recordView } from "@/lib/recent";
 
 const eventIcon = (e: MatchEvent) => {
   switch (e.type) {
@@ -54,6 +55,9 @@ export default function MatchCenter() {
   const home = getTeam(detail.homeId);
   const away = getTeam(detail.awayId);
   const live = detail.status === "live";
+  useEffect(() => {
+    recordView({ kind: "match", id: detail.id, label: `${home.short} vs ${away.short}`, sub: "Match center", path: `/matches/${detail.id}` });
+  }, [detail.id, home.short, away.short]);
   usePageMeta({
     title:
       detail.homeScore != null && detail.awayScore != null

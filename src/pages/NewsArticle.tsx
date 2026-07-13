@@ -13,12 +13,17 @@ import { articleJsonLd, usePageMeta } from "@/lib/seo";
 import { newsPath, resolveNews } from "@/lib/slugs";
 import { BookmarkButton } from "@/components/ui/FavoriteButton";
 import { ShareBar } from "@/components/ui/ShareBar";
+import { useEffect } from "react";
+import { recordView } from "@/lib/recent";
 
 export default function NewsArticle() {
   const { id } = useParams();
   const navigate = useNavigate();
   const article = resolveNews(id) ?? news[0];
   const related = article.related.map((r) => newsById.get(r)).filter(Boolean);
+  useEffect(() => {
+    recordView({ kind: "news", id: article.id, label: article.title.length > 48 ? article.title.slice(0, 45) + "…" : article.title, sub: article.category, path: newsPath(article) });
+  }, [article]);
   usePageMeta({
     title: article.title,
     description: article.aiSummary[0] ?? article.title,
