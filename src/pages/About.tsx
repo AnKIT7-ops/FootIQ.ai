@@ -44,9 +44,19 @@ export default function About() {
           AI reasoning layer on top of the raw numbers.
         </p>
         <p>
-          The product is currently in <strong className="text-ink">public beta</strong>. It runs on a curated demonstration dataset so you
-          can explore every feature end-to-end; live data feeds are part of the next phase.
+          The product is currently in <strong className="text-ink">public beta</strong>. League standings and fixtures sync from live
+          football data (Premier League via{" "}
+          <a href="https://www.football-data.org" target="_blank" rel="noreferrer" className="underline decoration-line-strong underline-offset-2 hover:text-ink">
+            football-data.org
+          </a>
+          ), layered over a curated demonstration dataset so every feature works end-to-end.
         </p>
+        <button
+          onClick={() => window.dispatchEvent(new Event("footiq:tour"))}
+          className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-4 py-2 text-[12.5px] font-semibold text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
+        >
+          Take the 30-second tour
+        </button>
       </ProseSection>
 
       <div className="grid gap-3 sm:grid-cols-2">

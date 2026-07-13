@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/shell/Sidebar";
 import { TopBar } from "@/components/shell/TopBar";
 import { MobileNav } from "@/components/shell/MobileNav";
 import { ChatDock } from "@/components/shell/ChatDock";
+import { Onboarding, shouldShowOnboarding } from "@/components/shell/Onboarding";
 import { useHotkey } from "@/lib/hooks";
 import { trackPageView } from "@/lib/analytics";
 import { bump } from "@/lib/metrics";
@@ -45,8 +46,21 @@ const CommandPalette = lazy(() => import("@/components/shell/CommandPalette").th
 function Shell() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [paletteMounted, setPaletteMounted] = useState(false);
+  const [tourOpen, setTourOpen] = useState(false);
   const location = useLocation();
   useHotkey("k", true, () => openSearch());
+
+  // first visit: open the tour once the page has settled; afterwards any part
+  // of the app can re-launch it via the "footiq:tour" event (TopBar ?, /about)
+  useEffect(() => {
+    const openTour = () => setTourOpen(true);
+    window.addEventListener("footiq:tour", openTour);
+    const timer = shouldShowOnboarding() ? setTimeout(openTour, 900) : undefined;
+    return () => {
+      window.removeEventListener("footiq:tour", openTour);
+      if (timer) clearTimeout(timer);
+    };
+  }, []);
 
   const openSearch = () => {
     setPaletteMounted(true);
@@ -141,6 +155,7 @@ function Shell() {
       </div>
       <MobileNav />
       <ChatDock />
+      <Onboarding open={tourOpen} onClose={() => setTourOpen(false)} />
       {paletteMounted && (
         <Suspense fallback={null}>
           <CommandPalette open={searchOpen} onClose={() => setSearchOpen(false)} />

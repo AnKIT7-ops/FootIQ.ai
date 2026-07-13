@@ -1,6 +1,6 @@
 import { Suspense, lazy, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Bell, Moon, Search, Sun } from "lucide-react";
+import { Bell, HelpCircle, Moon, Search, Sun } from "lucide-react";
 import { useTheme } from "@/lib/hooks";
 import { Logo } from "./Logo";
 import { Avatar } from "@/components/ui/Avatar";
@@ -51,6 +51,15 @@ export function TopBar({ onOpenSearch }: { onOpenSearch: () => void }) {
               <Bell className="size-4" />
             </span>
           )}
+
+          <button
+            onClick={() => window.dispatchEvent(new Event("footiq:tour"))}
+            className="hidden size-9 items-center justify-center rounded-full border border-line bg-surface text-ink-2 transition-colors hover:border-line-strong hover:text-ink sm:flex"
+            aria-label="What is FootIQ? Open the welcome tour"
+            title="What is FootIQ?"
+          >
+            <HelpCircle className="size-4" aria-hidden />
+          </button>
 
           <button
             onClick={toggleTheme}
