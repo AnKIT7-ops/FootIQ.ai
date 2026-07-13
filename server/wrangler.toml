@@ -20,4 +20,8 @@ crons = ["*/30 * * * *"]
 NODE_ENV = "production"
 CORS_ORIGINS = "https://footiq-omega.vercel.app,http://localhost:5173"
 SUPABASE_URL = "https://zcemnioniooyyhpjpwbn.supabase.co"
+AI_PROVIDER = "claude"
+AI_MODEL = "claude-opus-4-8"
+DATA_PROVIDER = "football-data"
+FOOTBALL_DATA_COMPETITION = "PL"
 # Non-secret config only. Secrets go via `wrangler secret put`.
