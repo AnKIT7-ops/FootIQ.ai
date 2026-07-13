@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { CheckCircle2, ShieldAlert } from "lucide-react";
 import { Card, SectionHeader } from "@/components/ui/Card";
 import { Badge, FormPills } from "@/components/ui/Badge";
@@ -13,6 +14,8 @@ import { players, getPlayer, attributeLabels } from "@/lib/repositories/players"
 import { teams, getTeam } from "@/lib/repositories/teams";
 import { money } from "@/lib/utils";
 import { usePageMeta } from "@/lib/seo";
+import { ShareBar } from "@/components/ui/ShareBar";
+import { track } from "@/lib/analytics";
 import type { Player } from "@/data/types";
 
 const axes = Object.keys(attributeLabels) as Array<keyof Player["attributes"]>;
@@ -71,10 +74,20 @@ function Picker({ value, onChange, options, label }: { value: string; onChange: 
 }
 
 function PlayerCompare() {
-  const [aId, setA] = useState("saka");
-  const [bId, setB] = useState("yamal");
+  const [params, setParams] = useSearchParams();
+  const validId = (id: string | null) => (id && players.some((p) => p.id === id) ? id : null);
+  const [aId, setA] = useState(() => validId(params.get("a")) ?? "saka");
+  const [bId, setB] = useState(() => validId(params.get("b")) ?? "yamal");
   const a = getPlayer(aId);
   const b = getPlayer(bId);
+  const mounted = useRef(false);
+
+  // shareable URLs: the pair lives in ?a=&b= (replace — no history spam)
+  useEffect(() => {
+    setParams({ a: aId, b: bId }, { replace: true });
+    if (mounted.current) track("comparison_created", { a: aId, b: bId });
+    mounted.current = true;
+  }, [aId, bId, setParams]);
 
   const diffs = useMemo(() => {
     return axes
@@ -89,6 +102,8 @@ function PlayerCompare() {
         <Picker label="Player A" value={aId} onChange={setA} options={players.map((p) => ({ id: p.id, label: `${p.name} — ${getTeam(p.teamId).short}` }))} />
         <Picker label="Player B" value={bId} onChange={setB} options={players.map((p) => ({ id: p.id, label: `${p.name} — ${getTeam(p.teamId).short}` }))} />
       </Card>
+
+      <ShareBar title={`${a.name} vs ${b.name}`} path={`/compare?a=${aId}&b=${bId}`} kind="Player Comparison" stat={`${a.stats.rating.toFixed(2)} vs ${b.stats.rating.toFixed(2)} rating`} />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_1.35fr]">
         <Card className="p-4 md:p-5">

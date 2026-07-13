@@ -6,6 +6,26 @@ import { recentSearches, recordSearch, runSearch, trendingSearches, type SearchI
 import { useVoiceInput } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 
+/** Highlight the matched part of a result label (whole query, else first word). */
+function Highlight({ text, query }: { text: string; query: string }) {
+  const q = query.trim().toLowerCase();
+  const lower = text.toLowerCase();
+  let term = q;
+  let at = q ? lower.indexOf(q) : -1;
+  if (at < 0 && q.includes(" ")) {
+    term = q.split(/\s+/)[0];
+    at = lower.indexOf(term);
+  }
+  if (at < 0 || !term) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, at)}
+      <mark className="rounded-[3px] bg-iq/25 px-px text-inherit">{text.slice(at, at + term.length)}</mark>
+      {text.slice(at + term.length)}
+    </>
+  );
+}
+
 const kindIcon = {
   player: UserRound,
   team: Shield,
@@ -198,7 +218,9 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
                             <Icon className="size-4" aria-hidden />
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate text-[13.5px] font-semibold text-ink">{r.label}</span>
+                            <span className="block truncate text-[13.5px] font-semibold text-ink">
+                              <Highlight text={r.label} query={query} />
+                            </span>
                             <span className="block truncate text-[11.5px] text-ink-3">{r.sub}</span>
                           </span>
                           <span className="shrink-0 font-mono text-[9.5px] uppercase tracking-wider text-ink-3">{r.kind}</span>

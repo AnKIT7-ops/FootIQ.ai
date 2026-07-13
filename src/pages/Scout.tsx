@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import { Crest } from "@/components/ui/Crest";
 import { IQInsight, IQTag } from "@/components/ui/IQInsight";
+import { ShareBar } from "@/components/ui/ShareBar";
 import { Meter } from "@/components/ui/StatTile";
 import { players } from "@/lib/repositories/players";
 import { getTeam } from "@/lib/repositories/teams";
@@ -234,6 +235,14 @@ export default function Scout() {
 
       {submitted && (
         <div className="space-y-3">
+          {results.length > 0 && (
+            <ShareBar
+              title={`AI Scout: ${submitted}`}
+              path={`/scout?q=${encodeURIComponent(submitted)}`}
+              kind="AI Scout Report"
+              stat={`${results.length} ranked ${results.length === 1 ? "match" : "matches"} · top fit ${results[0].fit}`}
+            />
+          )}
           {results.map(({ p, fit }, i) => (
             <motion.div key={p.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05, duration: 0.3 }}>
               <Card hover onClick={() => navigate(`/player/${p.id}`)} className="flex flex-wrap items-center gap-4 p-4 md:p-5">

@@ -33,7 +33,11 @@ export function WaitlistForm({ className, compact = false }: { className?: strin
       const already = await waitlist.has(value);
       await waitlist.join(value);
       setStatus("success");
-      setMessage(already ? "You're already on the list — we've got you." : "You're in. We'll email you when live data lands.");
+      setMessage(
+        already
+          ? "You're already on the list — we've got you."
+          : "You're in. Weekly AI football intelligence, transfer alerts and product updates — unsubscribe anytime.",
+      );
       track("newsletter_signup");
       bump("newsletter", "signup");
       setEmail("");
@@ -90,7 +94,7 @@ export function WaitlistForm({ className, compact = false }: { className?: strin
               Joining…
             </>
           ) : (
-            "Join the waitlist"
+            "Get the briefing"
           )}
         </button>
       </div>
@@ -101,6 +105,11 @@ export function WaitlistForm({ className, compact = false }: { className?: strin
           </p>
         )}
       </div>
+      {!compact && (
+        <p className="mt-2 text-[11.5px] leading-relaxed text-ink-3">
+          Weekly AI intelligence · favourite-team updates · transfer alerts · product news. No spam, unsubscribe anytime.
+        </p>
+      )}
     </form>
   );
 }
