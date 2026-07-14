@@ -44,7 +44,7 @@ export default function NewsArticle() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <button onClick={() => navigate(-1)} className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-ink-3 hover:text-ink">
+        <button onClick={() => navigate(-1)} className="inline-flex items-center gap-1.5 font-mono text-label uppercase tracking-wider text-ink-3 hover:text-ink">
           <ArrowLeft className="size-3.5" aria-hidden /> Back
         </button>
         <div className="flex items-center gap-2">
@@ -57,11 +57,11 @@ export default function NewsArticle() {
         <div className="flex flex-wrap items-center gap-3">
           <Badge variant={article.category === "Rumour" ? "warn" : "accent"}>{article.category}</Badge>
           <Reliability score={article.reliability} />
-          <span className="font-mono text-[11px] text-ink-3">
+          <span className="font-mono text-label text-ink-3">
             {article.source} · {agoFromMinutes(article.minutesAgo)}
           </span>
         </div>
-        <h1 className="mt-3 text-2xl font-bold leading-tight text-ink md:text-[1.8rem]">{article.title}</h1>
+        <h1 className="mt-3 text-2xl font-bold leading-tight text-ink md:text-3xl">{article.title}</h1>
       </header>
 
       <IQInsight title={`Read it in ${article.readSeconds} seconds`} feedback="News TL;DR">
@@ -75,7 +75,7 @@ export default function NewsArticle() {
         </ul>
       </IQInsight>
 
-      <article className="space-y-4 text-[15px] leading-[1.75] text-ink-2">
+      <article className="space-y-4 text-prose leading-[1.75] text-ink-2">
         {article.body.map((p, i) => (
           <p key={i} className={i === 0 ? "text-ink" : undefined}>
             {p}
@@ -106,8 +106,8 @@ export default function NewsArticle() {
             <li key={i} className="relative flex gap-3 pl-0">
               <span className="z-10 mt-1 size-3 shrink-0 rounded-full border-2 border-accent bg-bg" aria-hidden />
               <div>
-                <span className="font-mono text-[11px] text-accent-ink">{u.time}</span>
-                <p className="text-[13px] text-ink-2">{u.note}</p>
+                <span className="font-mono text-label text-accent-ink">{u.time}</span>
+                <p className="text-ui text-ink-2">{u.note}</p>
               </div>
             </li>
           ))}
@@ -125,12 +125,12 @@ export default function NewsArticle() {
                   <Card hover key={r.id} onClick={() => navigate(`/news/${r.id}`)} className="p-4">
                     <div className="flex items-center gap-2">
                       <Badge variant="neutral">{r.category}</Badge>
-                      <span className="ml-auto inline-flex items-center gap-1 font-mono text-[10px] text-ink-3">
+                      <span className="ml-auto inline-flex items-center gap-1 font-mono text-micro text-ink-3">
                         <Clock className="size-3" aria-hidden />
                         {r.readSeconds}s
                       </span>
                     </div>
-                    <p className="mt-2 line-clamp-2 text-[13.5px] font-semibold leading-snug text-ink">{r.title}</p>
+                    <p className="mt-2 line-clamp-2 text-ui font-semibold leading-snug text-ink">{r.title}</p>
                   </Card>
                 ),
             )}

@@ -36,7 +36,7 @@ export function FeedbackWidget({ subject = "AI analysis", className }: { subject
 
   if (done) {
     return (
-      <p className={cn("inline-flex items-center gap-1.5 text-[11.5px] font-medium text-ink-3", className)} role="status">
+      <p className={cn("inline-flex items-center gap-1.5 text-label font-medium text-ink-3", className)} role="status">
         <CheckCircle2 className="size-3.5 text-accent-ink" aria-hidden /> Thanks — this tunes future analysis.
       </p>
     );
@@ -44,7 +44,7 @@ export function FeedbackWidget({ subject = "AI analysis", className }: { subject
 
   return (
     <div className={cn("flex flex-wrap items-center gap-2", className)}>
-      <span className="font-mono text-[10.5px] uppercase tracking-wider text-ink-3">Was this helpful?</span>
+      <span className="font-mono text-micro uppercase tracking-wider text-ink-3">Was this helpful?</span>
       <div className="flex items-center gap-1">
         <button
           onClick={() => submit("up", "")}
@@ -81,12 +81,12 @@ export function FeedbackWidget({ subject = "AI analysis", className }: { subject
               maxLength={280}
               // eslint-disable-next-line jsx-a11y/no-autofocus
               autoFocus
-              className="h-7 w-full min-w-32 rounded-full border border-line bg-surface px-3 text-[12px] text-ink outline-none placeholder:text-ink-3 focus:border-accent"
+              className="h-7 w-full min-w-32 rounded-full border border-line bg-surface px-3 text-caption text-ink outline-none placeholder:text-ink-3 focus:border-accent"
             />
           </label>
           <button
             type="submit"
-            className="h-7 shrink-0 rounded-full bg-accent px-3 text-[11.5px] font-semibold text-[#04110c] transition-transform hover:scale-[1.03] active:scale-95"
+            className="h-7 shrink-0 rounded-full bg-accent px-3 text-label font-semibold text-[#04110c] transition-transform hover:scale-[1.03] active:scale-95"
           >
             Send
           </button>
@@ -130,7 +130,7 @@ export function FeedbackForm({ className }: { className?: string }) {
     return (
       <div className={cn("flex items-center gap-2.5 rounded-2xl border border-accent/40 bg-accent-soft px-4 py-3", className)} role="status">
         <CheckCircle2 className="size-5 shrink-0 text-accent-ink" aria-hidden />
-        <p className="text-[13.5px] font-medium text-ink">Received — beta feedback directly shapes the roadmap. Thank you.</p>
+        <p className="text-ui font-medium text-ink">Received — beta feedback directly shapes the roadmap. Thank you.</p>
       </div>
     );
   }
@@ -146,7 +146,7 @@ export function FeedbackForm({ className }: { className?: string }) {
             aria-checked={category === c.id}
             onClick={() => setCategory(c.id)}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors",
+              "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-caption font-medium transition-colors",
               category === c.id
                 ? "border-accent/50 bg-accent-soft text-accent-ink"
                 : "border-line bg-surface text-ink-2 hover:border-line-strong hover:text-ink",
@@ -169,14 +169,14 @@ export function FeedbackForm({ className }: { className?: string }) {
               ? "What broke? Include the page, your device and what you expected to happen."
               : "What's confusing, what's missing, what would make FootIQ indispensable?"
           }
-          className="w-full rounded-2xl border border-line bg-surface p-3.5 text-[13.5px] leading-relaxed text-ink outline-none transition-colors placeholder:text-ink-3 focus:border-accent"
+          className="w-full rounded-2xl border border-line bg-surface p-3.5 text-ui leading-relaxed text-ink outline-none transition-colors placeholder:text-ink-3 focus:border-accent"
         />
       </label>
       <div className="flex items-center gap-3">
         <button
           type="submit"
           disabled={message.trim().length < 3 || status === "loading"}
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-accent px-5 text-[13px] font-semibold text-[#04110c] transition-transform hover:scale-[1.02] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-accent px-5 text-ui font-semibold text-[#04110c] transition-transform hover:scale-[1.02] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {status === "loading" ? (
             <>
@@ -187,7 +187,7 @@ export function FeedbackForm({ className }: { className?: string }) {
           )}
         </button>
         {status === "error" && (
-          <p className="text-[12.5px] font-medium text-bad" role="alert">
+          <p className="text-caption font-medium text-bad" role="alert">
             Couldn't send — please try again or email hello@footiq.ai.
           </p>
         )}

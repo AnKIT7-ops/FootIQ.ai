@@ -66,7 +66,7 @@ export function NotificationCenter() {
                 <p className="eyebrow">Notifications</p>
                 {unread > 0 && (
                   <button
-                    className="font-mono text-[10.5px] uppercase tracking-wider text-accent-ink hover:underline"
+                    className="font-mono text-micro uppercase tracking-wider text-accent-ink hover:underline"
                     onClick={() => markRead(items.map((n) => n.id))}
                   >
                     Mark all read
@@ -86,14 +86,14 @@ export function NotificationCenter() {
                     >
                       <span className={cn("mt-1 size-2 shrink-0 rounded-full", kindDot[n.kind] ?? "bg-accent")} aria-hidden />
                       <span className="min-w-0">
-                        <span className="block truncate text-[13px] font-semibold text-ink">{n.title}</span>
+                        <span className="block truncate text-ui font-semibold text-ink">{n.title}</span>
                         <span className="mt-0.5 block text-xs leading-snug text-ink-2 line-clamp-2">{n.body}</span>
                       </span>
                     </Link>
                   </li>
                 ))}
                 {items.length === 0 && (
-                  <li className="px-4 py-6 text-center text-[13px] text-ink-3">
+                  <li className="px-4 py-6 text-center text-ui text-ink-3">
                     Follow teams or players and match reminders, news and fresh AI reports land here.
                   </li>
                 )}
@@ -101,7 +101,7 @@ export function NotificationCenter() {
               <Link
                 to="/profile"
                 onClick={() => setOpen(false)}
-                className="block border-t border-line px-4 py-2.5 text-center font-mono text-[10.5px] uppercase tracking-wider text-ink-3 transition-colors hover:text-ink"
+                className="block border-t border-line px-4 py-2.5 text-center font-mono text-micro uppercase tracking-wider text-ink-3 transition-colors hover:text-ink"
               >
                 Notification preferences
               </Link>

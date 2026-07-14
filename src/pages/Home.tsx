@@ -48,7 +48,7 @@ export default function Home() {
             <h1 className="display text-2xl font-black leading-tight text-ink md:text-3xl">
               Not the scores. <span className="text-accent-ink">The reasons.</span>
             </h1>
-            <p className="mt-1.5 max-w-2xl text-[13.5px] leading-relaxed text-ink-2">
+            <p className="mt-1.5 max-w-2xl text-ui leading-relaxed text-ink-2">
               Every match, transfer and player on FootIQ carries a model's read on <em>why</em> — predictions, scouting and tactics in
               plain language. <span className="text-accent-ink">Emerald is measured fact</span>,{" "}
               <span className="text-iq-ink">amber is AI inference</span>.
@@ -57,14 +57,14 @@ export default function Home() {
           <div className="flex flex-wrap gap-2">
             <Link
               to="/predictions"
-              className="inline-flex items-center gap-1.5 rounded-full border border-iq/35 bg-iq-soft px-4 py-2 text-[12.5px] font-semibold text-iq-ink transition-colors hover:border-iq/60"
+              className="inline-flex items-center gap-1.5 rounded-full border border-iq/35 bg-iq-soft px-4 py-2 text-caption font-semibold text-iq-ink transition-colors hover:border-iq/60"
             >
               <Sparkles className="size-3.5" aria-hidden />
               Explore predictions
             </Link>
             <Link
               to="/scout"
-              className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-4 py-2 text-[12.5px] font-semibold text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
+              className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-4 py-2 text-caption font-semibold text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
             >
               Try AI Scout
             </Link>
@@ -76,18 +76,18 @@ export default function Home() {
       <div className="no-scrollbar -mx-4 overflow-hidden border-b border-line pb-3 md:-mx-6" aria-label="Breaking headlines">
         <div className="animate-ticker flex w-max gap-8 px-4">
           {news.map((n) => (
-            <Link key={n.id} to={`/news/${n.id}`} className="group flex shrink-0 items-center gap-2 text-[12.5px] text-ink-3 hover:text-ink">
+            <Link key={n.id} to={`/news/${n.id}`} className="group flex shrink-0 items-center gap-2 text-caption text-ink-3 hover:text-ink">
               <span className="size-1 rounded-full bg-accent" aria-hidden />
-              <span className="font-mono text-[10px] uppercase tracking-wider text-ink-3">{n.category}</span>
+              <span className="font-mono text-micro uppercase tracking-wider text-ink-3">{n.category}</span>
               <span className="max-w-[26rem] truncate group-hover:underline">{n.title}</span>
             </Link>
           ))}
           {/* second copy purely for the seamless marquee loop */}
           <div className="flex shrink-0 gap-8" aria-hidden>
             {news.map((n) => (
-              <span key={`dup-${n.id}`} className="flex shrink-0 items-center gap-2 text-[12.5px] text-ink-3">
+              <span key={`dup-${n.id}`} className="flex shrink-0 items-center gap-2 text-caption text-ink-3">
                 <span className="size-1 rounded-full bg-accent" />
-                <span className="font-mono text-[10px] uppercase tracking-wider text-ink-3">{n.category}</span>
+                <span className="font-mono text-micro uppercase tracking-wider text-ink-3">{n.category}</span>
                 <span className="max-w-[26rem] truncate">{n.title}</span>
               </span>
             ))}
@@ -108,8 +108,8 @@ export default function Home() {
         >
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="live">Live · {minute}'</Badge>
-            <span className="font-mono text-[11px] uppercase tracking-wider text-ink-3">{featured.competition} · {featured.venue}</span>
-            <span className="ml-auto hidden font-mono text-[11px] text-ink-3 md:block">{featured.headline}</span>
+            <span className="font-mono text-label uppercase tracking-wider text-ink-3">{featured.competition} · {featured.venue}</span>
+            <span className="ml-auto hidden font-mono text-label text-ink-3 md:block">{featured.headline}</span>
           </div>
 
           <div className="mt-6 grid items-center gap-6 lg:grid-cols-[1fr_auto_1fr]">
@@ -122,7 +122,7 @@ export default function Home() {
               </p>
               <button
                 onClick={() => navigate("/match/ars-liv")}
-                className="group mt-4 inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[13px] font-semibold text-[#04110c] transition-transform hover:scale-[1.03] active:scale-95"
+                className="group mt-4 inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-ui font-semibold text-[#04110c] transition-transform hover:scale-[1.03] active:scale-95"
               >
                 <Radio className="size-4" aria-hidden />
                 Open Match Center
@@ -146,7 +146,7 @@ export default function Home() {
 
       {/* live now */}
       <section aria-label="Live matches">
-        <SectionHeader eyebrow="Right now" title="Live Matches" action={<SeeAll to="/matches" />} />
+        <SectionHeader title="Live Matches" action={<SeeAll to="/matches" />} />
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {liveMatches.map((m) => (
             <MatchCard key={m.id} match={m} />
@@ -165,18 +165,18 @@ export default function Home() {
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
                     <Badge variant={n.category === "Rumour" ? "warn" : "neutral"}>{n.category}</Badge>
                     <Reliability score={n.reliability} />
-                    <span className="ml-auto font-mono text-[10.5px] text-ink-3">{agoFromMinutes(n.minutesAgo)}</span>
+                    <span className="ml-auto font-mono text-micro text-ink-3">{agoFromMinutes(n.minutesAgo)}</span>
                   </div>
-                  <h3 className="mt-2.5 text-[15.5px] font-bold leading-snug text-ink">{n.title}</h3>
+                  <h3 className="mt-2.5 text-prose font-bold leading-snug text-ink">{n.title}</h3>
                   <ul className="mt-2.5 space-y-1">
                     {n.aiSummary.slice(0, 2).map((s, i) => (
-                      <li key={i} className="flex gap-2 text-[13px] leading-relaxed text-ink-2">
+                      <li key={i} className="flex gap-2 text-ui leading-relaxed text-ink-2">
                         <span className="mt-[0.55em] size-1 shrink-0 rounded-full bg-iq" aria-hidden />
                         {s}
                       </li>
                     ))}
                   </ul>
-                  <p className="mt-2.5 font-mono text-[10.5px] uppercase tracking-wider text-accent-ink">Read in {n.readSeconds}s →</p>
+                  <p className="mt-2.5 font-mono text-micro uppercase tracking-wider text-accent-ink">Read in {n.readSeconds}s →</p>
                 </Card>
               ))}
             </div>
@@ -184,7 +184,7 @@ export default function Home() {
 
           {/* viral clips */}
           <section aria-label="Viral clips">
-            <SectionHeader eyebrow="Going viral" title="Clips" action={<SeeAll to="/highlights" />} />
+            <SectionHeader title="Clips" action={<SeeAll to="/highlights" />} />
             <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 md:-mx-6 md:px-6">
               {clips.slice(0, 6).map((c) => {
                 const team = getTeam(c.teamId);
@@ -205,7 +205,7 @@ export default function Home() {
                     </div>
                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-3 pt-8">
                       <p className="line-clamp-2 text-xs font-semibold leading-snug text-white">{c.title}</p>
-                      <p className="mt-1 font-mono text-[10px] text-white/70">{c.views} views</p>
+                      <p className="mt-1 font-mono text-micro text-white/70">{c.views} views</p>
                     </div>
                   </Link>
                 );
@@ -215,7 +215,7 @@ export default function Home() {
 
           {/* trending transfers */}
           <section aria-label="Trending transfers">
-            <SectionHeader eyebrow="Rumor mill" title="Trending Transfers" action={<SeeAll to="/transfers" />} />
+            <SectionHeader title="Trending Transfers" action={<SeeAll to="/transfers" />} />
             <div className="grid gap-3 md:grid-cols-2">
               {trendingTransfers.slice(0, 4).map((t) => {
                 const p = getPlayer(t.playerId);
@@ -224,8 +224,8 @@ export default function Home() {
                     <div className="flex items-center gap-3">
                       <Avatar name={p.name} playerId={p.id} size={40} ringColor={getTeam(t.toId).colors[0]} />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-[14px] font-bold text-ink">{p.name}</p>
-                        <p className="mt-0.5 flex items-center gap-1.5 text-[11.5px] text-ink-3">
+                        <p className="truncate text-body font-bold text-ink">{p.name}</p>
+                        <p className="mt-0.5 flex items-center gap-1.5 text-label text-ink-3">
                           {getTeam(t.fromId).tla}
                           <ArrowRight className="size-3" aria-hidden />
                           {getTeam(t.toId).tla}
@@ -234,7 +234,7 @@ export default function Home() {
                       </div>
                       <div className="text-right">
                         <p className={cn("tabular font-display text-xl font-bold", t.probability >= 40 ? "text-accent-ink" : "text-ink")}>{t.probability}%</p>
-                        <p className={cn("font-mono text-[9.5px] uppercase tracking-wider", t.trend === "rising" ? "text-accent-ink" : t.trend === "cooling" ? "text-bad" : "text-ink-3")}>
+                        <p className={cn("font-mono text-micro uppercase tracking-wider", t.trend === "rising" ? "text-accent-ink" : t.trend === "cooling" ? "text-bad" : "text-ink-3")}>
                           {t.trend}
                         </p>
                       </div>
@@ -251,9 +251,9 @@ export default function Home() {
           <section aria-label="League table">
             <SectionHeader eyebrow="Premier League" title="Table" />
             <Card className="overflow-hidden">
-              <table className="w-full text-[13px]">
+              <table className="w-full text-ui">
                 <thead>
-                  <tr className="border-b border-line text-left font-mono text-[10px] uppercase tracking-wider text-ink-3">
+                  <tr className="border-b border-line text-left font-mono text-micro uppercase tracking-wider text-ink-3">
                     <th scope="col" className="py-2.5 pl-4 font-medium">#</th>
                     <th scope="col" className="font-medium">Club</th>
                     <th scope="col" className="text-right font-medium">GD</th>
@@ -283,7 +283,7 @@ export default function Home() {
                         </span>
                       </td>
                       <td className="tabular text-right font-mono text-xs text-ink-2">{t.gf - t.ga > 0 ? "+" : ""}{t.gf - t.ga}</td>
-                      <td className="tabular py-2.5 pr-4 text-right font-mono text-[13px] font-bold text-ink">{t.points}</td>
+                      <td className="tabular py-2.5 pr-4 text-right font-mono text-ui font-bold text-ink">{t.points}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -292,7 +292,7 @@ export default function Home() {
           </section>
 
           <section aria-label="Upcoming fixtures">
-            <SectionHeader eyebrow="Next up" title="Fixtures" action={<SeeAll to="/predictions" />} />
+            <SectionHeader title="Fixtures" action={<SeeAll to="/predictions" />} />
             <div className="space-y-2.5">
               {upcomingMatches.slice(0, 4).map((m) => (
                 <MatchCard key={m.id} match={m} dense />
@@ -301,9 +301,9 @@ export default function Home() {
           </section>
 
           <section aria-label="Fan sentiment">
-            <SectionHeader eyebrow="The stands" title="Fan Pulse" />
+            <SectionHeader title="Fan Pulse" />
             <Card className="p-4">
-              <p className="text-[13px] font-semibold text-ink">Who wins the title from here?</p>
+              <p className="text-ui font-semibold text-ink">Who wins the title from here?</p>
               <div className="mt-3 space-y-2.5">
                 {[
                   { team: "ars", pct: 44 },
@@ -324,12 +324,12 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-              <p className="mt-3 border-t border-line pt-2.5 font-mono text-[10.5px] text-ink-3">128,441 votes · updated live</p>
+              <p className="mt-3 border-t border-line pt-2.5 font-mono text-micro text-ink-3">128,441 votes · updated live</p>
             </Card>
           </section>
 
           <section aria-label="AI recommendations">
-            <SectionHeader eyebrow="For you" title="FootIQ Picks" />
+            <SectionHeader title="FootIQ Picks" />
             <div className="space-y-3">
               <IQInsight compact title="Watch next">
                 <span className="font-semibold">Bayern vs PSG</span> is 31 minutes into the tactical chess match of the round — Europe's two
@@ -347,7 +347,7 @@ export default function Home() {
           </section>
 
           <section aria-label="Form watch">
-            <SectionHeader eyebrow="Hot streaks" title="Form Watch" />
+            <SectionHeader title="Form Watch" />
             <Card className="divide-y divide-line">
               {["yamal", "dembele", "kane"].map((id) => {
                 const p = getPlayer(id);
@@ -355,8 +355,8 @@ export default function Home() {
                   <Link key={id} to={`/player/${id}`} className="flex items-center gap-3 p-3.5 transition-colors hover:bg-surface-2">
                     <Avatar name={p.name} playerId={p.id} size={36} />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[13.5px] font-semibold text-ink">{p.name}</p>
-                      <p className="text-[11px] text-ink-3">{getTeam(p.teamId).short} · rating {p.stats.rating.toFixed(2)}</p>
+                      <p className="truncate text-ui font-semibold text-ink">{p.name}</p>
+                      <p className="text-label text-ink-3">{getTeam(p.teamId).short} · rating {p.stats.rating.toFixed(2)}</p>
                     </div>
                     <Sparkline data={p.form} width={72} height={24} />
                     <TrendingUp className="size-4 text-accent-ink" aria-hidden />
@@ -374,12 +374,12 @@ export default function Home() {
           <div className="mx-auto max-w-xl text-center">
             <p className="eyebrow mb-2">Public beta · Live data coming</p>
             <h2 className="display text-2xl font-black text-ink md:text-3xl">Be first when the real feeds switch on</h2>
-            <p className="mt-2.5 text-[14px] leading-relaxed text-ink-2">
+            <p className="mt-2.5 text-body leading-relaxed text-ink-2">
               The beta runs on demo data so you can explore everything today. Join the waitlist and we'll email you exactly once — when
               live matches, live models and live probabilities arrive.
             </p>
             <WaitlistForm className="mx-auto mt-5 max-w-md text-left" />
-            <p className="mt-3 font-mono text-[10.5px] uppercase tracking-wider text-ink-3">No spam · one email · stored on your device during beta</p>
+            <p className="mt-3 font-mono text-micro uppercase tracking-wider text-ink-3">No spam · one email · stored on your device during beta</p>
           </div>
         </div>
       </section>
@@ -389,12 +389,12 @@ export default function Home() {
         <div className="flex flex-col items-center gap-3 text-center">
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
             {legalEntries.map((l) => (
-              <Link key={l.to} to={l.to} className="font-mono text-[10.5px] uppercase tracking-wider text-ink-3 transition-colors hover:text-ink">
+              <Link key={l.to} to={l.to} className="font-mono text-micro uppercase tracking-wider text-ink-3 transition-colors hover:text-ink">
                 {l.label}
               </Link>
             ))}
           </div>
-          <p className="max-w-2xl text-[11.5px] leading-relaxed text-ink-3">
+          <p className="max-w-2xl text-label leading-relaxed text-ink-3">
             FootIQ is a demo platform in public beta. Insights are AI-generated, predictions are informational only — never betting advice —
             and statistics may be simulated. © 2026 FootIQ.
           </p>
@@ -416,7 +416,7 @@ function TeamSide({ team, align }: { team: ReturnType<typeof getTeam>; align: "l
         <div className={cn("mt-1.5 flex items-center gap-2", align === "right" && "lg:justify-end")}>
           <FormPills form={team.form} />
         </div>
-        <p className="mt-1 font-mono text-[11px] text-ink-3">{team.manager}</p>
+        <p className="mt-1 font-mono text-label text-ink-3">{team.manager}</p>
       </div>
     </Link>
   );
@@ -424,7 +424,7 @@ function TeamSide({ team, align }: { team: ReturnType<typeof getTeam>; align: "l
 
 function SeeAll({ to }: { to: string }) {
   return (
-    <Link to={to} className="group inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-wider text-accent-ink hover:underline">
+    <Link to={to} className="group inline-flex items-center gap-1 font-mono text-label uppercase tracking-wider text-accent-ink hover:underline">
       See all
       <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
     </Link>

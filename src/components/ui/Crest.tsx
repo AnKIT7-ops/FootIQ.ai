@@ -22,7 +22,7 @@ export function Crest({ teamId, size = 36, className }: { teamId: string; size?:
         loading="lazy"
         draggable={false}
         onError={() => setFailed(true)}
-        className={cn("shrink-0 select-none object-contain drop-shadow-sm", className)}
+        className={cn("shrink-0 select-none object-contain", className)}
         style={{ width: size, height: size }}
       />
     );
@@ -35,7 +35,7 @@ export function Crest({ teamId, size = 36, className }: { teamId: string; size?:
       width={size}
       height={size}
       viewBox="0 0 40 44"
-      className={cn("shrink-0 drop-shadow-sm", className)}
+      className={cn("shrink-0", className)}
       role="img"
       aria-label={`${team.name} crest`}
     >

@@ -28,7 +28,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium tracking-wide",
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-label font-medium tracking-wide",
         mono && "font-mono uppercase",
         styles[variant],
         className,
@@ -50,7 +50,7 @@ export function FormPills({ form, className }: { form: string; className?: strin
         <span
           key={i}
           className={cn(
-            "inline-flex size-5 items-center justify-center rounded-md font-mono text-[10px] font-bold",
+            "inline-flex size-5 items-center justify-center rounded-md font-mono text-micro font-bold",
             r === "W" && "bg-accent-soft text-accent-ink",
             r === "D" && "bg-surface-3 text-ink-2",
             r === "L" && "bg-bad/10 text-bad",
@@ -79,7 +79,7 @@ export function Reliability({ score, className }: { score: number; className?: s
           />
         ))}
       </span>
-      <span className="font-mono text-[10px] uppercase tracking-wider text-ink-3">{label}</span>
+      <span className="font-mono text-micro uppercase tracking-wider text-ink-3">{label}</span>
     </span>
   );
 }

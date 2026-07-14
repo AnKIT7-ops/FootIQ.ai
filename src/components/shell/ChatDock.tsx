@@ -90,8 +90,8 @@ export function ChatDock() {
           >
             <div className="flex items-center gap-2 border-b border-line px-4 py-3">
               <Sparkles className="size-4 text-iq-ink" aria-hidden />
-              <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-iq-ink">FootIQ Concierge</p>
-              <span className="ml-auto font-mono text-[9.5px] uppercase tracking-wider text-ink-3">model inference</span>
+              <p className="font-mono text-label font-semibold uppercase tracking-[0.14em] text-iq-ink">FootIQ Concierge</p>
+              <span className="ml-auto font-mono text-micro uppercase tracking-wider text-ink-3">model inference</span>
             </div>
 
             <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto p-4" aria-live="polite">
@@ -99,7 +99,7 @@ export function ChatDock() {
                 <div key={i} className={cn("flex", m.from === "you" ? "justify-end" : "justify-start")}>
                   <div
                     className={cn(
-                      "max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed",
+                      "max-w-[85%] rounded-2xl px-3.5 py-2.5 text-ui leading-relaxed",
                       m.from === "you" ? "rounded-br-md bg-accent-soft text-ink" : "rounded-bl-md border border-iq/20 bg-iq-soft text-ink",
                     )}
                   >
@@ -149,7 +149,7 @@ export function ChatDock() {
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 placeholder="Ask about anything in football…"
-                className="h-10 flex-1 rounded-xl border border-line bg-surface px-3.5 text-[13px] text-ink outline-none placeholder:text-ink-3 focus:border-iq/40"
+                className="h-10 flex-1 rounded-xl border border-line bg-surface px-3.5 text-ui text-ink outline-none placeholder:text-ink-3 focus:border-iq/40"
                 aria-label="Message the assistant"
               />
               <button

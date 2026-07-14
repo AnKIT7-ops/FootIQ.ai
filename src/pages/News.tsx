@@ -32,13 +32,13 @@ export default function News() {
           <div className="flex flex-wrap items-center gap-3">
             <Badge variant={lead.category === "Rumour" ? "warn" : "accent"}>{lead.category}</Badge>
             <Reliability score={lead.reliability} />
-            <span className="ml-auto font-mono text-[11px] text-ink-3">{agoFromMinutes(lead.minutesAgo)} · {lead.source}</span>
+            <span className="ml-auto font-mono text-label text-ink-3">{agoFromMinutes(lead.minutesAgo)} · {lead.source}</span>
           </div>
           <h2 className="mt-3 max-w-3xl text-xl font-bold leading-snug text-ink md:text-2xl">{lead.title}</h2>
           <div className="mt-4 grid gap-4 md:grid-cols-[1fr_auto]">
             <ul className="max-w-2xl space-y-1.5">
               {lead.aiSummary.map((s, i) => (
-                <li key={i} className="flex gap-2 text-[13.5px] leading-relaxed text-ink-2">
+                <li key={i} className="flex gap-2 text-ui leading-relaxed text-ink-2">
                   <span className="mt-[0.55em] size-1 shrink-0 rounded-full bg-iq" aria-hidden />
                   {s}
                 </li>
@@ -50,7 +50,7 @@ export default function News() {
               ))}
             </div>
           </div>
-          <p className="mt-4 font-mono text-[11px] uppercase tracking-wider text-accent-ink">Read in {lead.readSeconds}s →</p>
+          <p className="mt-4 font-mono text-label uppercase tracking-wider text-accent-ink">Read in {lead.readSeconds}s →</p>
         </Card>
       )}
 
@@ -61,15 +61,15 @@ export default function News() {
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
                 <Badge variant={n.category === "Rumour" ? "warn" : "neutral"}>{n.category}</Badge>
                 <Reliability score={n.reliability} />
-                <span className="ml-auto font-mono text-[10.5px] text-ink-3">{agoFromMinutes(n.minutesAgo)}</span>
+                <span className="ml-auto font-mono text-micro text-ink-3">{agoFromMinutes(n.minutesAgo)}</span>
               </div>
-              <h3 className="mt-2.5 text-[15px] font-bold leading-snug text-ink">{n.title}</h3>
-              <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-ink-2">{n.aiSummary[0]}</p>
+              <h3 className="mt-2.5 text-prose font-bold leading-snug text-ink">{n.title}</h3>
+              <p className="mt-2 line-clamp-2 text-ui leading-relaxed text-ink-2">{n.aiSummary[0]}</p>
               <div className="mt-3 flex items-center gap-2">
                 {n.teamIds.slice(0, 3).map((t) => (
                   <Crest key={t} teamId={t} size={20} />
                 ))}
-                <span className="ml-auto font-mono text-[10.5px] uppercase tracking-wider text-accent-ink">{n.readSeconds}s read →</span>
+                <span className="ml-auto font-mono text-micro uppercase tracking-wider text-accent-ink">{n.readSeconds}s read →</span>
               </div>
             </Card>
           ))}
@@ -83,7 +83,7 @@ export default function News() {
           </IQInsight>
           <Card className="p-4">
             <p className="eyebrow mb-3">How reliability works</p>
-            <ul className="space-y-2.5 text-[12.5px] leading-relaxed text-ink-2">
+            <ul className="space-y-2.5 text-caption leading-relaxed text-ink-2">
               <li className="flex gap-2.5"><Reliability score={5} className="mt-0.5 shrink-0" /> Verified: multi-source or first-party data.</li>
               <li className="flex gap-2.5"><Reliability score={3} className="mt-0.5 shrink-0" /> Reliable: strong outlet, single source.</li>
               <li className="flex gap-2.5"><Reliability score={1} className="mt-0.5 shrink-0" /> Speculative: uncorroborated — labeled, never hidden.</li>

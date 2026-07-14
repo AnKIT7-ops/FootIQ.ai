@@ -43,7 +43,7 @@ export default function Contact() {
           <Mail className="size-5 text-accent-ink" aria-hidden />
           {CONTACT_EMAIL}
         </a>
-        <p className="mt-2 text-[13px] leading-relaxed text-ink-2">
+        <p className="mt-2 text-ui leading-relaxed text-ink-2">
           We read everything. During the beta, replies typically land within a few days.
         </p>
       </Card>
@@ -52,8 +52,8 @@ export default function Contact() {
         {channels.map((c) => (
           <Card key={c.title} className="p-4">
             <c.icon className="size-4.5 text-accent-ink" aria-hidden />
-            <h2 className="mt-2 text-[14px] font-bold text-ink">{c.title}</h2>
-            <p className="mt-1 text-[12.5px] leading-relaxed text-ink-2">{c.body}</p>
+            <h2 className="mt-2 text-body font-bold text-ink">{c.title}</h2>
+            <p className="mt-1 text-caption leading-relaxed text-ink-2">{c.body}</p>
           </Card>
         ))}
       </div>

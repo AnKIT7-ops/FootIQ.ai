@@ -1,0 +1,531 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-14T14:55:30.721Z",
+  "title": "Design System: FootIQ",
+  "extensions": {
+    "colorMeta": {
+      "pitch-emerald": {
+        "role": "primary",
+        "displayName": "Pitch Emerald",
+        "canonical": "#10b981",
+        "light": "#059669",
+        "purpose": "Measured fact. Live scores, real stats, primary actions, active nav.",
+        "tonalRamp": [
+          "#022c22",
+          "#064e3b",
+          "#065f46",
+          "#047857",
+          "#059669",
+          "#10b981",
+          "#34d399",
+          "#a7f3d0"
+        ]
+      },
+      "signal-amber": {
+        "role": "secondary",
+        "displayName": "Signal Amber",
+        "canonical": "#fbbf24",
+        "light": "#d97706",
+        "purpose": "Model inference. Every AI block, tag, prediction and confidence score.",
+        "tonalRamp": [
+          "#451a03",
+          "#78350f",
+          "#92400e",
+          "#b45309",
+          "#d97706",
+          "#f59e0b",
+          "#fbbf24",
+          "#fde68a"
+        ]
+      },
+      "live-emerald": {
+        "role": "primary",
+        "displayName": "Live Emerald",
+        "canonical": "#34d399",
+        "light": "#059669",
+        "purpose": "The pulsing live-match dot only.",
+        "tonalRamp": [
+          "#022c22",
+          "#064e3b",
+          "#065f46",
+          "#047857",
+          "#059669",
+          "#10b981",
+          "#34d399",
+          "#6ee7b7"
+        ]
+      },
+      "bad-rose": {
+        "role": "tertiary",
+        "displayName": "Bad Rose",
+        "canonical": "#fb7185",
+        "light": "#e11d48",
+        "purpose": "Losses, errors, negative deltas. Never decorative.",
+        "tonalRamp": [
+          "#4c0519",
+          "#881337",
+          "#9f1239",
+          "#be123c",
+          "#e11d48",
+          "#f43f5e",
+          "#fb7185",
+          "#fecdd3"
+        ]
+      },
+      "night-bg": {
+        "role": "neutral",
+        "displayName": "Night",
+        "canonical": "#0a0e16",
+        "light": "#f2f3ef",
+        "purpose": "The page. The floodlit stage everything else sits on.",
+        "tonalRamp": [
+          "#060910",
+          "#0a0e16",
+          "#10151e",
+          "#161d29",
+          "#1d2533",
+          "#5f6b7e",
+          "#9aa7ba",
+          "#eef2f8"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "canonical": "#10151e",
+        "light": "#fdfdfc",
+        "purpose": "Resting cards and panels. Step 1 of the tonal ladder that replaces shadows.",
+        "tonalRamp": [
+          "#060910",
+          "#0a0e16",
+          "#10151e",
+          "#161d29",
+          "#1d2533",
+          "#5f6b7e",
+          "#9aa7ba",
+          "#eef2f8"
+        ]
+      },
+      "surface-2": {
+        "role": "neutral",
+        "displayName": "Surface 2",
+        "canonical": "#161d29",
+        "light": "#f5f6f2",
+        "purpose": "Toolbars, tab tracks, hover fills. Step 2 of the ladder.",
+        "tonalRamp": [
+          "#060910",
+          "#0a0e16",
+          "#10151e",
+          "#161d29",
+          "#1d2533",
+          "#5f6b7e",
+          "#9aa7ba",
+          "#eef2f8"
+        ]
+      },
+      "surface-3": {
+        "role": "neutral",
+        "displayName": "Surface 3",
+        "canonical": "#1d2533",
+        "light": "#eceee8",
+        "purpose": "Selected tabs, active nav, neutral chips. Top of the ladder.",
+        "tonalRamp": [
+          "#060910",
+          "#0a0e16",
+          "#10151e",
+          "#161d29",
+          "#1d2533",
+          "#5f6b7e",
+          "#9aa7ba",
+          "#eef2f8"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Chalk Ink",
+        "canonical": "#eef2f8",
+        "light": "#131a26",
+        "purpose": "Body text and headings.",
+        "tonalRamp": [
+          "#131a26",
+          "#1d2533",
+          "#4d5a6e",
+          "#5f6b7e",
+          "#8592a5",
+          "#9aa7ba",
+          "#eef2f8",
+          "#ffffff"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Ink 2",
+        "canonical": "#9aa7ba",
+        "light": "#4d5a6e",
+        "purpose": "Secondary text, ghost-button labels.",
+        "tonalRamp": [
+          "#131a26",
+          "#1d2533",
+          "#4d5a6e",
+          "#5f6b7e",
+          "#8592a5",
+          "#9aa7ba",
+          "#c9d2de",
+          "#eef2f8"
+        ]
+      },
+      "ink-3": {
+        "role": "neutral",
+        "displayName": "Ink 3",
+        "canonical": "#7c8ca5",
+        "light": "#626c7a",
+        "purpose": "Mono labels, eyebrows, disabled states. Never prose.",
+        "tonalRamp": [
+          "#131a26",
+          "#1d2533",
+          "#4d5a6e",
+          "#5f6b7e",
+          "#8592a5",
+          "#9aa7ba",
+          "#c9d2de",
+          "#eef2f8"
+        ]
+      },
+      "pitch-turf": {
+        "role": "tertiary",
+        "displayName": "Pitch Turf",
+        "canonical": "#0d1a17",
+        "light": "#e4f0e6",
+        "purpose": "Pitch, heatmap, shot-map and pass-map canvases.",
+        "tonalRamp": [
+          "#04110c",
+          "#0d1a17",
+          "#0f2a22",
+          "#14453a",
+          "#1e6b57",
+          "#2f9c7e",
+          "#5eead4",
+          "#d1faf0"
+        ]
+      },
+      "chart-2": {
+        "role": "tertiary",
+        "displayName": "Broadcast Sky",
+        "canonical": "#38bdf8",
+        "light": "#0284c7",
+        "purpose": "Categorical chart series 2. Data viz only.",
+        "tonalRamp": [
+          "#082f49",
+          "#0c4a6e",
+          "#075985",
+          "#0369a1",
+          "#0284c7",
+          "#0ea5e9",
+          "#38bdf8",
+          "#bae6fd"
+        ]
+      },
+      "chart-4": {
+        "role": "tertiary",
+        "displayName": "Analyst Violet",
+        "canonical": "#a78bfa",
+        "light": "#8b5cf6",
+        "purpose": "Categorical chart series 4. Data viz only — never UI chrome.",
+        "tonalRamp": [
+          "#2e1065",
+          "#4c1d95",
+          "#5b21b6",
+          "#6d28d9",
+          "#7c3aed",
+          "#8b5cf6",
+          "#a78bfa",
+          "#ddd6fe"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display — Archivo Expanded",
+        "purpose": "Page and section headings only. Uppercase, width axis 118. Never in buttons, labels, inputs, table cells or charts."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Card and panel titles."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Row headings, player names, list leads."
+      },
+      "body": {
+        "displayName": "Body — Instrument Sans",
+        "purpose": "All prose. Long-form capped at 65–75ch."
+      },
+      "label": {
+        "displayName": "Label — Plex Mono eyebrow",
+        "purpose": "Metadata and badge text. Labels a datum; never used as section scaffolding."
+      },
+      "data": {
+        "displayName": "Data — Plex Mono tabular",
+        "purpose": "Every comparable number: score, rating, xG, confidence, fee."
+      }
+    },
+    "shadows": [
+      {
+        "name": "none",
+        "value": "none",
+        "purpose": "In-page elements are flat. Depth is tonal (surface → surface-2 → surface-3) plus 1px hairlines. Box-shadows are forbidden on cards, panels, tabs, crests and nav."
+      },
+      {
+        "name": "float",
+        "value": "shadow-2xl (xl for chart tooltips)",
+        "purpose": "Only for layers that genuinely float OVER the page and can overlap anything: command palette, chat dock, notification popover, mobile nav, onboarding panel, chart tooltip."
+      },
+      {
+        "name": "glow-accent",
+        "value": "0 0 24px rgba(16, 185, 129, 0.28)",
+        "purpose": "Lighting, not elevation. Makes a live emerald element read as lit on a night surface. Sparing."
+      },
+      {
+        "name": "glow-iq",
+        "value": "0 0 24px rgba(251, 191, 36, 0.2)",
+        "purpose": "Same, for the amber AI layer."
+      },
+      {
+        "name": "pulse-live",
+        "value": "0 0 0 0 rgba(52, 211, 153, 0.45) → 0 0 0 7px rgba(52, 211, 153, 0)",
+        "purpose": "The 2.2s expanding ring on the live-match dot."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-transition",
+        "value": "150–250ms ease-out",
+        "purpose": "Default for color, border and opacity state changes."
+      },
+      {
+        "name": "spring-card",
+        "value": "spring(stiffness 420, damping 28)",
+        "purpose": "Interactive card hover lift (-3px) and press (scale .985)."
+      },
+      {
+        "name": "spring-pill",
+        "value": "spring(stiffness 500, damping 38)",
+        "purpose": "Shared-layout pill sliding between tabs (layoutId)."
+      },
+      {
+        "name": "spring-nav",
+        "value": "spring(stiffness 480, damping 38)",
+        "purpose": "Shared-layout fill sliding between sidebar items."
+      },
+      {
+        "name": "press",
+        "value": "scale(1.03) hover / scale(0.95) active, transform-only",
+        "purpose": "Button feedback. Transform-only so nothing reflows."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "all animations and transitions clamped to 0.01ms",
+        "purpose": "Global prefers-reduced-motion override. Non-negotiable."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ],
+    "zIndex": [
+      {
+        "name": "z-10",
+        "purpose": "In-card overlays"
+      },
+      {
+        "name": "z-20",
+        "purpose": "Chart tooltips, tactical-board tokens"
+      },
+      {
+        "name": "z-30",
+        "purpose": "Sticky chrome"
+      },
+      {
+        "name": "z-40",
+        "purpose": "Docked panels (chat dock, mobile nav)"
+      },
+      {
+        "name": "z-50",
+        "purpose": "Modals, command palette"
+      },
+      {
+        "name": "z-skip",
+        "purpose": "Skip link — must clear everything (60)"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single most important action on a screen. Emerald pill, near-black text.",
+      "html": "<button class=\"ds-btn-primary\">View match centre</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 8px; background: var(--accent, #10b981); color: #04110c; font-family: 'Instrument Sans Variable', system-ui, sans-serif; font-size: 13px; font-weight: 600; padding: 10px 20px; border: none; border-radius: 999px; cursor: pointer; transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-primary:hover { transform: scale(1.03); } .ds-btn-primary:active { transform: scale(0.95); } .ds-btn-primary:focus-visible { outline: 2px solid var(--accent, #10b981); outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary actions and toolbar controls. Transparent until touched.",
+      "html": "<button class=\"ds-btn-ghost\">Compare</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; gap: 6px; background: transparent; color: var(--ink-2, #9aa7ba); font-family: 'Instrument Sans Variable', system-ui, sans-serif; font-size: 13px; font-weight: 500; padding: 8px 14px; border: none; border-radius: 999px; cursor: pointer; transition: background 180ms ease-out, color 180ms ease-out; } .ds-btn-ghost:hover { background: var(--surface-2, #161d29); color: var(--ink, #eef2f8); } .ds-btn-ghost:focus-visible { outline: 2px solid var(--accent, #10b981); outline-offset: 2px; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "The resting container. Flat surface, hairline border, 20px radius. Interactive variants lift on hover.",
+      "html": "<div class=\"ds-card\" role=\"button\" tabindex=\"0\"><p class=\"ds-card-eyebrow\">PREMIER LEAGUE · 67'</p><p class=\"ds-card-title\">Arsenal 2 — 1 Liverpool</p></div>",
+      "css": ".ds-card { background: var(--surface, #10151e); border: 1px solid var(--line, rgba(226,236,248,0.08)); border-radius: 20px; padding: 16px; cursor: pointer; transition: border-color 200ms ease-out, transform 200ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-card:hover { border-color: var(--line-strong, rgba(226,236,248,0.16)); transform: translateY(-3px); } .ds-card:active { transform: scale(0.985); } .ds-card:focus-visible { outline: 2px solid var(--accent, #10b981); outline-offset: 2px; } .ds-card-eyebrow { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3, #5f6b7e); margin: 0 0 4px; } .ds-card-title { font-family: 'Instrument Sans Variable', system-ui, sans-serif; font-size: 15px; font-weight: 600; color: var(--ink, #eef2f8); margin: 0; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Search Input",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Search and query fields. Border shifts to emerald on focus — amber instead when the field talks to a model.",
+      "html": "<input class=\"ds-input-search\" type=\"search\" placeholder=\"Ask Scout anything — “left-footed wingers under 21”…\" aria-label=\"Search\" />",
+      "css": ".ds-input-search { width: 100%; height: 48px; background: var(--surface, #10151e); color: var(--ink, #eef2f8); font-family: 'Instrument Sans Variable', system-ui, sans-serif; font-size: 14px; padding: 12px 16px; border: 1px solid var(--line, rgba(226,236,248,0.08)); border-radius: 16px; outline: none; transition: border-color 180ms ease-out; } .ds-input-search::placeholder { color: var(--ink-3, #5f6b7e); } .ds-input-search:focus { border-color: var(--accent, #10b981); }"
+    },
+    {
+      "name": "Tabs",
+      "kind": "nav",
+      "refersTo": "tab-active",
+      "description": "Pill segmented control on a tonal track. Active pill animates between tabs; full arrow-key navigation.",
+      "html": "<div class=\"ds-tabs\" role=\"tablist\"><button class=\"ds-tab ds-tab-active\" role=\"tab\" aria-selected=\"true\">Overview</button><button class=\"ds-tab\" role=\"tab\" aria-selected=\"false\">Stats</button><button class=\"ds-tab\" role=\"tab\" aria-selected=\"false\">Tactics</button></div>",
+      "css": ".ds-tabs { display: inline-flex; align-items: center; gap: 4px; background: var(--surface-2, #161d29); border: 1px solid var(--line, rgba(226,236,248,0.08)); border-radius: 999px; padding: 4px; } .ds-tab { background: transparent; color: var(--ink-3, #5f6b7e); font-family: 'Instrument Sans Variable', system-ui, sans-serif; font-size: 13px; font-weight: 500; padding: 6px 14px; border: none; border-radius: 999px; cursor: pointer; transition: color 180ms ease-out, background 180ms ease-out; } .ds-tab:hover { color: var(--ink-2, #9aa7ba); } .ds-tab-active { background: var(--surface-3, #1d2533); color: var(--ink, #eef2f8); } .ds-tab:focus-visible { outline: 2px solid var(--accent, #10b981); outline-offset: 2px; }"
+    },
+    {
+      "name": "Fact Badge",
+      "kind": "chip",
+      "refersTo": "badge-fact",
+      "description": "Emerald = measured. The live variant carries a pulsing dot.",
+      "html": "<span class=\"ds-badge-fact\"><span class=\"ds-badge-dot\" aria-hidden=\"true\"></span>LIVE 67'</span>",
+      "css": ".ds-badge-fact { display: inline-flex; align-items: center; gap: 6px; background: var(--accent-soft, rgba(16,185,129,0.12)); color: var(--accent-ink, #5eead4); font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 10px; border-radius: 999px; } .ds-badge-dot { width: 6px; height: 6px; border-radius: 999px; background: var(--live, #34d399); animation: ds-pulse-live 2.2s ease-in-out infinite; } @keyframes ds-pulse-live { 0%, 100% { box-shadow: 0 0 0 0 rgba(52,211,153,0.45); } 55% { box-shadow: 0 0 0 7px rgba(52,211,153,0); } } @media (prefers-reduced-motion: reduce) { .ds-badge-dot { animation: none; } }"
+    },
+    {
+      "name": "IQ Tag",
+      "kind": "chip",
+      "refersTo": "badge-iq",
+      "description": "Amber = inferred. Marks any single value as model-derived.",
+      "html": "<span class=\"ds-badge-iq\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z\"/></svg>68% confidence</span>",
+      "css": ".ds-badge-iq { display: inline-flex; align-items: center; gap: 4px; background: var(--iq-soft, rgba(251,191,36,0.1)); color: var(--iq-ink, #fcd34d); font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10.5px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; }"
+    },
+    {
+      "name": "IQ Insight",
+      "kind": "custom",
+      "refersTo": "iq-insight",
+      "description": "Signature component. Every AI-inferred statement in FootIQ renders inside one of these. The single sanctioned decorative blur in the system.",
+      "html": "<div class=\"ds-iq\"><span class=\"ds-iq-orb\" aria-hidden=\"true\"></span><p class=\"ds-iq-label\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z\"/></svg>FootIQ Insight</p><p class=\"ds-iq-body\">Arsenal press 4.2m higher than their season average, and Liverpool have conceded 61% of their chances against high blocks. Expect the second goal inside 20 minutes.</p></div>",
+      "css": ".ds-iq { position: relative; overflow: hidden; background: var(--iq-soft, rgba(251,191,36,0.1)); border: 1px solid rgba(251,191,36,0.25); border-radius: 16px; padding: 16px; } .ds-iq-orb { position: absolute; top: -48px; right: -40px; width: 144px; height: 144px; border-radius: 999px; background: var(--iq, #fbbf24); opacity: 0.25; filter: blur(40px); pointer-events: none; } .ds-iq-label { position: relative; display: flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10.5px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--iq-ink, #fcd34d); margin: 0 0 6px; } .ds-iq-body { position: relative; font-family: 'Instrument Sans Variable', system-ui, sans-serif; font-size: 14px; line-height: 1.6; color: var(--ink, #eef2f8); margin: 0; }"
+    },
+    {
+      "name": "Sidebar Nav Item",
+      "kind": "nav",
+      "refersTo": "sidebar-nav-active",
+      "description": "Active item takes a tonal fill, an emerald icon and a 2px emerald rail. The fill slides between items on a spring.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item ds-nav-active\" href=\"#\"><span class=\"ds-nav-rail\" aria-hidden=\"true\"></span><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20\"/></svg>Match Centre</a><a class=\"ds-nav-item\" href=\"#\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"8\"/><path d=\"m21 21-4.3-4.3\"/></svg>AI Scout</a></nav>",
+      "css": ".ds-nav { display: flex; flex-direction: column; gap: 2px; width: 220px; } .ds-nav-item { position: relative; display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 12px; font-family: 'Instrument Sans Variable', system-ui, sans-serif; font-size: 13.5px; font-weight: 500; color: var(--ink-3, #5f6b7e); text-decoration: none; transition: background 180ms ease-out, color 180ms ease-out; } .ds-nav-item:hover { background: var(--surface-2, #161d29); color: var(--ink-2, #9aa7ba); } .ds-nav-active { background: var(--surface-3, #1d2533); color: var(--ink, #eef2f8); } .ds-nav-active svg { color: var(--accent-ink, #5eead4); } .ds-nav-rail { position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 2px; height: 16px; border-radius: 999px; background: var(--accent, #10b981); } .ds-nav-item:focus-visible { outline: 2px solid var(--accent, #10b981); outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Floodlit Instrument",
+    "overview": "A precision tool used under stadium lights. The surfaces are deep indigo night (#0a0e16), the type is chalk-white, and the only colors that carry meaning are the two that state the product's integrity: emerald for what was measured, amber for what was inferred. Nothing else is allowed to be loud. The atmosphere is broadcast-night; the behavior is Linear — keyboard-first, dense, chrome that gets out of the way. The football is the drama, so the interface refuses to compete with it.\n\nDensity is a feature. The audience is fluent — tactics nerds who already watch the match and can spot a lazy number — so a screen full of tabular figures is not clutter, it is the point. What must never happen is decoration: a glow that means nothing, a gradient that flatters nothing, a card that exists because there was space. Every element either reports a fact, admits an inference, or gets out of the way.\n\nThis system explicitly rejects betting sites, generic AI SaaS, legacy scores sites, and fantasy hype content. If a screen could be mistaken for any of them, it is wrong regardless of how well it renders.",
+    "keyCharacteristics": [
+      "Dark by default (#0a0e16); light theme is a full peer, not an afterthought.",
+      "Two semantic accents and no third. Emerald = fact. Amber = inference.",
+      "Flat surfaces, tonal layering, hairline borders. No shadows.",
+      "Mono for every number; tabular figures so columns never dance.",
+      "Motion is state, never showmanship. 150–250 ms, spring on touch."
+    ],
+    "rules": [
+      {
+        "name": "The Two-Signal Rule",
+        "body": "Emerald and amber are the only colors permitted to carry meaning. If a new color is needed to make a screen work, the screen is wrong. Anything not fact and not inference is a neutral.",
+        "section": "colors"
+      },
+      {
+        "name": "The Honesty Rule",
+        "body": "Amber may never dress a measured number, and emerald may never dress a model output. A single violation costs more trust than a hundred polished screens buy.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ramp Rule",
+        "body": "Six steps below 18px (micro 10 / label 11 / caption 12 / ui 13 / body 14 / prose 15), and nothing else. If a design seems to need 13.5px, it needs 13px or 14px — the half-pixel is you avoiding a decision. Reach for an arbitrary value and you are re-opening the 345-literal-size drift this system was built to close.",
+        "section": "typography"
+      },
+      {
+        "name": "The Mono-Numbers Rule",
+        "body": "Every number a user might compare — score, rating, xG, confidence, price — is set in IBM Plex Mono with tabular-nums. Proportional digits in a data column are a bug.",
+        "section": "typography"
+      },
+      {
+        "name": "The Eyebrow Budget Rule",
+        "body": "The eyebrow utility is metadata, not scaffolding. It labels a datum (LIVE · 67', CONFIDENCE, UPDATED 2H AGO). Stamping a tracked-uppercase kicker above every section is the AI-landing-page tell and is forbidden here.",
+        "section": "typography"
+      },
+      {
+        "name": "The Display-Stays-Out Rule",
+        "body": "Archivo never appears in a button, a label, an input, a table cell, or a chart. It is for headings. Product UI is set in Instrument Sans and Plex Mono.",
+        "section": "typography"
+      },
+      {
+        "name": "The Float-Or-Flat Rule",
+        "body": "If an element sits ON the page, it gets tone and hairline and no shadow. If it floats OVER the page and can overlap anything (palette, dock, popover, mobile nav, tooltip), it casts shadow-2xl. There is no third category, and \"it looks nicer with a shadow\" is not one.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Stacking Ladder",
+        "body": "z-10 in-card overlays · z-20 chart tooltips and board tokens · z-30 sticky chrome · z-40 docked panels · z-50 modals and the command palette · z-skip the skip link. Named steps only; an arbitrary z-[9999] means the ladder was never read.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Glass Rule",
+        "body": "The glass utility (blur + saturate) is permitted on exactly two things: the sticky top bar and the command palette, where content genuinely scrolls beneath. Decorative glass cards are forbidden — that is generic AI SaaS, an explicit anti-reference.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do wear amber on every model output, always with confidence, generation date and source links (AIMeta). The user must never have to guess what was measured and what was inferred.",
+      "Do pick every size below 18px from the six-step ramp (text-micro / label / caption / ui / body / prose). Arbitrary text-[Npx] values are a defect.",
+      "Do set every comparable number in IBM Plex Mono with tabular-nums.",
+      "Do build depth from the tonal ladder (#10151e → #161d29 → #1d2533) and 1px hairlines.",
+      "Do keep transitions at 150–250ms and springs on press. Motion states a change; it never announces one.",
+      "Do ship every interactive component with default, hover, focus-visible, active, disabled — and skeletons, not centered spinners, for loading.",
+      "Do honor prefers-reduced-motion (globally clamped to 0.01ms) and keep the command palette, skip link and focus ring working on keyboard alone.",
+      "Do validate contrast on both themes: body text ≥4.5:1, large text ≥3:1. Ink-3 (#5f6b7e) is for mono labels, never prose."
+    ],
+    "donts": [
+      "Don't build anything that could pass for a betting site — no odds-shouting, no casino urgency, no green-on-green. Predictions are stated with confidence intervals, never sold as tips.",
+      "Don't reach for generic AI SaaS furniture: purple gradients, glowing orbs, \"AI-powered\" hero copy, decorative glassmorphism, identical icon-heading-text card grids.",
+      "Don't drift toward legacy scores sites (ESPN, Livescore): ad-shaped slots, banner clutter, dense grey chrome.",
+      "Don't adopt fantasy hype language or graphics — no clickbait arrows, no inflated numbers, no thumbnail energy.",
+      "Don't use background-clip: text with a gradient. Emphasis is weight and size; color is meaning.",
+      "Don't use a colored border-left/border-right above 1px as an accent stripe on cards, alerts or list items. (The 2px emerald rail on the active sidebar item is an active-state indicator, not a decorative stripe — do not generalize it.)",
+      "Don't add a box-shadow to anything that sits ON the page. Only genuinely floating layers cast (see the Float-Or-Flat Rule).",
+      "Don't put Archivo in a button, input, label, table cell or chart.",
+      "Don't stamp a tracked-uppercase eyebrow above every section. It labels data; it is not page scaffolding.",
+      "Don't nest a card inside a card.",
+      "Don't reach for a modal first. Exhaust inline and progressive alternatives — this product is a workspace, not a wizard."
+    ]
+  }
+}

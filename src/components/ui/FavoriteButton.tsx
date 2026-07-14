@@ -13,7 +13,7 @@ export function FavoriteButton({ kind, refId, name, className }: { kind: Favorit
       aria-label={on ? `Unfollow ${name}` : `Follow ${name}`}
       onClick={() => toggleFavorite(kind, refId)}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-mono text-[10.5px] uppercase tracking-wider transition-colors",
+        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-mono text-micro uppercase tracking-wider transition-colors",
         on
           ? "border-accent/40 bg-accent-soft text-accent-ink"
           : "border-line-strong bg-surface-2 text-ink-2 hover:border-accent/40 hover:text-ink",
@@ -37,7 +37,7 @@ export function BookmarkButton({ entry, className }: { entry: Omit<BookmarkEntry
       aria-label={on ? "Remove bookmark" : "Bookmark for later"}
       onClick={() => toggleBookmark(entry)}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-mono text-[10.5px] uppercase tracking-wider transition-colors",
+        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-mono text-micro uppercase tracking-wider transition-colors",
         on
           ? "border-iq/40 bg-iq-soft text-iq-ink"
           : "border-line-strong bg-surface-2 text-ink-2 hover:border-iq/40 hover:text-ink",

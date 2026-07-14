@@ -33,9 +33,9 @@ export function CompareBars({
         return (
           <div key={r.label}>
             <div className="mb-1 flex items-baseline justify-between">
-              <span className={cn("tabular w-16 font-mono text-[12.5px] font-semibold", aWins ? "text-ink" : "text-ink-3")}>{fa(r.a)}</span>
-              <span className="text-center text-[12px] text-ink-2">{r.label}</span>
-              <span className={cn("tabular w-16 text-right font-mono text-[12.5px] font-semibold", bWins ? "text-ink" : "text-ink-3")}>{fa(r.b)}</span>
+              <span className={cn("tabular w-16 font-mono text-caption font-semibold", aWins ? "text-ink" : "text-ink-3")}>{fa(r.a)}</span>
+              <span className="text-center text-caption text-ink-2">{r.label}</span>
+              <span className={cn("tabular w-16 text-right font-mono text-caption font-semibold", bWins ? "text-ink" : "text-ink-3")}>{fa(r.b)}</span>
             </div>
             <div className="flex items-center gap-[2px]">
               <div className="flex h-1.5 flex-1 justify-end overflow-hidden rounded-l-full bg-surface-3">

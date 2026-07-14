@@ -41,29 +41,29 @@ export default function Fantasy() {
         <StatTile label="Average score" value={gameweek.averageScore} />
         <Card className="px-4 py-3.5">
           <p className="eyebrow">Overall rank</p>
-          <p className="tabular mt-1 font-display text-[1.7rem] font-bold leading-none text-ink">{gameweek.overallRank}</p>
-          <p className="tabular mt-1 font-mono text-[11px] text-accent-ink">↑ {gameweek.rankMove.toLocaleString()} places</p>
+          <p className="tabular mt-1 font-display text-figure font-bold leading-none text-ink">{gameweek.overallRank}</p>
+          <p className="tabular mt-1 font-mono text-label text-accent-ink">↑ {gameweek.rankMove.toLocaleString()} places</p>
         </Card>
         <StatTile label="GW32 projected" value={71} suffix=" pts" />
       </div>
 
       <section aria-label="Captain picks">
-        <SectionHeader eyebrow="The armband" title="Captain Picks" />
+        <SectionHeader title="Captain Picks" />
         <div className="grid gap-3 md:grid-cols-3">
           {captainPicks.map((c, i) => {
             const p = getPlayer(c.playerId);
             return (
               <Card hover key={c.playerId} onClick={() => navigate(`/player/${c.playerId}`)} className={cn("relative overflow-hidden p-4 md:p-5", i === 0 && "border-iq/40")}>
                 {i === 0 && (
-                  <span className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full bg-iq px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-[#241a02]">
+                  <span className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full bg-iq px-2.5 py-1 font-mono text-micro font-bold uppercase tracking-wider text-[#241a02]">
                     <Crown className="size-3" aria-hidden /> Top pick
                   </span>
                 )}
                 <div className="flex items-center gap-3">
                   <Avatar name={p.name} playerId={p.id} size={46} ringColor={getTeam(p.teamId).colors[0]} />
                   <div>
-                    <p className="text-[14.5px] font-bold text-ink">{p.name}</p>
-                    <p className="flex items-center gap-1.5 text-[11.5px] text-ink-3">
+                    <p className="text-body font-bold text-ink">{p.name}</p>
+                    <p className="flex items-center gap-1.5 text-label text-ink-3">
                       <Crest teamId={p.teamId} size={15} /> {getTeam(p.teamId).short}
                     </p>
                   </div>
@@ -79,10 +79,10 @@ export default function Fantasy() {
                   </div>
                   <div>
                     <p className="eyebrow">Fixture</p>
-                    <p className={cn("mx-auto mt-1 w-8 rounded-md py-0.5 font-mono text-[12px] font-bold", fdrColor(6 - c.fixtureEase))}>{c.fixtureEase}/5</p>
+                    <p className={cn("mx-auto mt-1 w-8 rounded-md py-0.5 font-mono text-caption font-bold", fdrColor(6 - c.fixtureEase))}>{c.fixtureEase}/5</p>
                   </div>
                 </div>
-                <p className="mt-3 text-[12.5px] leading-relaxed text-ink-2">{c.note}</p>
+                <p className="mt-3 text-caption leading-relaxed text-ink-2">{c.note}</p>
               </Card>
             );
           })}
@@ -91,7 +91,7 @@ export default function Fantasy() {
 
       <div className="grid gap-8 lg:grid-cols-2">
         <section aria-label="Transfer recommendations">
-          <SectionHeader eyebrow="Market moves" title="Transfer Calls" />
+          <SectionHeader title="Transfer Calls" />
           <div className="space-y-2.5">
             {transferTips.in.map((t) => {
               const p = getPlayer(t.playerId);
@@ -101,8 +101,8 @@ export default function Fantasy() {
                     <ArrowUpRight className="size-4" aria-hidden />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13.5px] font-bold text-ink">Bring in {p.name}</p>
-                    <p className="mt-0.5 text-[12px] leading-snug text-ink-2">{t.reason}</p>
+                    <p className="text-ui font-bold text-ink">Bring in {p.name}</p>
+                    <p className="mt-0.5 text-caption leading-snug text-ink-2">{t.reason}</p>
                   </div>
                 </Card>
               );
@@ -115,8 +115,8 @@ export default function Fantasy() {
                     <ArrowDownRight className="size-4" aria-hidden />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13.5px] font-bold text-ink">Move on {p.name}</p>
-                    <p className="mt-0.5 text-[12px] leading-snug text-ink-2">{t.reason}</p>
+                    <p className="text-ui font-bold text-ink">Move on {p.name}</p>
+                    <p className="mt-0.5 text-caption leading-snug text-ink-2">{t.reason}</p>
                   </div>
                 </Card>
               );
@@ -125,7 +125,7 @@ export default function Fantasy() {
         </section>
 
         <section aria-label="Injury alerts and differentials">
-          <SectionHeader eyebrow="Edge finder" title="Alerts & Differentials" />
+          <SectionHeader title="Alerts & Differentials" />
           <div className="space-y-2.5">
             {injuryAlerts.map((a) => {
               const p = getPlayer(a.playerId);
@@ -135,10 +135,10 @@ export default function Fantasy() {
                     <Stethoscope className="size-4" aria-hidden />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-[13.5px] font-bold text-ink">
-                      {p.name} <span className="ml-1 font-mono text-[11px] font-medium text-warn">{a.status}</span>
+                    <p className="text-ui font-bold text-ink">
+                      {p.name} <span className="ml-1 font-mono text-label font-medium text-iq-ink">{a.status}</span>
                     </p>
-                    <p className="mt-0.5 text-[12px] leading-snug text-ink-2">{a.note}</p>
+                    <p className="mt-0.5 text-caption leading-snug text-ink-2">{a.note}</p>
                   </div>
                 </Card>
               );
@@ -151,10 +151,10 @@ export default function Fantasy() {
                     <Gem className="size-4" aria-hidden />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13.5px] font-bold text-ink">
-                      {p.name} <span className="ml-1 font-mono text-[11px] text-ink-3">{d.ownership}% owned · {d.expectedPoints.toFixed(1)} xPts</span>
+                    <p className="text-ui font-bold text-ink">
+                      {p.name} <span className="ml-1 font-mono text-label text-ink-3">{d.ownership}% owned · {d.expectedPoints.toFixed(1)} xPts</span>
                     </p>
-                    <p className="mt-0.5 text-[12px] leading-snug text-ink-2">{d.note}</p>
+                    <p className="mt-0.5 text-caption leading-snug text-ink-2">{d.note}</p>
                   </div>
                 </Card>
               );
@@ -166,9 +166,9 @@ export default function Fantasy() {
       <section aria-label="Fixture difficulty">
         <SectionHeader eyebrow="Next five gameweeks" title="Fixture Difficulty" />
         <Card className="overflow-x-auto">
-          <table className="w-full min-w-[30rem] text-[13px]">
+          <table className="w-full min-w-[30rem] text-ui">
             <thead>
-              <tr className="border-b border-line text-left font-mono text-[10px] uppercase tracking-wider text-ink-3">
+              <tr className="border-b border-line text-left font-mono text-micro uppercase tracking-wider text-ink-3">
                 <th scope="col" className="py-2.5 pl-4 font-medium">Team</th>
                 {[32, 33, 34, 35, 36].map((gw) => (
                   <th key={gw} scope="col" className="text-center font-medium">GW{gw}</th>
@@ -201,7 +201,7 @@ export default function Fantasy() {
                     </td>
                     {diffs.map((d, i) => (
                       <td key={i} className="text-center">
-                        <span className={cn("mx-auto inline-block w-8 rounded-md py-1 text-center font-mono text-[11.5px] font-bold", fdrColor(d))}>{d}</span>
+                        <span className={cn("mx-auto inline-block w-8 rounded-md py-1 text-center font-mono text-label font-bold", fdrColor(d))}>{d}</span>
                       </td>
                     ))}
                     <td className="tabular py-2.5 pr-4 text-right font-mono text-xs font-semibold text-ink-2">{avg.toFixed(1)}</td>
@@ -211,7 +211,7 @@ export default function Fantasy() {
             </tbody>
           </table>
         </Card>
-        <p className="mt-2 font-mono text-[10.5px] uppercase tracking-wider text-ink-3">1 = easiest · 5 = hardest · FootIQ difficulty blends opponent strength, venue and rest days</p>
+        <p className="mt-2 font-mono text-micro uppercase tracking-wider text-ink-3">1 = easiest · 5 = hardest · FootIQ difficulty blends opponent strength, venue and rest days</p>
       </section>
 
       <IQInsight title="This week's chip call" feedback="Fantasy chip call">

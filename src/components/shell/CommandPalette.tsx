@@ -129,7 +129,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={onKeyDown}
                   placeholder="Search or ask anything…"
-                  className="h-13 w-full bg-transparent py-4 text-[15px] text-ink outline-none placeholder:text-ink-3"
+                  className="h-13 w-full bg-transparent py-4 text-prose text-ink outline-none placeholder:text-ink-3"
                   aria-label="Search query"
                   role="combobox"
                   aria-expanded={results.length > 0}
@@ -153,7 +153,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
               </div>
 
               {listening && (
-                <p className="border-b border-line px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-bad">
+                <p className="border-b border-line px-4 py-2 font-mono text-label uppercase tracking-wider text-bad">
                   ● Listening… speak now
                 </p>
               )}
@@ -197,7 +197,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
                 </div>
               ) : results.length === 0 ? (
                 <div className="p-5 text-sm text-ink-2">
-                  No direct matches. Press <kbd className="rounded border border-line bg-surface-2 px-1 font-mono text-[10px]">Enter</kbd> to
+                  No direct matches. Press <kbd className="rounded border border-line bg-surface-2 px-1 font-mono text-micro">Enter</kbd> to
                   ask AI Scout: <span className="italic text-ink">"{query}"</span>
                 </div>
               ) : (
@@ -218,12 +218,12 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
                             <Icon className="size-4" aria-hidden />
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate text-[13.5px] font-semibold text-ink">
+                            <span className="block truncate text-ui font-semibold text-ink">
                               <Highlight text={r.label} query={query} />
                             </span>
-                            <span className="block truncate text-[11.5px] text-ink-3">{r.sub}</span>
+                            <span className="block truncate text-label text-ink-3">{r.sub}</span>
                           </span>
-                          <span className="shrink-0 font-mono text-[9.5px] uppercase tracking-wider text-ink-3">{r.kind}</span>
+                          <span className="shrink-0 font-mono text-micro uppercase tracking-wider text-ink-3">{r.kind}</span>
                           {i === cursor && <CornerDownLeft className="size-3.5 shrink-0 text-ink-3" aria-hidden />}
                         </button>
                       </li>

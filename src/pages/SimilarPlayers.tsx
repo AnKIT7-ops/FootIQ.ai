@@ -82,7 +82,7 @@ export default function SimilarPlayers() {
               setBaseId(e.target.value);
               setSelectedId(null);
             }}
-            className="h-10 rounded-xl border border-line bg-surface-2 px-3 text-[13.5px] font-medium text-ink outline-none focus:border-accent"
+            className="h-10 rounded-xl border border-line bg-surface-2 px-3 text-ui font-medium text-ink outline-none focus:border-accent"
           >
             {players.map((p) => (
               <option key={p.id} value={p.id}>
@@ -93,7 +93,7 @@ export default function SimilarPlayers() {
         </label>
         <label className="block">
           <span className="eyebrow mb-1.5 block">Position</span>
-          <select value={pos} onChange={(e) => setPos(e.target.value)} className="h-10 rounded-xl border border-line bg-surface-2 px-3 text-[13.5px] text-ink outline-none focus:border-accent">
+          <select value={pos} onChange={(e) => setPos(e.target.value)} className="h-10 rounded-xl border border-line bg-surface-2 px-3 text-ui text-ink outline-none focus:border-accent">
             <option value="all">Any</option>
             <option value="FW">Forwards</option>
             <option value="MF">Midfielders</option>
@@ -103,7 +103,7 @@ export default function SimilarPlayers() {
         </label>
         <label className="block">
           <span className="eyebrow mb-1.5 block">League</span>
-          <select value={league} onChange={(e) => setLeague(e.target.value)} className="h-10 rounded-xl border border-line bg-surface-2 px-3 text-[13.5px] text-ink outline-none focus:border-accent">
+          <select value={league} onChange={(e) => setLeague(e.target.value)} className="h-10 rounded-xl border border-line bg-surface-2 px-3 text-ui text-ink outline-none focus:border-accent">
             <option value="all">All leagues</option>
             {leagues.map((l) => (
               <option key={l} value={l}>
@@ -141,8 +141,8 @@ export default function SimilarPlayers() {
             >
               <Avatar name={p.name} playerId={p.id} size={40} ringColor={getTeam(p.teamId).colors[0]} />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[14px] font-bold text-ink">{p.name}</p>
-                <p className="truncate text-[11.5px] text-ink-3">
+                <p className="truncate text-body font-bold text-ink">{p.name}</p>
+                <p className="truncate text-label text-ink-3">
                   {p.role} · {getTeam(p.teamId).short} · {p.age}y · {money(p.marketValue)}
                 </p>
               </div>
@@ -160,7 +160,7 @@ export default function SimilarPlayers() {
           <div className="space-y-4">
             <Card className="p-4 md:p-5">
               <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-                <SectionHeader eyebrow="Attribute overlay" title={`${base.name.split(" ").slice(-1)[0]} vs ${selected.p.name.split(" ").slice(-1)[0]}`} className="mb-0" />
+                <SectionHeader title={`${base.name.split(" ").slice(-1)[0]} vs ${selected.p.name.split(" ").slice(-1)[0]}`} className="mb-0" />
                 <Badge variant="iq">{selected.sim} similarity</Badge>
               </div>
               <Radar
@@ -174,7 +174,7 @@ export default function SimilarPlayers() {
             </Card>
 
             <Card className="p-4 md:p-5">
-              <SectionHeader eyebrow="Season output" title="Statistical Breakdown" className="mb-4" />
+              <SectionHeader title="Statistical Breakdown" className="mb-4" />
               <CompareBars
                 rows={[
                   { label: "Goals", a: base.stats.goals, b: selected.p.stats.goals },
@@ -190,17 +190,17 @@ export default function SimilarPlayers() {
                   <p className="tabular mt-1 font-display text-lg font-bold text-ink">
                     {money(Math.abs(base.marketValue - selected.p.marketValue))}
                   </p>
-                  <p className="font-mono text-[10px] text-ink-3">{base.marketValue > selected.p.marketValue ? "cheaper" : "pricier"}</p>
+                  <p className="font-mono text-micro text-ink-3">{base.marketValue > selected.p.marketValue ? "cheaper" : "pricier"}</p>
                 </div>
                 <div>
                   <p className="eyebrow">Age gap</p>
                   <p className="tabular mt-1 font-display text-lg font-bold text-ink">{Math.abs(base.age - selected.p.age)}y</p>
-                  <p className="font-mono text-[10px] text-ink-3">{selected.p.age < base.age ? "younger" : selected.p.age === base.age ? "same age" : "older"}</p>
+                  <p className="font-mono text-micro text-ink-3">{selected.p.age < base.age ? "younger" : selected.p.age === base.age ? "same age" : "older"}</p>
                 </div>
                 <div>
                   <p className="eyebrow">Tactical fit</p>
                   <p className={cn("tabular mt-1 font-display text-lg font-bold", selected.fit >= 75 ? "text-accent-ink" : "text-ink")}>{selected.fit}%</p>
-                  <p className="font-mono text-[10px] text-ink-3">system transfer</p>
+                  <p className="font-mono text-micro text-ink-3">system transfer</p>
                 </div>
               </div>
             </Card>

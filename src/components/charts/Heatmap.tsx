@@ -22,8 +22,8 @@ export function Heatmap({ cells, className }: { cells: HeatCell[]; className?: s
         ))}
       </Pitch>
       <div className="mt-2 flex items-center justify-between">
-        <span className="font-mono text-[10.5px] uppercase tracking-wider text-ink-3">Attacking →</span>
-        <span className="inline-flex items-center gap-1.5 font-mono text-[10.5px] uppercase tracking-wider text-ink-3">
+        <span className="font-mono text-micro uppercase tracking-wider text-ink-3">Attacking →</span>
+        <span className="inline-flex items-center gap-1.5 font-mono text-micro uppercase tracking-wider text-ink-3">
           Low
           <span className="inline-flex gap-0.5" aria-hidden>
             {[0.15, 0.35, 0.55, 0.8].map((o) => (

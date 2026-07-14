@@ -66,7 +66,7 @@ export default function Intelligence() {
               <Link to={`/intelligence/${digest.slug}`} className="display text-lg font-bold text-ink transition-colors hover:text-accent-ink">
                 {digest.title}
               </Link>
-              <p className="mt-1 text-[13px] text-ink-2">{digest.dek}</p>
+              <p className="mt-1 text-ui text-ink-2">{digest.dek}</p>
             </div>
             <div className="w-full max-w-sm">
               <WaitlistForm compact />
@@ -83,7 +83,7 @@ export default function Intelligence() {
             aria-selected={filter === f.key}
             onClick={() => setFilter(f.key)}
             className={cn(
-              "rounded-full px-3.5 py-1.5 font-mono text-[11px] uppercase tracking-wider transition-colors",
+              "rounded-full px-3.5 py-1.5 font-mono text-label uppercase tracking-wider transition-colors",
               filter === f.key ? "bg-accent-soft text-accent-ink" : "bg-surface-2 text-ink-3 hover:text-ink",
             )}
           >
@@ -98,15 +98,15 @@ export default function Intelligence() {
             <Card hover className="flex h-full flex-col p-4">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <Badge variant="iq">{contentKindLabels[a.kind]}</Badge>
-                <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-ink-3">
+                <span className="inline-flex items-center gap-1 font-mono text-micro uppercase tracking-wider text-ink-3">
                   <Clock className="size-3" aria-hidden /> {a.readMinutes} min
                 </span>
               </div>
-              <h2 className="display text-[15px] font-bold leading-snug text-ink transition-colors group-hover:text-accent-ink">
+              <h2 className="display text-prose font-bold leading-snug text-ink transition-colors group-hover:text-accent-ink">
                 {a.title}
               </h2>
-              <p className="mt-1.5 line-clamp-2 text-[12.5px] leading-relaxed text-ink-2">{a.dek}</p>
-              <p className="mt-auto pt-3 font-mono text-[10px] uppercase tracking-wider text-ink-3">
+              <p className="mt-1.5 line-clamp-2 text-caption leading-relaxed text-ink-2">{a.dek}</p>
+              <p className="mt-auto pt-3 font-mono text-micro uppercase tracking-wider text-ink-3">
                 Confidence {a.confidence}% · {a.publishedAt}
               </p>
             </Card>

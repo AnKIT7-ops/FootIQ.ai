@@ -129,7 +129,7 @@ export function Onboarding({ open, onClose }: { open: boolean; onClose: () => vo
           >
             <div ref={panelRef} tabIndex={-1} className="glass overflow-hidden rounded-2xl shadow-2xl outline-none">
               <div className="flex items-center justify-between border-b border-line px-5 py-3">
-                <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-3">
+                <p className="font-mono text-micro uppercase tracking-[0.14em] text-ink-3">
                   {step + 1} / {steps.length}
                 </p>
                 <button
@@ -159,8 +159,8 @@ export function Onboarding({ open, onClose }: { open: boolean; onClose: () => vo
                       <Icon className="size-5" aria-hidden />
                     </span>
                     <p className="eyebrow mb-1.5">{s.eyebrow}</p>
-                    <h2 className="text-[19px] font-bold leading-snug text-ink">{s.title}</h2>
-                    <p className="mt-2 text-[13.5px] leading-relaxed text-ink-2">{s.body}</p>
+                    <h2 className="text-xl font-bold leading-snug text-ink">{s.title}</h2>
+                    <p className="mt-2 text-ui leading-relaxed text-ink-2">{s.body}</p>
                   </motion.div>
                 </AnimatePresence>
               </div>
@@ -173,7 +173,7 @@ export function Onboarding({ open, onClose }: { open: boolean; onClose: () => vo
                       onClick={() => setStep(i)}
                       tabIndex={-1}
                       className={cn(
-                        "h-1.5 rounded-full transition-all",
+                        "h-1.5 rounded-full transition-[width,background-color] duration-200",
                         i === step ? "w-5 bg-accent" : "w-1.5 bg-line-strong hover:bg-ink-3",
                       )}
                     />
@@ -183,14 +183,14 @@ export function Onboarding({ open, onClose }: { open: boolean; onClose: () => vo
                   {s.cta?.to && (
                     <button
                       onClick={followCta}
-                      className="rounded-full border border-line px-3.5 py-2 text-[12.5px] font-semibold text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
+                      className="rounded-full border border-line px-3.5 py-2 text-caption font-semibold text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
                     >
                       {s.cta.label}
                     </button>
                   )}
                   <button
                     onClick={s.cta && !s.cta.to ? followCta : advance}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-[12.5px] font-semibold text-[#04110c] transition-transform hover:scale-[1.03] active:scale-95"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-caption font-semibold text-[#04110c] transition-transform hover:scale-[1.03] active:scale-95"
                   >
                     {last ? (s.cta?.label ?? "Done") : "Next"}
                     {!last && <ArrowRight className="size-3.5" aria-hidden />}

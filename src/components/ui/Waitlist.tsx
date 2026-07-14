@@ -51,7 +51,7 @@ export function WaitlistForm({ className, compact = false }: { className?: strin
     return (
       <div className={cn("flex items-center gap-2.5 rounded-2xl border border-accent/40 bg-accent-soft px-4 py-3", className)} role="status">
         <CheckCircle2 className="size-5 shrink-0 text-accent-ink" aria-hidden />
-        <p className="text-[13.5px] font-medium text-ink">{message}</p>
+        <p className="text-ui font-medium text-ink">{message}</p>
       </div>
     );
   }
@@ -78,7 +78,7 @@ export function WaitlistForm({ className, compact = false }: { className?: strin
             aria-invalid={status === "error"}
             aria-describedby={message ? "waitlist-message" : undefined}
             className={cn(
-              "h-11 w-full rounded-2xl border bg-surface pl-10 pr-3.5 text-[14px] text-ink outline-none transition-colors placeholder:text-ink-3",
+              "h-11 w-full rounded-2xl border bg-surface pl-10 pr-3.5 text-body text-ink outline-none transition-colors placeholder:text-ink-3",
               status === "error" ? "border-bad/60 focus:border-bad" : "border-line focus:border-accent",
             )}
           />
@@ -86,7 +86,7 @@ export function WaitlistForm({ className, compact = false }: { className?: strin
         <button
           type="submit"
           disabled={status === "loading"}
-          className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-2xl bg-accent px-5 text-[13.5px] font-semibold text-[#04110c] transition-transform hover:scale-[1.02] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-2xl bg-accent px-5 text-ui font-semibold text-[#04110c] transition-transform hover:scale-[1.02] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {status === "loading" ? (
             <>
@@ -100,13 +100,13 @@ export function WaitlistForm({ className, compact = false }: { className?: strin
       </div>
       <div aria-live="polite">
         {message && status === "error" && (
-          <p id="waitlist-message" className="mt-2 text-[12.5px] font-medium text-bad">
+          <p id="waitlist-message" className="mt-2 text-caption font-medium text-bad">
             {message}
           </p>
         )}
       </div>
       {!compact && (
-        <p className="mt-2 text-[11.5px] leading-relaxed text-ink-3">
+        <p className="mt-2 text-label leading-relaxed text-ink-3">
           Weekly AI intelligence · favourite-team updates · transfer alerts · product news. No spam, unsubscribe anytime.
         </p>
       )}

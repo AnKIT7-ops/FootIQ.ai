@@ -43,8 +43,8 @@ export default function Transfers() {
               >
                 <Avatar name={p.name} playerId={p.id} size={46} ringColor={to.colors[0]} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[15px] font-bold text-ink">{p.name}</p>
-                  <p className="mt-0.5 flex items-center gap-2 text-[12px] text-ink-3">
+                  <p className="truncate text-prose font-bold text-ink">{p.name}</p>
+                  <p className="mt-0.5 flex items-center gap-2 text-caption text-ink-3">
                     <span className="inline-flex items-center gap-1"><Crest teamId={from.id} size={16} /> {from.tla}</span>
                     <ArrowRight className="size-3.5" aria-hidden />
                     <span className="inline-flex items-center gap-1"><Crest teamId={to.id} size={16} /> {to.tla}</span>
@@ -53,14 +53,14 @@ export default function Transfers() {
                 </div>
                 <div className="hidden text-right sm:block">
                   <Reliability score={r.reliability} />
-                  <p className="mt-1 font-mono text-[10.5px] uppercase tracking-wider text-ink-3">{r.stage}</p>
+                  <p className="mt-1 font-mono text-micro uppercase tracking-wider text-ink-3">{r.stage}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="text-right">
                     <p className={cn("tabular font-display text-2xl font-black leading-none", r.probability >= 40 ? "text-accent-ink" : "text-ink")}>
                       {r.probability}%
                     </p>
-                    <p className={cn("mt-0.5 inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider", r.trend === "rising" ? "text-accent-ink" : r.trend === "cooling" ? "text-bad" : "text-ink-3")}>
+                    <p className={cn("mt-0.5 inline-flex items-center gap-1 font-mono text-micro uppercase tracking-wider", r.trend === "rising" ? "text-accent-ink" : r.trend === "cooling" ? "text-bad" : "text-ink-3")}>
                       <TrendIcon className="size-3" aria-hidden />
                       {r.trend}
                     </p>
@@ -87,8 +87,8 @@ export default function Transfers() {
                             <li key={i} className="relative flex gap-3">
                               <span className={cn("z-10 mt-1 size-2.5 shrink-0 rounded-full", i === r.timeline.length - 1 ? "bg-accent" : "border-2 border-line-strong bg-bg")} aria-hidden />
                               <div>
-                                <span className="font-mono text-[10.5px] text-accent-ink">{t.date}</span>
-                                <p className="text-[12.5px] leading-snug text-ink-2">{t.event}</p>
+                                <span className="font-mono text-micro text-accent-ink">{t.date}</span>
+                                <p className="text-caption leading-snug text-ink-2">{t.event}</p>
                               </div>
                             </li>
                           ))}
@@ -96,7 +96,7 @@ export default function Transfers() {
                         <p className="eyebrow mb-2 mt-5">Financial analysis</p>
                         <dl className="space-y-1.5">
                           {r.finances.map((f) => (
-                            <div key={f.label} className="flex justify-between gap-4 text-[12.5px]">
+                            <div key={f.label} className="flex justify-between gap-4 text-caption">
                               <dt className="text-ink-3">{f.label}</dt>
                               <dd className="text-right font-medium text-ink">{f.value}</dd>
                             </div>
@@ -108,7 +108,7 @@ export default function Transfers() {
                       <div className="flex flex-col items-center gap-4">
                         <DonutGauge value={r.probability} label="Completion probability" size={130} color={r.probability >= 40 ? "var(--chart-1)" : "var(--chart-3)"} />
                         <div className="w-full">
-                          <div className="mb-1.5 flex justify-between font-mono text-[11px] text-ink-3">
+                          <div className="mb-1.5 flex justify-between font-mono text-label text-ink-3">
                             <span>Fan sentiment</span>
                             <span className="text-ink">{r.sentiment.positive}% in favour</span>
                           </div>
@@ -118,10 +118,10 @@ export default function Transfers() {
                           </div>
                           <div className="mt-3 space-y-2">
                             {r.sentiment.sample.slice(0, 2).map((s, i) => (
-                              <p key={i} className="flex gap-2 rounded-xl bg-surface-2 p-2.5 text-[12px] leading-snug text-ink-2">
+                              <p key={i} className="flex gap-2 rounded-xl bg-surface-2 p-2.5 text-caption leading-snug text-ink-2">
                                 <MessageSquareText className={cn("mt-0.5 size-3.5 shrink-0", s.mood === "for" ? "text-accent-ink" : "text-bad")} aria-hidden />
                                 <span>
-                                  <span className="font-mono text-[10.5px] text-ink-3">{s.handle}</span> {s.text}
+                                  <span className="font-mono text-micro text-ink-3">{s.handle}</span> {s.text}
                                 </span>
                               </p>
                             ))}
@@ -140,8 +140,8 @@ export default function Transfers() {
                               return (
                                 <Link key={rid} to={`/player/${rid}`} className="flex items-center gap-2.5 rounded-xl border border-line bg-surface-2 p-2.5 transition-colors hover:border-line-strong">
                                   <Avatar name={rp.name} playerId={rp.id} size={30} />
-                                  <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-ink">{rp.name}</span>
-                                  <span className="font-mono text-[11px] text-ink-3">{money(rp.marketValue)}</span>
+                                  <span className="min-w-0 flex-1 truncate text-ui font-semibold text-ink">{rp.name}</span>
+                                  <span className="font-mono text-label text-ink-3">{money(rp.marketValue)}</span>
                                 </Link>
                               );
                             })}

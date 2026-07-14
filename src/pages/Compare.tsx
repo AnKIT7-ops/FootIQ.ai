@@ -61,7 +61,7 @@ function Picker({ value, onChange, options, label }: { value: string; onChange: 
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-10 w-full rounded-xl border border-line bg-surface-2 px-3 text-[13.5px] font-medium text-ink outline-none focus:border-accent"
+        className="h-10 w-full rounded-xl border border-line bg-surface-2 px-3 text-ui font-medium text-ink outline-none focus:border-accent"
       >
         {options.map((o) => (
           <option key={o.id} value={o.id}>
@@ -112,8 +112,8 @@ function PlayerCompare() {
               <div key={p.id} className={`flex items-center gap-2.5 ${i === 1 ? "flex-row-reverse text-right" : ""}`}>
                 <Avatar name={p.name} playerId={p.id} size={44} ringColor={i === 0 ? "var(--chart-1)" : "var(--chart-4)"} />
                 <div>
-                  <p className="text-[13.5px] font-bold leading-tight text-ink">{p.name}</p>
-                  <p className="text-[11px] text-ink-3">
+                  <p className="text-ui font-bold leading-tight text-ink">{p.name}</p>
+                  <p className="text-label text-ink-3">
                     {getTeam(p.teamId).tla} · {p.age}y · {money(p.marketValue)}
                   </p>
                 </div>
@@ -186,7 +186,7 @@ function TeamCompare() {
               <div key={t.id} className={`flex items-center gap-3 ${i === 1 ? "flex-row-reverse text-right" : ""}`}>
                 <Crest teamId={t.id} size={44} />
                 <div>
-                  <p className="text-[14px] font-bold text-ink">{t.short}</p>
+                  <p className="text-body font-bold text-ink">{t.short}</p>
                   <FormPills form={t.form} />
                 </div>
               </div>
@@ -213,13 +213,13 @@ function TeamCompare() {
                 <p className="eyebrow mb-2">{t.short} · silverware</p>
                 <ul className="space-y-1.5">
                   {t.trophies.map((tr) => (
-                    <li key={tr.name} className="flex items-baseline justify-between text-[13px]">
+                    <li key={tr.name} className="flex items-baseline justify-between text-ui">
                       <span className="text-ink-2">{tr.name}</span>
                       <span className="tabular font-mono font-bold text-ink">{tr.count}</span>
                     </li>
                   ))}
                 </ul>
-                <p className="mt-3 border-t border-line pt-2.5 text-[12px] leading-relaxed text-ink-3">
+                <p className="mt-3 border-t border-line pt-2.5 text-caption leading-relaxed text-ink-3">
                   {t.style.formation} · {t.styleTags.join(" · ")}
                 </p>
               </Card>
@@ -257,22 +257,22 @@ function ManagerCompare() {
             <div className="flex items-center gap-3.5">
               <Avatar name={t.manager} size={52} ringColor={t.colors[0]} />
               <div>
-                <p className="text-[15px] font-bold text-ink">{t.manager}</p>
-                <p className="flex items-center gap-1.5 text-[12px] text-ink-3">
+                <p className="text-prose font-bold text-ink">{t.manager}</p>
+                <p className="flex items-center gap-1.5 text-caption text-ink-3">
                   <Crest teamId={t.id} size={16} /> {t.name}
                 </p>
               </div>
               <Badge variant="accent" className="ml-auto">{ppg(t)} PPG</Badge>
             </div>
-            <dl className="mt-4 space-y-2 border-t border-line pt-4 text-[13px]">
+            <dl className="mt-4 space-y-2 border-t border-line pt-4 text-ui">
               <div className="flex justify-between"><dt className="text-ink-3">System</dt><dd className="font-medium text-ink">{t.style.formation}</dd></div>
               <div className="flex justify-between"><dt className="text-ink-3">Build-up</dt><dd className="max-w-[60%] text-right text-ink-2">{t.style.buildUp}</dd></div>
               <div className="flex justify-between"><dt className="text-ink-3">Press</dt><dd className="max-w-[60%] text-right text-ink-2">{t.style.press}</dd></div>
               <div className="flex justify-between"><dt className="text-ink-3">Identity</dt><dd className="text-right text-ink-2">{t.styleTags.join(", ")}</dd></div>
             </dl>
             <div className="mt-4 space-y-1.5 border-t border-line pt-3.5">
-              <p className="flex items-start gap-2 text-[12.5px] text-ink-2"><CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-accent-ink" aria-hidden />{t.aiReport[0]}</p>
-              <p className="flex items-start gap-2 text-[12.5px] text-ink-2"><ShieldAlert className="mt-0.5 size-3.5 shrink-0 text-bad" aria-hidden />{t.aiReport[1]}</p>
+              <p className="flex items-start gap-2 text-caption text-ink-2"><CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-accent-ink" aria-hidden />{t.aiReport[0]}</p>
+              <p className="flex items-start gap-2 text-caption text-ink-2"><ShieldAlert className="mt-0.5 size-3.5 shrink-0 text-bad" aria-hidden />{t.aiReport[1]}</p>
             </div>
           </Card>
         ))}

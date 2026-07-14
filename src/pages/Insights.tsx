@@ -29,22 +29,22 @@ function FleetCard() {
       <div className="grid grid-cols-3 gap-3 text-center">
         <div>
           <p className="font-mono text-2xl font-bold text-ink">{stats.newsletterSubscribers ?? "—"}</p>
-          <p className="font-mono text-[10px] uppercase tracking-wider text-ink-3">Subscribers</p>
+          <p className="font-mono text-micro uppercase tracking-wider text-ink-3">Subscribers</p>
         </div>
         <div>
           <p className="font-mono text-2xl font-bold text-ink">{stats.feedbackEntries ?? "—"}</p>
-          <p className="font-mono text-[10px] uppercase tracking-wider text-ink-3">Feedback</p>
+          <p className="font-mono text-micro uppercase tracking-wider text-ink-3">Feedback</p>
         </div>
         <div>
-          <p className="truncate font-mono text-[13px] font-bold leading-8 text-ink" title={stats.dataProvider}>
+          <p className="truncate font-mono text-ui font-bold leading-8 text-ink" title={stats.dataProvider}>
             {stats.dataProvider}
           </p>
-          <p className="font-mono text-[10px] uppercase tracking-wider text-ink-3">
+          <p className="font-mono text-micro uppercase tracking-wider text-ink-3">
             {stats.lastStandingsSyncAt ? `synced ${stats.lastStandingsSyncAt.slice(0, 10)}` : "data source"}
           </p>
         </div>
       </div>
-      <p className="mt-3 flex items-center gap-1.5 text-[11.5px] text-ink-3">
+      <p className="mt-3 flex items-center gap-1.5 text-label text-ink-3">
         <Globe2 className="size-3.5" aria-hidden /> Aggregate counts only — no rows, no PII leave the server.
       </p>
     </Card>
@@ -69,20 +69,20 @@ function MetricPanel({ category, title, empty }: { category: MetricCategory; tit
   const max = rows[0]?.count ?? 1;
   return (
     <Card className="p-5">
-      <SectionHeader eyebrow="This device" title={title} />
+      <SectionHeader title={title} />
       {rows.length === 0 ? (
-        <p className="text-[13px] text-ink-3">{empty}</p>
+        <p className="text-ui text-ink-3">{empty}</p>
       ) : (
         <ul className="space-y-2.5">
           {rows.map((r) => (
             <li key={r.key}>
-              <div className="mb-1 flex items-center justify-between gap-3 text-[12.5px]">
+              <div className="mb-1 flex items-center justify-between gap-3 text-caption">
                 {r.key.startsWith("/") ? (
                   <Link to={r.key} className="truncate text-ink-2 transition-colors hover:text-ink">{r.key}</Link>
                 ) : (
                   <span className="truncate text-ink-2">{r.key}</span>
                 )}
-                <span className="font-mono text-[11px] text-ink-3">{r.count}</span>
+                <span className="font-mono text-label text-ink-3">{r.count}</span>
               </div>
               <div className="h-1.5 overflow-hidden rounded-full bg-surface-3/60">
                 <div className="h-full rounded-full bg-accent" style={{ width: `${(r.count / max) * 100}%` }} />
@@ -128,7 +128,7 @@ export default function Insights() {
         ).map(([c, label]) => (
           <Card key={c} className="p-4 text-center">
             <p className="font-mono text-2xl font-bold text-ink">{t[c]}</p>
-            <p className="font-mono text-[10px] uppercase tracking-wider text-ink-3">{label}</p>
+            <p className="font-mono text-micro uppercase tracking-wider text-ink-3">{label}</p>
           </Card>
         ))}
       </div>
@@ -138,7 +138,7 @@ export default function Insights() {
           <MetricPanel key={p.category} {...p} />
         ))}
       </div>
-      <p className="text-[12px] leading-relaxed text-ink-3">
+      <p className="text-caption leading-relaxed text-ink-3">
         Device counters are stored in this browser only — no fingerprinting, no cross-device tracking. Fleet-wide numbers are safe
         aggregates from the API; full analytics run through GA4 when configured.
       </p>

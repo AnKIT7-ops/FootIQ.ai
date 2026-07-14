@@ -23,12 +23,12 @@ export function StatTile({
   return (
     <div className={cn("card px-4 py-3.5", className)}>
       <p className="eyebrow">{label}</p>
-      <p className="tabular mt-1 font-display text-[1.7rem] font-bold leading-none text-ink">
+      <p className="tabular mt-1 font-display text-figure font-bold leading-none text-ink">
         {display}
         {suffix && <span className="ml-0.5 text-base font-semibold text-ink-2">{suffix}</span>}
       </p>
       {delta !== undefined && (
-        <p className={cn("tabular mt-1 font-mono text-[11px]", delta >= 0 ? "text-accent-ink" : "text-bad")}>
+        <p className={cn("tabular mt-1 font-mono text-label", delta >= 0 ? "text-accent-ink" : "text-bad")}>
           {signed(delta)}
           {deltaSuffix}
         </p>
@@ -55,7 +55,7 @@ export function Meter({
   return (
     <div className={className}>
       <div className="mb-1 flex items-baseline justify-between gap-3">
-        <span className="text-[13px] text-ink-2">{label}</span>
+        <span className="text-ui text-ink-2">{label}</span>
         <span className="tabular font-mono text-xs font-semibold text-ink">{Math.round(value)}</span>
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-surface-3" role="meter" aria-valuenow={value} aria-valuemin={0} aria-valuemax={max} aria-label={label}>

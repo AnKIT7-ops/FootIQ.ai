@@ -61,12 +61,12 @@ export default function IntelligenceArticle() {
       <header>
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <Badge variant="iq">{contentKindLabels[article.kind]}</Badge>
-          <span className="font-mono text-[10.5px] uppercase tracking-wider text-ink-3">
+          <span className="font-mono text-micro uppercase tracking-wider text-ink-3">
             {article.publishedAt} · {article.readMinutes} min read
           </span>
         </div>
         <SectionHeader level={1} title={article.title} className="mb-2" />
-        <p className="text-[15px] leading-relaxed text-ink-2">{article.dek}</p>
+        <p className="text-prose leading-relaxed text-ink-2">{article.dek}</p>
       </header>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -79,7 +79,7 @@ export default function IntelligenceArticle() {
           {s.heading && <h2 className="display mb-3 text-lg font-bold text-ink">{s.heading}</h2>}
           <div className="space-y-3">
             {s.paragraphs.map((p, j) => (
-              <p key={j} className="text-[14px] leading-relaxed text-ink-2">
+              <p key={j} className="text-body leading-relaxed text-ink-2">
                 {p}
               </p>
             ))}
@@ -87,7 +87,7 @@ export default function IntelligenceArticle() {
           {s.bullets && s.bullets.length > 0 && (
             <ul className="mt-4 space-y-2">
               {s.bullets.map((b, j) => (
-                <li key={j} className="flex gap-2 text-[13.5px] leading-relaxed text-ink-2">
+                <li key={j} className="flex gap-2 text-ui leading-relaxed text-ink-2">
                   <span className="mt-[7px] size-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
                   {b}
                 </li>
@@ -101,13 +101,13 @@ export default function IntelligenceArticle() {
 
       <Card className="p-5">
         <p className="eyebrow mb-1">Weekly in your inbox</p>
-        <p className="mb-3 text-[13px] text-ink-2">One digest, every week — previews, form inflections and market movement. No noise.</p>
+        <p className="mb-3 text-ui text-ink-2">One digest, every week — previews, form inflections and market movement. No noise.</p>
         <WaitlistForm compact />
       </Card>
 
       {related.length > 0 && (
         <section aria-label="Related intelligence">
-          <SectionHeader eyebrow="Keep reading" title="Related intelligence" />
+          <SectionHeader title="Related intelligence" />
           <div className="grid gap-3 sm:grid-cols-3">
             {related.map((a) => (
               <Link key={a.slug} to={`/intelligence/${a.slug}`} className="group">
@@ -115,8 +115,8 @@ export default function IntelligenceArticle() {
                   <Badge variant="iq" className="mb-2 self-start">
                     {contentKindLabels[a.kind]}
                   </Badge>
-                  <p className="display text-[13.5px] font-bold leading-snug text-ink transition-colors group-hover:text-accent-ink">{a.title}</p>
-                  <span className="mt-auto inline-flex items-center gap-1 pt-3 font-mono text-[10px] uppercase tracking-wider text-ink-3">
+                  <p className="display text-ui font-bold leading-snug text-ink transition-colors group-hover:text-accent-ink">{a.title}</p>
+                  <span className="mt-auto inline-flex items-center gap-1 pt-3 font-mono text-micro uppercase tracking-wider text-ink-3">
                     Read <ArrowRight className="size-3" aria-hidden />
                   </span>
                 </Card>

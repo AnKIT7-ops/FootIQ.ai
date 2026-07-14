@@ -24,7 +24,7 @@ export function Flag({
         loading="lazy"
         draggable={false}
         onError={() => setFailed(true)}
-        className={cn("inline-block h-[0.95em] w-auto rounded-[2px] align-[-0.08em] shadow-sm", className)}
+        className={cn("inline-block h-[0.95em] w-auto rounded-[2px] align-[-0.08em] ring-1 ring-line-strong", className)}
       />
     );
   }

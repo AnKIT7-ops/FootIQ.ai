@@ -29,7 +29,7 @@ export function ShareBar({
   };
 
   const btn =
-    "inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-surface-2 px-3 py-1.5 font-mono text-[10.5px] uppercase tracking-wider text-ink-2 transition-colors hover:border-accent/40 hover:text-ink";
+    "inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-surface-2 px-3 py-1.5 font-mono text-micro uppercase tracking-wider text-ink-2 transition-colors hover:border-accent/40 hover:text-ink";
 
   return (
     <div className={cn("flex flex-wrap items-center gap-2", className)} aria-label="Share this page">
