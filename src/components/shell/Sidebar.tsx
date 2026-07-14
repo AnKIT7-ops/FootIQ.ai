@@ -56,7 +56,7 @@ export function Sidebar() {
                     end={item.to === "/"}
                     className={({ isActive }) =>
                       cn(
-                        "group relative flex items-center gap-3 rounded-xl px-3 py-2 text-[13.5px] font-medium transition-colors",
+                        "group relative flex items-center gap-3 rounded-xl px-3 py-2 text-ui font-medium transition-colors",
                         isActive ? "text-ink" : "text-ink-3 hover:bg-surface-2 hover:text-ink-2",
                       )
                     }
@@ -83,7 +83,8 @@ export function Sidebar() {
         ))}
       </nav>
       <div className="space-y-2 border-t border-line px-5 py-4">
-        <div className="flex flex-wrap gap-x-3 gap-y-1">
+        {/* -mx-1.5 keeps the row optically flush with the label below while the tap targets stay ≥24px (WCAG 2.5.8). */}
+        <div className="-mx-1.5 flex flex-wrap">
           {[
             { to: "/about", label: "About" },
             { to: "/contact", label: "Contact" },
@@ -91,12 +92,16 @@ export function Sidebar() {
             { to: "/terms", label: "Terms" },
             { to: "/disclaimer", label: "Disclaimer" },
           ].map((l) => (
-            <NavLink key={l.to} to={l.to} className="font-mono text-[9.5px] uppercase tracking-wider text-ink-3 transition-colors hover:text-ink-2">
+            <NavLink
+              key={l.to}
+              to={l.to}
+              className="inline-flex min-h-6 items-center rounded-md px-1.5 font-mono text-micro uppercase tracking-wider text-ink-3 transition-colors hover:text-ink-2"
+            >
               {l.label}
             </NavLink>
           ))}
         </div>
-        <p className="font-mono text-[10px] uppercase tracking-widest text-ink-3">FootIQ · Beta · Demo data</p>
+        <p className="font-mono text-micro uppercase tracking-widest text-ink-3">FootIQ · Beta · Demo data</p>
       </div>
     </aside>
   );

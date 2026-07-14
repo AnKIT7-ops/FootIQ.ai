@@ -45,7 +45,7 @@ export function PersonalRows() {
         <div className="grid gap-3 md:grid-cols-2">
           {favTeams.length > 0 && (
             <Card className="p-4">
-              <p className="mb-2.5 flex items-center gap-1.5 font-mono text-[10.5px] uppercase tracking-wider text-ink-3">
+              <p className="mb-2.5 flex items-center gap-1.5 font-mono text-micro uppercase tracking-wider text-ink-3">
                 <Heart className="size-3" aria-hidden /> Your clubs
               </p>
               <ul className="space-y-2">
@@ -56,8 +56,8 @@ export function PersonalRows() {
                       <Link to={teamPathFor(t)} className="group flex items-center gap-2.5 rounded-xl p-1.5 transition-colors hover:bg-surface-2">
                         <Crest teamId={t.id} size={26} />
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-[13px] font-semibold text-ink">{t.name}</span>
-                          <span className="block text-[11px] text-ink-3">
+                          <span className="block truncate text-ui font-semibold text-ink">{t.name}</span>
+                          <span className="block text-label text-ink-3">
                             {pos > 0 ? `#${pos} · ` : ""}
                             {t.league}
                           </span>
@@ -72,7 +72,7 @@ export function PersonalRows() {
           )}
           {favPlayers.length > 0 && (
             <Card className="p-4">
-              <p className="mb-2.5 flex items-center gap-1.5 font-mono text-[10.5px] uppercase tracking-wider text-ink-3">
+              <p className="mb-2.5 flex items-center gap-1.5 font-mono text-micro uppercase tracking-wider text-ink-3">
                 <UserRound className="size-3" aria-hidden /> Your players
               </p>
               <ul className="space-y-2">
@@ -81,8 +81,8 @@ export function PersonalRows() {
                     <Link to={playerPathFor(p)} className="group flex items-center gap-2.5 rounded-xl p-1.5 transition-colors hover:bg-surface-2">
                       <Avatar name={p.name} size={26} />
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[13px] font-semibold text-ink">{p.name}</span>
-                        <span className="block text-[11px] text-ink-3">
+                        <span className="block truncate text-ui font-semibold text-ink">{p.name}</span>
+                        <span className="block text-label text-ink-3">
                           {p.role} · {getTeam(p.teamId).short}
                         </span>
                       </span>
@@ -98,17 +98,17 @@ export function PersonalRows() {
 
       {reading.length > 0 && (
         <div>
-          <p className="mb-2 flex items-center gap-1.5 font-mono text-[10.5px] uppercase tracking-wider text-ink-3">
+          <p className="mb-2 flex items-center gap-1.5 font-mono text-micro uppercase tracking-wider text-ink-3">
             <BookmarkCheck className="size-3" aria-hidden /> Continue reading
           </p>
           <div className="grid gap-2 sm:grid-cols-3">
             {reading.map((b) => (
               <Link key={b.refId} to={b.path} className="group rounded-2xl border border-line bg-surface p-3.5 transition-colors hover:border-line-strong">
-                <span className="font-mono text-[9.5px] uppercase tracking-wider text-ink-3">{b.kind === "intel" ? "Intelligence" : "News"}</span>
-                <span className="mt-1 block text-[13px] font-semibold leading-snug text-ink [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] overflow-hidden">
+                <span className="font-mono text-micro uppercase tracking-wider text-ink-3">{b.kind === "intel" ? "Intelligence" : "News"}</span>
+                <span className="mt-1 block text-ui font-semibold leading-snug text-ink [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] overflow-hidden">
                   {b.title}
                 </span>
-                <span className="mt-1.5 block text-[10.5px] text-ink-3">
+                <span className="mt-1.5 block text-micro text-ink-3">
                   Saved {agoFromMinutes((Date.now() - new Date(b.savedAt).getTime()) / 60000)}
                 </span>
               </Link>
@@ -119,7 +119,7 @@ export function PersonalRows() {
 
       {viewed.length > 0 && (
         <div>
-          <p className="mb-2 flex items-center gap-1.5 font-mono text-[10.5px] uppercase tracking-wider text-ink-3">
+          <p className="mb-2 flex items-center gap-1.5 font-mono text-micro uppercase tracking-wider text-ink-3">
             <Clock3 className="size-3" aria-hidden /> Recently viewed
           </p>
           <div className="no-scrollbar -mx-1 flex gap-1.5 overflow-x-auto px-1">
@@ -127,7 +127,7 @@ export function PersonalRows() {
               <Link
                 key={r.path}
                 to={r.path}
-                className="shrink-0 rounded-full border border-line bg-surface px-3 py-1.5 text-[12px] text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
+                className="shrink-0 rounded-full border border-line bg-surface px-3 py-1.5 text-caption text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
               >
                 {r.label}
               </Link>
@@ -135,7 +135,7 @@ export function PersonalRows() {
             {lastPlayer && (
               <Link
                 to={`/similar/${lastPlayer.id}`}
-                className="shrink-0 rounded-full border border-iq/35 bg-iq-soft px-3 py-1.5 text-[12px] font-medium text-iq-ink transition-colors hover:border-iq/60"
+                className="shrink-0 rounded-full border border-iq/35 bg-iq-soft px-3 py-1.5 text-caption font-medium text-iq-ink transition-colors hover:border-iq/60"
               >
                 Because you viewed {lastPlayer.label}: find similar →
               </Link>

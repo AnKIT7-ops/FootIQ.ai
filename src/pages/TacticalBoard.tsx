@@ -290,14 +290,14 @@ export default function TacticalBoard() {
           <span className="flex items-center gap-1.5">
           <button
             onClick={saveBoard}
-            className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent-soft px-3.5 py-1.5 font-mono text-[11px] uppercase tracking-wider text-accent-ink transition-colors hover:border-accent/70"
+            className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent-soft px-3.5 py-1.5 font-mono text-label uppercase tracking-wider text-accent-ink transition-colors hover:border-accent/70"
           >
             <Save className="size-3.5" aria-hidden />
             Save board
           </button>
           <button
             onClick={reset}
-            className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3.5 py-1.5 font-mono text-[11px] uppercase tracking-wider text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
+            className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3.5 py-1.5 font-mono text-label uppercase tracking-wider text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
           >
             <RotateCcw className="size-3.5" aria-hidden />
             Reset
@@ -343,12 +343,12 @@ export default function TacticalBoard() {
         <Card className="p-3 md:p-4">
           {mode === "h2h" && (
             <div className="mb-3 flex items-center justify-between px-1">
-              <span className="inline-flex items-center gap-2 text-[13px] font-semibold text-ink">
+              <span className="inline-flex items-center gap-2 text-ui font-semibold text-ink">
                 <Crest teamId={teamAId} size={22} /> {teamA.short}
-                <span className="ml-1 font-mono text-[10px] uppercase tracking-wider text-ink-3">{teamA.style.formation} · attacks →</span>
+                <span className="ml-1 font-mono text-micro uppercase tracking-wider text-ink-3">{teamA.style.formation} · attacks →</span>
               </span>
-              <span className="inline-flex items-center gap-2 text-[13px] font-semibold text-ink">
-                <span className="mr-1 font-mono text-[10px] uppercase tracking-wider text-ink-3">← attacks · {teamB.style.formation}</span>
+              <span className="inline-flex items-center gap-2 text-ui font-semibold text-ink">
+                <span className="mr-1 font-mono text-micro uppercase tracking-wider text-ink-3">← attacks · {teamB.style.formation}</span>
                 {teamB.short} <Crest teamId={teamBId} size={22} />
               </span>
             </div>
@@ -378,7 +378,7 @@ export default function TacticalBoard() {
                 (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
                 dragId.current = "ball";
               }}
-              className="absolute z-20 -translate-x-1/2 -translate-y-1/2 cursor-grab select-none text-[17px] leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.55)] transition-transform hover:scale-125 active:cursor-grabbing md:text-[19px]"
+              className="absolute z-20 -translate-x-1/2 -translate-y-1/2 cursor-grab select-none text-lg leading-none transition-transform hover:scale-125 active:cursor-grabbing md:text-xl"
               style={{ left: `${ball.x}%`, top: `${ball.y}%` }}
               aria-label="Drag the ball"
             >
@@ -402,7 +402,7 @@ export default function TacticalBoard() {
                   aria-label={`Drag ${c.team === "A" ? teamA.short : teamB.short} ${role}`}
                 >
                   <span
-                    className="flex size-8 items-center justify-center rounded-full font-mono text-[9.5px] font-bold shadow-lg ring-2 transition-transform hover:scale-110 md:size-9"
+                    className="flex size-8 items-center justify-center rounded-full font-mono text-micro font-bold ring-2 transition-transform hover:scale-110 md:size-9"
                     style={{
                       background: fill,
                       color: textColor,
@@ -415,14 +415,14 @@ export default function TacticalBoard() {
               );
             })}
           </div>
-          <p className="mt-2.5 text-center font-mono text-[10.5px] uppercase tracking-wider text-ink-3">
+          <p className="mt-2.5 text-center font-mono text-micro uppercase tracking-wider text-ink-3">
             {mode === "single" ? "Attacking → · drag any player — the position label follows the zone" : "Drag anyone on either side · labels re-read the zone as you move"}
           </p>
         </Card>
 
         <div className="space-y-4">
           <Card className="p-4 md:p-5">
-            <SectionHeader eyebrow="Live shape metrics" title="Structure" className="mb-4" />
+            <SectionHeader title="Structure" className="mb-4" />
             {mode === "h2h" && mB ? (
               <>
                 <Legend className="mb-4" items={[{ label: teamA.short, color: "var(--chart-1)" }, { label: teamB.short, color: "var(--chart-4)" }]} />
@@ -494,11 +494,11 @@ export default function TacticalBoard() {
                 {boards.map((b) => (
                   <li key={b.id} className="flex items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2">
                     <button onClick={() => loadBoard(b)} className="group min-w-0 flex-1 text-left" aria-label={`Load board ${b.name}`}>
-                      <span className="flex items-center gap-1.5 truncate text-[12.5px] font-semibold text-ink group-hover:underline">
+                      <span className="flex items-center gap-1.5 truncate text-caption font-semibold text-ink group-hover:underline">
                         <FolderOpen className="size-3.5 shrink-0 text-ink-3" aria-hidden />
                         {b.name}
                       </span>
-                      <span className="block pl-5 font-mono text-[9.5px] uppercase tracking-wider text-ink-3">
+                      <span className="block pl-5 font-mono text-micro uppercase tracking-wider text-ink-3">
                         {b.mode === "single" ? "Formation lab" : "Head to head"} · {b.savedAt.slice(0, 10)}
                       </span>
                     </button>
@@ -528,7 +528,7 @@ function TeamSelect({ value, onChange, exclude, label }: { value: string; onChan
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-9 rounded-xl border border-line bg-surface-2 px-2.5 text-[13px] font-medium text-ink outline-none focus:border-accent"
+        className="h-9 rounded-xl border border-line bg-surface-2 px-2.5 text-ui font-medium text-ink outline-none focus:border-accent"
         aria-label={label}
       >
         {teams.filter((t) => t.id !== exclude).map((t) => (

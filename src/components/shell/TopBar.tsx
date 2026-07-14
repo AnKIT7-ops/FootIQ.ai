@@ -26,12 +26,12 @@ export function TopBar({ onOpenSearch }: { onOpenSearch: () => void }) {
 
         <button
           onClick={onOpenSearch}
-          className="group flex h-9 min-w-0 flex-1 items-center gap-2.5 rounded-full border border-line bg-surface px-3.5 text-left text-[13px] text-ink-3 transition-colors hover:border-line-strong hover:text-ink-2 sm:max-w-xs lg:max-w-sm"
+          className="group flex h-9 min-w-0 flex-1 items-center gap-2.5 rounded-full border border-line bg-surface px-3.5 text-left text-ui text-ink-3 transition-colors hover:border-line-strong hover:text-ink-2 sm:max-w-xs lg:max-w-sm"
           aria-label="Open universal search"
         >
           <Search className="size-3.5 shrink-0" aria-hidden />
           <span className="truncate">Search players, teams, anything…</span>
-          <kbd className="ml-auto hidden shrink-0 rounded-md border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-[10px] text-ink-3 md:block">
+          <kbd className="ml-auto hidden shrink-0 rounded-md border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-micro text-ink-3 md:block">
             Ctrl K
           </kbd>
         </button>

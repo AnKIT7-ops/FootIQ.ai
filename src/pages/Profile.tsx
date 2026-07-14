@@ -56,7 +56,7 @@ export default function Profile() {
               </Badge>
             )}
           </div>
-          <p className="mt-1 text-[13px] text-ink-2">
+          <p className="mt-1 text-ui text-ink-2">
             {favTeams.length} teams · {favPlayers.length} players followed · {user.bookmarks.length} saved reports
           </p>
         </div>
@@ -75,7 +75,7 @@ export default function Profile() {
       <div className="grid gap-8 lg:grid-cols-2">
         {/* favourite teams */}
         <section aria-label="Favorite teams">
-          <SectionHeader eyebrow="Your clubs" title="Favorite Teams" />
+          <SectionHeader title="Favorite Teams" />
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
             {teams.map((t) => {
               const active = favTeams.includes(t.id);
@@ -90,7 +90,7 @@ export default function Profile() {
                   aria-pressed={active}
                 >
                   <Crest teamId={t.id} size={28} />
-                  <span className="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-ink">{t.short}</span>
+                  <span className="min-w-0 flex-1 truncate text-caption font-semibold text-ink">{t.short}</span>
                   <Star className={cn("size-4 shrink-0", active ? "fill-accent text-accent" : "text-ink-3")} aria-hidden />
                 </button>
               );
@@ -100,7 +100,7 @@ export default function Profile() {
 
         {/* followed players */}
         <section aria-label="Followed players">
-          <SectionHeader eyebrow="Watchlist" title="Followed Players" />
+          <SectionHeader title="Followed Players" />
           <Card className="divide-y divide-line">
             {players
               .filter((p) => favPlayers.includes(p.id))
@@ -108,14 +108,14 @@ export default function Profile() {
                 <div key={p.id} className="flex items-center gap-3 p-3.5">
                   <Avatar name={p.name} playerId={p.id} size={38} ringColor={getTeam(p.teamId).colors[0]} />
                   <button onClick={() => navigate(playerPath(p))} className="min-w-0 flex-1 text-left">
-                    <p className="truncate text-[13.5px] font-semibold text-ink hover:underline">{p.name}</p>
-                    <p className="text-[11px] text-ink-3">
+                    <p className="truncate text-ui font-semibold text-ink hover:underline">{p.name}</p>
+                    <p className="text-label text-ink-3">
                       {getTeam(p.teamId).short} · {p.role} · {money(p.marketValue)}
                     </p>
                   </button>
                   <button
                     onClick={() => toggleFavorite("player", p.id)}
-                    className="rounded-full border border-line px-3 py-1 font-mono text-[10.5px] uppercase tracking-wider text-ink-3 transition-colors hover:border-bad/40 hover:text-bad"
+                    className="rounded-full border border-line px-3 py-1 font-mono text-micro uppercase tracking-wider text-ink-3 transition-colors hover:border-bad/40 hover:text-bad"
                   >
                     Unfollow
                   </button>
@@ -160,20 +160,20 @@ export default function Profile() {
 
         {/* saved reports */}
         <section aria-label="Saved reports">
-          <SectionHeader eyebrow="Read later" title="Bookmarked Reports" />
+          <SectionHeader title="Bookmarked Reports" />
           <Card className="divide-y divide-line">
             {user.bookmarks.slice(0, 8).map((b) => (
               <div key={b.refId} className="flex items-center gap-3 p-3.5">
-                <Bookmark className="size-4 shrink-0 fill-iq text-iq" aria-hidden />
+                <Bookmark className="size-4 shrink-0 fill-iq-ink text-iq-ink" aria-hidden />
                 <Link to={b.path} className="min-w-0 flex-1">
-                  <p className="truncate text-[13.5px] font-semibold text-ink hover:underline">{b.title}</p>
-                  <p className="font-mono text-[10px] uppercase tracking-wider text-ink-3">
+                  <p className="truncate text-ui font-semibold text-ink hover:underline">{b.title}</p>
+                  <p className="font-mono text-micro uppercase tracking-wider text-ink-3">
                     {b.kind === "intel" ? "Intelligence" : "News"} · {b.savedAt.slice(0, 10)}
                   </p>
                 </Link>
                 <button
                   onClick={() => toggleBookmark(b)}
-                  className="rounded-full border border-line px-3 py-1 font-mono text-[10.5px] uppercase tracking-wider text-ink-3 transition-colors hover:border-bad/40 hover:text-bad"
+                  className="rounded-full border border-line px-3 py-1 font-mono text-micro uppercase tracking-wider text-ink-3 transition-colors hover:border-bad/40 hover:text-bad"
                 >
                   Remove
                 </button>
@@ -198,16 +198,16 @@ export default function Profile() {
 
         {/* prediction history */}
         <section aria-label="Prediction history">
-          <SectionHeader eyebrow="Your calls" title="Prediction History" />
+          <SectionHeader title="Prediction History" />
           <Card className="divide-y divide-line">
             {user.predictionViews.slice(0, 8).map((v) => (
               <Link key={v.matchId} to={v.path} className="flex items-center gap-3 p-3.5 transition-colors hover:bg-surface-2">
                 <TrendingUp className="size-4 shrink-0 text-chart-2" aria-hidden />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13.5px] font-semibold text-ink">{v.label}</p>
-                  <p className="font-mono text-[10px] uppercase tracking-wider text-ink-3">viewed {v.viewedAt.slice(0, 10)}</p>
+                  <p className="truncate text-ui font-semibold text-ink">{v.label}</p>
+                  <p className="font-mono text-micro uppercase tracking-wider text-ink-3">viewed {v.viewedAt.slice(0, 10)}</p>
                 </div>
-                <span className="shrink-0 font-mono text-[11px] text-ink-2">
+                <span className="shrink-0 font-mono text-label text-ink-2">
                   {v.probs[0]}/{v.probs[1]}/{v.probs[2]}
                 </span>
               </Link>
@@ -228,14 +228,14 @@ export default function Profile() {
 
         {/* notification preferences */}
         <section aria-label="Notification preferences">
-          <SectionHeader eyebrow="Never miss it" title="Notifications" />
+          <SectionHeader title="Notifications" />
           <Card className="divide-y divide-line">
             {(Object.keys(prefLabels) as Array<keyof NotificationPrefs>).map((key) => {
               const on = user.prefs[key];
               return (
                 <div key={key} className="flex items-center gap-3 p-3.5">
                   <BellRing className={cn("size-4 shrink-0", on ? "text-accent-ink" : "text-ink-3")} aria-hidden />
-                  <span className="min-w-0 flex-1 text-[13px] text-ink-2">{prefLabels[key]}</span>
+                  <span className="min-w-0 flex-1 text-ui text-ink-2">{prefLabels[key]}</span>
                   <button
                     role="switch"
                     aria-checked={on}
@@ -253,7 +253,7 @@ export default function Profile() {
 
         {/* saved comparisons + premium */}
         <section aria-label="Saved comparisons and premium">
-          <SectionHeader eyebrow="Your library" title="Saved Comparisons" />
+          <SectionHeader title="Saved Comparisons" />
           <div className="space-y-2.5">
             {savedComparisons.map((s, i) => {
               const a = getPlayer(s.a);
@@ -262,20 +262,20 @@ export default function Profile() {
                 <Card hover key={i} onClick={() => navigate("/compare")} className="flex items-center gap-3 p-3.5">
                   <GitCompareArrows className="size-4 shrink-0 text-chart-2" aria-hidden />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13.5px] font-semibold text-ink">
+                    <p className="truncate text-ui font-semibold text-ink">
                       {a.name} vs {b.name}
                     </p>
-                    <p className="text-[11px] text-ink-3">{s.note}</p>
+                    <p className="text-label text-ink-3">{s.note}</p>
                   </div>
-                  <Bookmark className="size-4 shrink-0 fill-iq text-iq" aria-hidden />
+                  <Bookmark className="size-4 shrink-0 fill-iq-ink text-iq-ink" aria-hidden />
                 </Card>
               );
             })}
             <Card className="p-4">
-              <p className="flex items-center gap-2 text-[13.5px] font-bold text-ink">
+              <p className="flex items-center gap-2 text-ui font-bold text-ink">
                 <Crown className="size-4 text-iq-ink" aria-hidden /> IQ Premium
               </p>
-              <ul className="mt-2.5 space-y-1.5 text-[12.5px] text-ink-2">
+              <ul className="mt-2.5 space-y-1.5 text-caption text-ink-2">
                 <li className="flex gap-2"><Eye className="mt-0.5 size-3.5 shrink-0 text-accent-ink" aria-hidden /> Unlimited AI Scout queries & live win-probability feeds</li>
                 <li className="flex gap-2"><Eye className="mt-0.5 size-3.5 shrink-0 text-accent-ink" aria-hidden /> Full historical model archive back to 1950</li>
                 <li className="flex gap-2"><Eye className="mt-0.5 size-3.5 shrink-0 text-accent-ink" aria-hidden /> Fantasy chip optimizer with private projections</li>
@@ -283,7 +283,7 @@ export default function Profile() {
               <button
                 onClick={() => setPremium((p) => !p)}
                 className={cn(
-                  "mt-3.5 w-full rounded-xl py-2.5 text-[13px] font-semibold transition-transform hover:scale-[1.01] active:scale-[0.99]",
+                  "mt-3.5 w-full rounded-xl py-2.5 text-ui font-semibold transition-transform hover:scale-[1.01] active:scale-[0.99]",
                   premium ? "border border-line text-ink-2" : "bg-iq text-[#241a02]",
                 )}
               >

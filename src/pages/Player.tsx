@@ -72,7 +72,7 @@ export default function PlayerPage() {
               {player.starter && <Badge>Starter</Badge>}
             </div>
             <h1 className="display mt-1 text-3xl font-black text-ink md:text-4xl">{player.name}</h1>
-            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px] text-ink-2">
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-ui text-ink-2">
               <Link to={teamPath(team)} className="inline-flex items-center gap-1.5 font-semibold text-ink hover:underline">
                 <Crest teamId={team.id} size={20} />
                 {team.name}
@@ -106,7 +106,7 @@ export default function PlayerPage() {
           {contentBySlug(`analysis-${playerSlug(player)}`) && (
             <Link
               to={`/intelligence/analysis-${playerSlug(player)}`}
-              className="inline-flex items-center gap-1.5 rounded-full border border-iq/30 bg-iq-soft px-3 py-1.5 font-mono text-[10.5px] uppercase tracking-wider text-iq-ink transition-colors hover:border-iq/60"
+              className="inline-flex items-center gap-1.5 rounded-full border border-iq/30 bg-iq-soft px-3 py-1.5 font-mono text-micro uppercase tracking-wider text-iq-ink transition-colors hover:border-iq/60"
             >
               <Sparkles className="size-3.5" aria-hidden /> AI analysis
             </Link>
@@ -160,9 +160,9 @@ export default function PlayerPage() {
               </div>
             </Card>
             <Card className="p-4 md:p-5">
-              <SectionHeader eyebrow="Who he is" title="Biography" className="mb-2" />
-              <p className="text-[14px] leading-relaxed text-ink-2">{player.bio}</p>
-              <p className="mt-3 border-t border-line pt-3 text-[14px] leading-relaxed text-ink-2">
+              <SectionHeader title="Biography" className="mb-2" />
+              <p className="text-body leading-relaxed text-ink-2">{player.bio}</p>
+              <p className="mt-3 border-t border-line pt-3 text-body leading-relaxed text-ink-2">
                 <IQTag className="mr-2 align-[2px]">Playing style</IQTag>
                 {player.style}
               </p>
@@ -174,15 +174,15 @@ export default function PlayerPage() {
       {tab === "maps" && (
         <div className="grid gap-6 lg:grid-cols-2">
           <Card className="p-4 md:p-5">
-            <SectionHeader eyebrow="Where he lives" title="Touch Heatmap" className="mb-3" />
+            <SectionHeader title="Touch Heatmap" className="mb-3" />
             <Heatmap cells={heat} />
           </Card>
           <Card className="p-4 md:p-5">
-            <SectionHeader eyebrow="Season shots" title="Shot Map" className="mb-3" />
+            <SectionHeader title="Shot Map" className="mb-3" />
             <ShotMap shots={shots} />
           </Card>
           <Card className="p-4 md:p-5 lg:col-span-2">
-            <SectionHeader eyebrow="Distribution" title="Passing Map" className="mb-3" />
+            <SectionHeader title="Passing Map" className="mb-3" />
             <PassMap passes={passes} />
           </Card>
         </div>
@@ -191,7 +191,7 @@ export default function PlayerPage() {
       {tab === "history" && (
         <div className="grid gap-6 lg:grid-cols-2">
           <Card className="p-4 md:p-5">
-            <SectionHeader eyebrow="Availability" title="Injury History" className="mb-3" />
+            <SectionHeader title="Injury History" className="mb-3" />
             {player.injuryHistory.length === 0 ? (
               <p className="flex items-center gap-2 text-sm text-ink-2">
                 <CheckCircle2 className="size-4 text-accent-ink" aria-hidden />
@@ -205,8 +205,8 @@ export default function PlayerPage() {
                       <BriefcaseMedical className="size-3.5" aria-hidden />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[13.5px] font-semibold text-ink">{inj.injury}</p>
-                      <p className="font-mono text-[11px] text-ink-3">
+                      <p className="text-ui font-semibold text-ink">{inj.injury}</p>
+                      <p className="font-mono text-label text-ink-3">
                         {inj.date} · {inj.daysOut} days · {inj.gamesMissed} games missed
                       </p>
                     </div>
@@ -216,16 +216,16 @@ export default function PlayerPage() {
             )}
           </Card>
           <Card className="p-4 md:p-5">
-            <SectionHeader eyebrow="The journey" title="Transfer History" className="mb-3" />
+            <SectionHeader title="Transfer History" className="mb-3" />
             <ol className="relative space-y-4 before:absolute before:bottom-2 before:left-[0.34rem] before:top-2 before:w-px before:bg-line">
               {[...player.transferHistory].reverse().map((tr, i) => (
                 <li key={i} className="relative flex gap-3">
                   <span className="z-10 mt-1.5 size-3 shrink-0 rounded-full border-2 border-chart-2 bg-bg" aria-hidden />
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13.5px] font-semibold text-ink">
+                    <p className="text-ui font-semibold text-ink">
                       {tr.from} <ArrowRight className="inline size-3.5 text-ink-3" aria-hidden /> {tr.to}
                     </p>
-                    <p className="font-mono text-[11px] text-ink-3">
+                    <p className="font-mono text-label text-ink-3">
                       {tr.season} ·{" "}
                       {typeof tr.fee === "number" ? money(tr.fee) : tr.fee === "academy" ? "Academy graduate" : tr.fee === "free" ? "Free transfer" : "Loan"}
                     </p>
@@ -245,7 +245,7 @@ export default function PlayerPage() {
                 <p className="eyebrow mb-3 text-accent-ink">Strengths</p>
                 <ul className="space-y-2.5">
                   {player.strengths.map((s, i) => (
-                    <li key={i} className="flex gap-2.5 text-[13.5px] leading-snug text-ink-2">
+                    <li key={i} className="flex gap-2.5 text-ui leading-snug text-ink-2">
                       <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-accent-ink" aria-hidden />
                       {s}
                     </li>
@@ -256,7 +256,7 @@ export default function PlayerPage() {
                 <p className="eyebrow mb-3 text-bad">Weaknesses</p>
                 <ul className="space-y-2.5">
                   {player.weaknesses.map((w, i) => (
-                    <li key={i} className="flex gap-2.5 text-[13.5px] leading-snug text-ink-2">
+                    <li key={i} className="flex gap-2.5 text-ui leading-snug text-ink-2">
                       <ShieldAlert className="mt-0.5 size-4 shrink-0 text-bad" aria-hidden />
                       {w}
                     </li>
@@ -268,11 +268,10 @@ export default function PlayerPage() {
           </div>
           <Card className="p-4 md:p-5">
             <SectionHeader
-              eyebrow="Similarity engine"
               title="Plays Like"
               className="mb-3"
               action={
-                <Link to={`/similar/${player.id}`} className="font-mono text-[11px] uppercase tracking-wider text-accent-ink hover:underline">
+                <Link to={`/similar/${player.id}`} className="font-mono text-label uppercase tracking-wider text-accent-ink hover:underline">
                   Full analysis →
                 </Link>
               }
@@ -288,8 +287,8 @@ export default function PlayerPage() {
                   >
                     <Avatar name={sp.name} playerId={sp.id} size={36} />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[13.5px] font-semibold text-ink">{sp.name}</p>
-                      <p className="text-[11px] text-ink-3">
+                      <p className="truncate text-ui font-semibold text-ink">{sp.name}</p>
+                      <p className="text-label text-ink-3">
                         {sp.role} · {getTeam(sp.teamId).short}
                       </p>
                     </div>

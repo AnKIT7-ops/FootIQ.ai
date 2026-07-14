@@ -50,9 +50,9 @@ export default function Predictions() {
               aria-pressed={selected}
             >
               <Crest teamId={h.id} size={22} />
-              <span className="font-mono text-[11px] font-semibold text-ink">{h.tla} v {a.tla}</span>
+              <span className="font-mono text-label font-semibold text-ink">{h.tla} v {a.tla}</span>
               <Crest teamId={a.id} size={22} />
-              <span className="font-mono text-[10px] text-ink-3">{m.kickoff}</span>
+              <span className="font-mono text-micro text-ink-3">{m.kickoff}</span>
             </button>
           );
         })}
@@ -74,17 +74,17 @@ export default function Predictions() {
             </div>
 
             <div className="flex h-11 w-full gap-[3px] overflow-hidden rounded-2xl" role="img" aria-label={`Win probabilities: ${home.short} ${active.homeWin}%, draw ${active.draw}%, ${away.short} ${active.awayWin}%`}>
-              <motion.div initial={{ flexBasis: 0 }} animate={{ flexBasis: `${active.homeWin}%` }} transition={{ duration: 0.6 }} className="flex items-center justify-center bg-chart-1 font-mono text-[12px] font-bold text-[#04110c]">
+              <motion.div initial={{ flexBasis: 0 }} animate={{ flexBasis: `${active.homeWin}%` }} transition={{ duration: 0.6 }} className="flex items-center justify-center bg-chart-1 font-mono text-caption font-bold text-[#04110c]">
                 {active.homeWin}%
               </motion.div>
-              <motion.div initial={{ flexBasis: 0 }} animate={{ flexBasis: `${active.draw}%` }} transition={{ duration: 0.6 }} className="flex items-center justify-center bg-surface-3 font-mono text-[12px] font-bold text-ink-2">
+              <motion.div initial={{ flexBasis: 0 }} animate={{ flexBasis: `${active.draw}%` }} transition={{ duration: 0.6 }} className="flex items-center justify-center bg-surface-3 font-mono text-caption font-bold text-ink-2">
                 {active.draw}%
               </motion.div>
-              <motion.div initial={{ flexBasis: 0 }} animate={{ flexBasis: `${active.awayWin}%` }} transition={{ duration: 0.6 }} className="flex items-center justify-center bg-chart-4 font-mono text-[12px] font-bold text-white">
+              <motion.div initial={{ flexBasis: 0 }} animate={{ flexBasis: `${active.awayWin}%` }} transition={{ duration: 0.6 }} className="flex items-center justify-center bg-chart-4 font-mono text-caption font-bold text-white">
                 {active.awayWin}%
               </motion.div>
             </div>
-            <div className="mt-2 flex justify-between font-mono text-[11px] text-ink-3">
+            <div className="mt-2 flex justify-between font-mono text-label text-ink-3">
               <span>{home.short} win</span>
               <span>Draw</span>
               <span>{away.short} win</span>
@@ -109,10 +109,10 @@ export default function Predictions() {
                 <p className="eyebrow">Kickoff</p>
                 <p className="mt-1 font-display text-2xl font-bold text-ink">{match.kickoff.split(" ").slice(-1)[0]}</p>
                 <div className="flex flex-col items-start">
-                  <button onClick={() => navigate(`/match/${match.id}`)} className="mt-0.5 font-mono text-[10.5px] uppercase tracking-wider text-accent-ink hover:underline">
+                  <button onClick={() => navigate(`/match/${match.id}`)} className="mt-0.5 font-mono text-micro uppercase tracking-wider text-accent-ink hover:underline">
                     Match page →
                   </button>
-                  <button onClick={() => navigate(predictionPath(match))} className="mt-0.5 font-mono text-[10.5px] uppercase tracking-wider text-iq-ink hover:underline">
+                  <button onClick={() => navigate(predictionPath(match))} className="mt-0.5 font-mono text-micro uppercase tracking-wider text-iq-ink hover:underline">
                     Full report →
                   </button>
                 </div>
@@ -125,7 +125,7 @@ export default function Predictions() {
             <ul className="space-y-2.5">
               {active.reasoning.map((r, i) => (
                 <li key={i} className="flex gap-2.5">
-                  <span className="mt-[0.14em] font-mono text-[11px] font-bold text-iq-ink">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="mt-[0.14em] font-mono text-label font-bold text-iq-ink">{String(i + 1).padStart(2, "0")}</span>
                   <span>{r}</span>
                 </li>
               ))}
@@ -136,7 +136,7 @@ export default function Predictions() {
         <div className="space-y-6">
           {/* score distribution */}
           <Card className="p-4 md:p-5">
-            <SectionHeader eyebrow="Most likely" title="Scorelines" className="mb-4" />
+            <SectionHeader title="Scorelines" className="mb-4" />
             <div className="space-y-3">
               {active.topScores.map((s) => (
                 <Meter key={s.score} label={s.score} value={s.p} max={20} color="var(--chart-2)" />
@@ -146,7 +146,7 @@ export default function Predictions() {
 
           {/* MVP candidates */}
           <Card className="p-4 md:p-5">
-            <SectionHeader eyebrow="Player of the match" title="MVP Candidates" className="mb-3" />
+            <SectionHeader title="MVP Candidates" className="mb-3" />
             <div className="space-y-2.5">
               {active.mvp.map((c) => {
                 const p = getPlayer(c.playerId);
@@ -158,8 +158,8 @@ export default function Predictions() {
                   >
                     <Avatar name={p.name} playerId={p.id} size={36} ringColor={getTeam(p.teamId).colors[0]} />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[13.5px] font-semibold text-ink">{p.name}</p>
-                      <p className="text-[11px] text-ink-3">{p.role} · {getTeam(p.teamId).tla}</p>
+                      <p className="truncate text-ui font-semibold text-ink">{p.name}</p>
+                      <p className="text-label text-ink-3">{p.role} · {getTeam(p.teamId).tla}</p>
                     </div>
                     <span className="tabular font-display text-lg font-bold text-iq-ink">{c.p}%</span>
                   </button>
@@ -168,7 +168,7 @@ export default function Predictions() {
             </div>
           </Card>
 
-          <Card className="p-4 text-[12.5px] leading-relaxed text-ink-3">
+          <Card className="p-4 text-caption leading-relaxed text-ink-3">
             Predictions are probabilistic model outputs for entertainment and analysis — never guarantees. A 70% favourite still loses three
             times in ten.
           </Card>

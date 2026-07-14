@@ -83,9 +83,17 @@ export default function MatchCenter() {
     <div className="space-y-6">
       {/* header */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="floodlight card relative overflow-hidden p-5 md:p-7">
+        {/* The score is rendered as a figure, not a heading — screen readers get the fixture as the page's h1. */}
+        <h1 className="sr-only">
+          {detail.homeScore != null && detail.awayScore != null
+            ? `${home.name} ${detail.homeScore}–${detail.awayScore} ${away.name}`
+            : `${home.name} vs ${away.name}`}
+          {" · "}
+          {detail.competition}
+        </h1>
         <div className="flex flex-wrap items-center gap-2">
           {live ? <Badge variant="live">Live · {detail.minute}'</Badge> : <Badge>{detail.status === "finished" ? "Full-time" : detail.kickoff}</Badge>}
-          <span className="font-mono text-[11px] uppercase tracking-wider text-ink-3">
+          <span className="font-mono text-label uppercase tracking-wider text-ink-3">
             {detail.competition} · {detail.venue}
           </span>
         </div>
@@ -104,7 +112,7 @@ export default function MatchCenter() {
             <span className="hidden max-w-[10rem] truncate text-lg font-bold text-ink md:block">{away.short}</span>
           </Link>
         </div>
-        <p className="mt-3 text-center font-mono text-[11px] text-ink-3 md:hidden">
+        <p className="mt-3 text-center font-mono text-label text-ink-3 md:hidden">
           {home.short} vs {away.short}
         </p>
         <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
@@ -116,7 +124,7 @@ export default function MatchCenter() {
           />
           <Link
             to={predictionPath(detail)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-iq/30 bg-iq-soft px-3 py-1.5 font-mono text-[10.5px] uppercase tracking-wider text-iq-ink transition-colors hover:border-iq/60"
+            className="inline-flex items-center gap-1.5 rounded-full border border-iq/30 bg-iq-soft px-3 py-1.5 font-mono text-micro uppercase tracking-wider text-iq-ink transition-colors hover:border-iq/60"
           >
             AI prediction
           </Link>
@@ -140,12 +148,12 @@ export default function MatchCenter() {
         <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
           <div className="space-y-6">
             <Card className="p-4 md:p-5">
-              <SectionHeader eyebrow="Pressure map" title="Momentum" className="mb-3" />
+              <SectionHeader title="Momentum" className="mb-3" />
               <MomentumRiver data={detail.momentum} homeLabel={home.short} awayLabel={away.short} />
             </Card>
 
             <Card className="p-4 md:p-5">
-              <SectionHeader eyebrow="Key numbers" title="Match Stats" className="mb-4" />
+              <SectionHeader title="Match Stats" className="mb-4" />
               <CompareBars
                 rows={[
                   { label: "Expected goals (xG)", a: detail.home.xG, b: detail.away.xG, format: (v) => v.toFixed(2) },
@@ -163,7 +171,7 @@ export default function MatchCenter() {
 
           <div className="space-y-6">
             <Card className="p-4 md:p-5">
-              <SectionHeader eyebrow="As it happened" title="Timeline" className="mb-3" />
+              <SectionHeader title="Timeline" className="mb-3" />
               <ol className="relative space-y-4 before:absolute before:bottom-1 before:left-[1.05rem] before:top-1 before:w-px before:bg-line">
                 {[...detail.events].reverse().map((e, i) => (
                   <li key={i} className="relative flex gap-3 pl-0">
@@ -176,11 +184,11 @@ export default function MatchCenter() {
                       {eventIcon(e)}
                     </span>
                     <div className="min-w-0 pt-0.5">
-                      <p className="font-mono text-[10.5px] uppercase tracking-wider text-ink-3">
+                      <p className="font-mono text-micro uppercase tracking-wider text-ink-3">
                         {e.minute}'{e.teamId ? ` · ${getTeam(e.teamId).tla}` : ""}
                         {e.player ? ` · ${e.player}` : ""}
                       </p>
-                      <p className="mt-0.5 text-[13px] leading-snug text-ink-2">{e.detail}</p>
+                      <p className="mt-0.5 text-ui leading-snug text-ink-2">{e.detail}</p>
                     </div>
                   </li>
                 ))}
@@ -193,7 +201,7 @@ export default function MatchCenter() {
       {tab === "stats" && (
         <div className="grid gap-6 lg:grid-cols-2">
           <Card className="p-4 md:p-5">
-            <SectionHeader eyebrow="Complete sheet" title="All Stats" className="mb-4" />
+            <SectionHeader title="All Stats" className="mb-4" />
             <CompareBars
               rows={[
                 { label: "Possession %", a: detail.home.possession, b: detail.away.possession, max: 100 },
@@ -238,7 +246,7 @@ export default function MatchCenter() {
               homeColor={home.colors[0]}
               awayColor={away.colors[0] === home.colors[0] ? away.colors[1] : away.colors[0]}
             />
-            <p className="mt-2 text-center font-mono text-[10.5px] uppercase tracking-wide text-ink-3">
+            <p className="mt-2 text-center font-mono text-micro uppercase tracking-wide text-ink-3">
               Hover players for ratings · {home.tla} attacks →
             </p>
           </Card>
@@ -247,24 +255,24 @@ export default function MatchCenter() {
             <ol className="space-y-2.5">
               {ratings.map((p, i) => (
                 <li key={`${p.teamId}-${p.shirt}`} className="flex items-center gap-3">
-                  <span className="w-4 text-center font-mono text-[11px] text-ink-3">{i + 1}</span>
+                  <span className="w-4 text-center font-mono text-label text-ink-3">{i + 1}</span>
                   <span className="relative">
                     <Avatar name={p.name} playerId={p.playerId} size={30} />
                     <Crest teamId={p.teamId} size={14} className="absolute -bottom-0.5 -right-1" />
                   </span>
                   <div className="min-w-0 flex-1">
                     {p.playerId ? (
-                      <Link to={`/player/${p.playerId}`} className="truncate text-[13.5px] font-semibold text-ink hover:underline">
+                      <Link to={`/player/${p.playerId}`} className="truncate text-ui font-semibold text-ink hover:underline">
                         {p.name}
                       </Link>
                     ) : (
-                      <span className="truncate text-[13.5px] font-semibold text-ink">{p.name}</span>
+                      <span className="truncate text-ui font-semibold text-ink">{p.name}</span>
                     )}
-                    <p className="text-[10.5px] uppercase tracking-wide text-ink-3">{p.pos}</p>
+                    <p className="text-micro uppercase tracking-wide text-ink-3">{p.pos}</p>
                   </div>
                   <span
                     className={cn(
-                      "tabular rounded-lg px-2 py-0.5 font-mono text-[12.5px] font-bold",
+                      "tabular rounded-lg px-2 py-0.5 font-mono text-caption font-bold",
                       p.rating >= 7.5 ? "bg-accent-soft text-accent-ink" : "bg-surface-3 text-ink-2",
                     )}
                   >
@@ -290,10 +298,10 @@ export default function MatchCenter() {
                       <Sparkles className="size-3.5" aria-hidden />
                     </span>
                     <div>
-                      <p className="font-mono text-[10.5px] uppercase tracking-wider text-ink-3">
+                      <p className="font-mono text-micro uppercase tracking-wider text-ink-3">
                         {c.minute}' · {c.kind}
                       </p>
-                      <p className="mt-1 text-[13.5px] leading-relaxed text-ink-2">{c.text}</p>
+                      <p className="mt-1 text-ui leading-relaxed text-ink-2">{c.text}</p>
                     </div>
                   </li>
                 ))}
@@ -319,7 +327,7 @@ export default function MatchCenter() {
 function PossessionBar({ homeName, awayName, home, away }: { homeName: string; awayName: string; home: number; away: number }) {
   return (
     <div>
-      <div className="mb-1.5 flex justify-between font-mono text-[11px] text-ink-2">
+      <div className="mb-1.5 flex justify-between font-mono text-label text-ink-2">
         <span>
           {homeName} <strong className="text-ink">{home}%</strong>
         </span>
@@ -347,7 +355,7 @@ function WinProb({ home, away, detail }: { home: string; away: string; detail: {
       {rows.map((r) => (
         <Meter key={r.label} label={r.label} value={r.v} color={r.color} />
       ))}
-      <p className="pt-1 font-mono text-[10px] uppercase tracking-wider text-ink-3">
+      <p className="pt-1 font-mono text-micro uppercase tracking-wider text-ink-3">
         <ArrowLeftRight className="mr-1 inline size-3" aria-hidden />
         Updates every event · probabilities, not promises
       </p>

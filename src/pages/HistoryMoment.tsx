@@ -59,35 +59,35 @@ export default function HistoryMoment() {
           ))}
         </div>
         <SectionHeader level={1} title={moment.title} className="mb-1" />
-        <p className="mb-4 text-[15px] text-ink-2">{moment.subtitle}</p>
-        <p className="text-[14px] leading-relaxed text-ink-2">{moment.detail}</p>
+        <p className="mb-4 text-prose text-ink-2">{moment.subtitle}</p>
+        <p className="text-body leading-relaxed text-ink-2">{moment.detail}</p>
         <div className="mt-5 inline-block rounded-xl bg-surface-2 px-4 py-3">
           <p className="font-mono text-xl font-bold text-accent-ink">{moment.stat.value}</p>
-          <p className="font-mono text-[10px] uppercase tracking-wider text-ink-3">{moment.stat.label}</p>
+          <p className="font-mono text-micro uppercase tracking-wider text-ink-3">{moment.stat.label}</p>
         </div>
       </Card>
 
       <ShareBar title={moment.title} path={momentPath(moment)} kind={`Football History · ${moment.year}`} stat={`${moment.stat.value} ${moment.stat.label}`} />
 
       <div className="flex items-center justify-between">
-        <Link to="/history" className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-ink-3 transition-colors hover:text-ink">
+        <Link to="/history" className="inline-flex items-center gap-1.5 font-mono text-label uppercase tracking-wider text-ink-3 transition-colors hover:text-ink">
           <ArrowLeft className="size-3.5" aria-hidden /> All moments
         </Link>
-        <Link to={momentPath(next)} className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-accent-ink transition-colors hover:text-ink">
+        <Link to={momentPath(next)} className="inline-flex items-center gap-1.5 font-mono text-label uppercase tracking-wider text-accent-ink transition-colors hover:text-ink">
           {next.title} <ArrowRight className="size-3.5" aria-hidden />
         </Link>
       </div>
 
       {related.length > 0 && (
         <section aria-label="Related moments">
-          <SectionHeader eyebrow="More from the archive" title="Related moments" />
+          <SectionHeader title="Related moments" />
           <div className="grid gap-3 sm:grid-cols-3">
             {related.map((m) => (
               <Link key={m.id} to={momentPath(m)} className="group">
                 <Card hover className="flex h-full flex-col p-4">
                   <Badge variant="accent" className="mb-2 self-start">{m.year}</Badge>
-                  <p className="display text-[13.5px] font-bold leading-snug text-ink transition-colors group-hover:text-accent-ink">{m.title}</p>
-                  <p className="mt-1 line-clamp-2 text-[11.5px] text-ink-3">{m.subtitle}</p>
+                  <p className="display text-ui font-bold leading-snug text-ink transition-colors group-hover:text-accent-ink">{m.title}</p>
+                  <p className="mt-1 line-clamp-2 text-label text-ink-3">{m.subtitle}</p>
                 </Card>
               </Link>
             ))}

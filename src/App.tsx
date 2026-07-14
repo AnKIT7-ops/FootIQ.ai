@@ -81,7 +81,7 @@ function Shell() {
     <div className="min-h-dvh bg-bg">
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-full focus:bg-accent focus:px-4 focus:py-2 focus:text-[13px] focus:font-semibold focus:text-[#04110c]"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-skip focus:rounded-full focus:bg-accent focus:px-4 focus:py-2 focus:text-ui focus:font-semibold focus:text-[#04110c]"
       >
         Skip to content
       </a>

@@ -19,7 +19,7 @@ function Bar({ label, value, tone }: { label: string; value: number; tone: "home
   const color = tone === "home" ? "bg-accent" : tone === "away" ? "bg-chart-2" : "bg-surface-3";
   return (
     <div>
-      <div className="mb-1 flex items-center justify-between font-mono text-[10.5px] uppercase tracking-wider">
+      <div className="mb-1 flex items-center justify-between font-mono text-micro uppercase tracking-wider">
         <span className="text-ink-3">{label}</span>
         <span className="text-ink">{value}%</span>
       </div>
@@ -89,7 +89,7 @@ export default function PredictionDetail() {
           </div>
           <Badge variant="iq">Confidence {pred.confidence}%</Badge>
         </div>
-        <p className="mb-5 font-mono text-[11px] uppercase tracking-wider text-ink-3">
+        <p className="mb-5 font-mono text-label uppercase tracking-wider text-ink-3">
           {match.competition} · {match.venue} · expected {pred.expectedHome.toFixed(1)}–{pred.expectedAway.toFixed(1)}
         </p>
         <div className="space-y-3">
@@ -101,16 +101,16 @@ export default function PredictionDetail() {
           {pred.topScores.slice(0, 2).map((s) => (
             <div key={s.score} className="rounded-xl bg-surface-2 p-3 text-center">
               <p className="font-mono text-lg font-bold text-ink">{s.score}</p>
-              <p className="font-mono text-[10px] uppercase tracking-wider text-ink-3">{s.p}% likely</p>
+              <p className="font-mono text-micro uppercase tracking-wider text-ink-3">{s.p}% likely</p>
             </div>
           ))}
           <div className="rounded-xl bg-surface-2 p-3 text-center">
             <p className="font-mono text-lg font-bold text-ink">{pred.over25}%</p>
-            <p className="font-mono text-[10px] uppercase tracking-wider text-ink-3">Over 2.5</p>
+            <p className="font-mono text-micro uppercase tracking-wider text-ink-3">Over 2.5</p>
           </div>
           <div className="rounded-xl bg-surface-2 p-3 text-center">
             <p className="font-mono text-lg font-bold text-ink">{pred.btts}%</p>
-            <p className="font-mono text-[10px] uppercase tracking-wider text-ink-3">BTTS</p>
+            <p className="font-mono text-micro uppercase tracking-wider text-ink-3">BTTS</p>
           </div>
         </div>
       </Card>
@@ -123,10 +123,10 @@ export default function PredictionDetail() {
       />
 
       <Card className="p-5">
-        <SectionHeader eyebrow="Why" title="The model's reasoning" />
+        <SectionHeader title="The model's reasoning" />
         <ul className="space-y-2.5">
           {pred.reasoning.map((r, i) => (
-            <li key={i} className="flex gap-2 text-[13.5px] leading-relaxed text-ink-2">
+            <li key={i} className="flex gap-2 text-ui leading-relaxed text-ink-2">
               <span className="mt-[7px] size-1.5 shrink-0 rounded-full bg-iq" aria-hidden />
               {r}
             </li>
@@ -165,7 +165,7 @@ export default function PredictionDetail() {
 
       <Link
         to={matchPath(match)}
-        className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-accent-ink transition-colors hover:text-ink"
+        className="inline-flex items-center gap-1.5 font-mono text-label uppercase tracking-wider text-accent-ink transition-colors hover:text-ink"
       >
         Open match center <ArrowRight className="size-3.5" aria-hidden />
       </Link>

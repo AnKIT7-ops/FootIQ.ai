@@ -70,7 +70,7 @@ export default function TeamPage() {
             <h1 className="display mt-0.5 text-3xl font-black text-ink md:text-4xl">{team.name}</h1>
             <div className="mt-2 flex flex-wrap items-center gap-3">
               <FormPills form={team.form} />
-              <span className="text-[13px] text-ink-2">
+              <span className="text-ui text-ink-2">
                 Manager:{" "}
                 <Link to={managerPath(team)} className="font-semibold text-ink hover:underline">
                   {team.manager}
@@ -113,21 +113,21 @@ export default function TeamPage() {
       {tab === "squad" && (
         <div className="space-y-6">
           <section aria-label="Key players">
-            <SectionHeader eyebrow="The core" title="Key Players" className="mb-3" />
+            <SectionHeader title="Key Players" className="mb-3" />
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {stars.map((p) => (
                 <Card hover key={p.id} onClick={() => navigate(`/player/${p.id}`)} className="p-4">
                   <div className="flex items-center gap-3">
                     <Avatar name={p.name} playerId={p.id} size={44} ringColor={team.colors[0]} />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[14px] font-bold text-ink">{p.name}</p>
-                      <p className="text-[11.5px] text-ink-3">{p.role} · #{p.shirt}</p>
+                      <p className="truncate text-body font-bold text-ink">{p.name}</p>
+                      <p className="text-label text-ink-3">{p.role} · #{p.shirt}</p>
                     </div>
-                    <span className={cn("tabular rounded-lg px-2 py-1 font-mono text-[12.5px] font-bold", p.stats.rating >= 7.5 ? "bg-accent-soft text-accent-ink" : "bg-surface-3 text-ink-2")}>
+                    <span className={cn("tabular rounded-lg px-2 py-1 font-mono text-caption font-bold", p.stats.rating >= 7.5 ? "bg-accent-soft text-accent-ink" : "bg-surface-3 text-ink-2")}>
                       {p.stats.rating.toFixed(2)}
                     </span>
                   </div>
-                  <div className="mt-3 flex justify-between border-t border-line pt-2.5 font-mono text-[11px] text-ink-3">
+                  <div className="mt-3 flex justify-between border-t border-line pt-2.5 font-mono text-label text-ink-3">
                     <span>{p.stats.goals}G {p.stats.assists}A</span>
                     <span>{money(p.marketValue)}</span>
                   </div>
@@ -137,11 +137,11 @@ export default function TeamPage() {
           </section>
 
           <section aria-label="Full squad">
-            <SectionHeader eyebrow="Depth chart" title="Squad List" className="mb-3" />
+            <SectionHeader title="Squad List" className="mb-3" />
             <Card className="overflow-x-auto">
-              <table className="w-full min-w-[34rem] text-[13px]">
+              <table className="w-full min-w-[34rem] text-ui">
                 <thead>
-                  <tr className="border-b border-line text-left font-mono text-[10px] uppercase tracking-wider text-ink-3">
+                  <tr className="border-b border-line text-left font-mono text-micro uppercase tracking-wider text-ink-3">
                     <th scope="col" className="py-2.5 pl-4 font-medium">#</th>
                     <th scope="col" className="font-medium">Player</th>
                     <th scope="col" className="font-medium">Role</th>
@@ -196,7 +196,7 @@ export default function TeamPage() {
       {tab === "matches" && (
         <div className="grid gap-6 lg:grid-cols-2">
           <section aria-label="Fixtures">
-            <SectionHeader eyebrow="Upcoming" title="Fixtures" className="mb-3" />
+            <SectionHeader title="Fixtures" className="mb-3" />
             <div className="space-y-2.5">
               {fixtures.map((m) => (
                 <MatchCard key={m.id} match={m} dense />
@@ -205,7 +205,7 @@ export default function TeamPage() {
             </div>
           </section>
           <section aria-label="Results">
-            <SectionHeader eyebrow="Recent" title="Results" className="mb-3" />
+            <SectionHeader title="Results" className="mb-3" />
             <div className="space-y-2.5">
               {results.map((m) => (
                 <MatchCard key={m.id} match={m} dense />
@@ -237,7 +237,7 @@ export default function TeamPage() {
                 <Meter label="Directness" value={team.style.directness} color="var(--chart-3)" />
                 <Meter label="Press intensity" value={team.style.pressIntensity} color="var(--chart-4)" />
               </div>
-              <dl className="mt-5 space-y-2 border-t border-line pt-4 text-[13px]">
+              <dl className="mt-5 space-y-2 border-t border-line pt-4 text-ui">
                 <div className="flex justify-between gap-6"><dt className="shrink-0 text-ink-3">Build-up</dt><dd className="text-right text-ink-2">{team.style.buildUp}</dd></div>
                 <div className="flex justify-between gap-6"><dt className="shrink-0 text-ink-3">Press</dt><dd className="text-right text-ink-2">{team.style.press}</dd></div>
                 <div className="flex justify-between gap-6"><dt className="shrink-0 text-ink-3">Line</dt><dd className="text-right text-ink-2">{team.style.line}</dd></div>
@@ -248,13 +248,13 @@ export default function TeamPage() {
             <Card className="flex flex-col items-center p-5">
               <p className="eyebrow mb-3 self-start">Squad chemistry</p>
               <DonutGauge value={team.chemistry} label="Cohesion index" size={150} color={team.chemistry >= 85 ? "var(--chart-1)" : "var(--chart-3)"} />
-              <p className="mt-3 text-center text-[12.5px] leading-relaxed text-ink-3">
+              <p className="mt-3 text-center text-caption leading-relaxed text-ink-3">
                 Minutes shared, pass-network density and lineup stability, rolled into one number.
               </p>
             </Card>
             <Card className="p-4">
               <p className="eyebrow mb-3">Season shape</p>
-              <div className="flex items-center gap-3 text-[13px] text-ink-2">
+              <div className="flex items-center gap-3 text-ui text-ink-2">
                 <Activity className="size-4 text-accent-ink" aria-hidden />
                 {team.won}W · {team.drawn}D · {team.lost}L — {team.gf} scored, {team.ga} conceded
               </div>
@@ -266,7 +266,7 @@ export default function TeamPage() {
       {tab === "market" && (
         <div className="grid gap-6 lg:grid-cols-2">
           <section aria-label="Transfer involvement">
-            <SectionHeader eyebrow="Rumor mill" title="Transfer Threads" className="mb-3" />
+            <SectionHeader title="Transfer Threads" className="mb-3" />
             <div className="space-y-2.5">
               {rumors.map((r) => {
                 const p = getPlayer(r.playerId);
@@ -275,8 +275,8 @@ export default function TeamPage() {
                   <Card hover key={r.id} onClick={() => navigate("/transfers")} className="flex items-center gap-3 p-3.5">
                     <Avatar name={p.name} playerId={p.id} size={38} />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[13.5px] font-semibold text-ink">{p.name}</p>
-                      <p className="text-[11px] text-ink-3">
+                      <p className="truncate text-ui font-semibold text-ink">{p.name}</p>
+                      <p className="text-label text-ink-3">
                         {incoming ? `In from ${getTeam(r.fromId).short}` : `Out to ${getTeam(r.toId).short}`} · {money(r.fee)}
                       </p>
                     </div>
@@ -288,7 +288,7 @@ export default function TeamPage() {
             </div>
           </section>
           <section aria-label="Injury list">
-            <SectionHeader eyebrow="Treatment room" title="Injuries & Doubts" className="mb-3" />
+            <SectionHeader title="Injuries & Doubts" className="mb-3" />
             <div className="space-y-2.5">
               {injuries.map(({ p, i }, idx) => (
                 <Card key={idx} className="flex items-center gap-3 p-3.5">
@@ -296,12 +296,12 @@ export default function TeamPage() {
                     <BriefcaseMedical className="size-4" aria-hidden />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <Link to={`/player/${p.id}`} className="truncate text-[13.5px] font-semibold text-ink hover:underline">
+                    <Link to={`/player/${p.id}`} className="truncate text-ui font-semibold text-ink hover:underline">
                       {p.name}
                     </Link>
-                    <p className="text-[11px] text-ink-3">{i.injury} · {i.date}</p>
+                    <p className="text-label text-ink-3">{i.injury} · {i.date}</p>
                   </div>
-                  <span className="font-mono text-[11px] text-ink-3">{i.gamesMissed} gms</span>
+                  <span className="font-mono text-label text-ink-3">{i.gamesMissed} gms</span>
                 </Card>
               ))}
               {injuries.length === 0 && (

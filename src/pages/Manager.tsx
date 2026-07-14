@@ -60,7 +60,7 @@ export default function Manager() {
             <div>
               <p className="eyebrow mb-0.5">Manager · {team.name}</p>
               <SectionHeader level={1} title={team.manager} className="mb-0" />
-              <p className="mt-1 flex flex-wrap items-center gap-2 text-[12.5px] text-ink-2">
+              <p className="mt-1 flex flex-wrap items-center gap-2 text-caption text-ink-2">
                 <Badge variant="accent">{s.formation}</Badge>
                 <span>{team.league}</span> · <span>{team.position}ᵗʰ, {team.points} pts</span>
                 <FormPills form={team.form} />
@@ -73,11 +73,11 @@ export default function Manager() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="p-5">
-          <SectionHeader eyebrow="The system" title="Four dials" />
+          <SectionHeader title="Four dials" />
           <div className="space-y-4">
             {DIALS.map((d) => (
               <div key={d.key}>
-                <div className="mb-1 flex items-center justify-between font-mono text-[10.5px] uppercase tracking-wider">
+                <div className="mb-1 flex items-center justify-between font-mono text-micro uppercase tracking-wider">
                   <span className="text-ink-3">{d.label}</span>
                   <span className="text-ink">{s[d.key]}</span>
                 </div>
@@ -87,7 +87,7 @@ export default function Manager() {
               </div>
             ))}
           </div>
-          <div className="mt-5 grid grid-cols-1 gap-2 text-[13px] text-ink-2 sm:grid-cols-3">
+          <div className="mt-5 grid grid-cols-1 gap-2 text-ui text-ink-2 sm:grid-cols-3">
             <div><p className="eyebrow mb-0.5">Build-up</p>{s.buildUp}</div>
             <div><p className="eyebrow mb-0.5">Press</p>{s.press}</div>
             <div><p className="eyebrow mb-0.5">Line</p>{s.line}</div>
@@ -95,7 +95,7 @@ export default function Manager() {
         </Card>
 
         <Card className="p-5">
-          <SectionHeader eyebrow="Identity" title="Style signature" />
+          <SectionHeader title="Style signature" />
           <div className="mb-4 flex flex-wrap gap-1.5">
             {team.styleTags.map((t) => (
               <Badge key={t} variant="outline">{t}</Badge>
@@ -106,7 +106,7 @@ export default function Manager() {
           </IQInsight>
           <Link
             to={`/intelligence/manager-${managerSlug(team)}`}
-            className="mt-4 inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-accent-ink transition-colors hover:text-ink"
+            className="mt-4 inline-flex items-center gap-1.5 font-mono text-label uppercase tracking-wider text-accent-ink transition-colors hover:text-ink"
           >
             <Sparkles className="size-3.5" aria-hidden /> Full tactical DNA report <ArrowRight className="size-3.5" aria-hidden />
           </Link>
@@ -114,8 +114,8 @@ export default function Manager() {
       </div>
 
       <Card className="p-5">
-        <SectionHeader eyebrow="Executors" title="Key players in the system" action={
-          <Link to={teamPath(team)} className="font-mono text-[11px] uppercase tracking-wider text-ink-3 transition-colors hover:text-ink">
+        <SectionHeader title="Key players in the system" action={
+          <Link to={teamPath(team)} className="font-mono text-label uppercase tracking-wider text-ink-3 transition-colors hover:text-ink">
             Full squad <ArrowRight className="inline size-3.5" aria-hidden />
           </Link>
         } />
@@ -123,8 +123,8 @@ export default function Manager() {
           {squad.map((p) => (
             <Link key={p.id} to={playerPath(p)} className="group">
               <Card hover className="p-4">
-                <p className="display text-[14px] font-bold text-ink transition-colors group-hover:text-accent-ink">{p.name}</p>
-                <p className="mt-0.5 text-[11.5px] text-ink-3">{p.role} · rating {p.stats.rating.toFixed(2)}</p>
+                <p className="display text-body font-bold text-ink transition-colors group-hover:text-accent-ink">{p.name}</p>
+                <p className="mt-0.5 text-label text-ink-3">{p.role} · rating {p.stats.rating.toFixed(2)}</p>
               </Card>
             </Link>
           ))}

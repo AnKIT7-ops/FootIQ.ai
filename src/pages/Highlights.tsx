@@ -85,15 +85,15 @@ export default function Highlights() {
 
               <div className="absolute left-3 top-3 flex items-center gap-2">
                 <Crest teamId={c.teamId} size={22} />
-                <span className="rounded-full bg-black/45 px-2 py-0.5 font-mono text-[9.5px] uppercase tracking-wider text-white backdrop-blur-sm">
+                <span className="rounded-full bg-black/45 px-2 py-0.5 font-mono text-micro uppercase tracking-wider text-white backdrop-blur-sm">
                   {c.type}
                 </span>
               </div>
 
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent p-3 pt-10">
-                <p className="line-clamp-2 text-[12.5px] font-bold leading-snug text-white">{c.title}</p>
-                <p className="mt-1 line-clamp-2 text-[10.5px] leading-snug text-white/70">{c.caption}</p>
-                <div className="mt-2 flex items-center gap-3 font-mono text-[10px] text-white/80">
+                <p className="line-clamp-2 text-caption font-bold leading-snug text-white">{c.title}</p>
+                <p className="mt-1 line-clamp-2 text-micro leading-snug text-white/70">{c.caption}</p>
+                <div className="mt-2 flex items-center gap-3 font-mono text-micro text-white/80">
                   <span>{c.views}</span>
                   <span className="inline-flex items-center gap-1">
                     <Heart className="size-3" aria-hidden /> {c.likes}

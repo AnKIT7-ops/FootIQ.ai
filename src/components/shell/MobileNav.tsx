@@ -45,7 +45,7 @@ export function MobileNav() {
             end={item.to === "/"}
             className={({ isActive }) =>
               cn(
-                "flex flex-col items-center gap-0.5 rounded-xl px-3 py-1.5 text-[10px] font-medium transition-colors",
+                "flex flex-col items-center gap-0.5 rounded-xl px-3 py-1.5 text-micro font-medium transition-colors",
                 isActive ? "text-accent-ink" : "text-ink-3",
               )
             }
@@ -57,7 +57,7 @@ export function MobileNav() {
         <button
           ref={moreButtonRef}
           onClick={() => setMoreOpen(true)}
-          className="flex flex-col items-center gap-0.5 rounded-xl px-3 py-1.5 text-[10px] font-medium text-ink-3"
+          className="flex flex-col items-center gap-0.5 rounded-xl px-3 py-1.5 text-micro font-medium text-ink-3"
           aria-label="More pages"
           aria-expanded={moreOpen}
         >
@@ -103,8 +103,8 @@ export function MobileNav() {
                     onClick={() => setMoreOpen(false)}
                     className="rounded-xl border border-line bg-surface-2 px-3.5 py-3 transition-colors hover:border-line-strong"
                   >
-                    <p className="text-[13.5px] font-semibold text-ink">{p.label}</p>
-                    <p className="mt-0.5 truncate text-[11.5px] text-ink-3">{p.sub}</p>
+                    <p className="text-ui font-semibold text-ink">{p.label}</p>
+                    <p className="mt-0.5 truncate text-label text-ink-3">{p.sub}</p>
                   </Link>
                 ))}
               </div>
@@ -114,7 +114,7 @@ export function MobileNav() {
                     key={p.to}
                     to={p.to}
                     onClick={() => setMoreOpen(false)}
-                    className="font-mono text-[10.5px] uppercase tracking-wider text-ink-3 hover:text-ink"
+                    className="font-mono text-micro uppercase tracking-wider text-ink-3 hover:text-ink"
                   >
                     {p.label}
                   </Link>

@@ -47,7 +47,7 @@ export function DonutGauge({
           {Math.round(value)}%
         </text>
       </svg>
-      <span className="max-w-[9rem] text-center font-mono text-[10.5px] uppercase tracking-wider text-ink-3">{label}</span>
+      <span className="max-w-[9rem] text-center font-mono text-micro uppercase tracking-wider text-ink-3">{label}</span>
     </div>
   );
 }

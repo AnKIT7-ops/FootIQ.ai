@@ -42,7 +42,7 @@ export default function History() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder='Ask history anything — "greatest comebacks", "5000-1", "Maradona 1986"…'
-              className="h-12 w-full rounded-2xl border border-line bg-surface py-3 pl-11 pr-4 text-[14px] text-ink outline-none placeholder:text-ink-3 focus:border-accent"
+              className="h-12 w-full rounded-2xl border border-line bg-surface py-3 pl-11 pr-4 text-body text-ink outline-none placeholder:text-ink-3 focus:border-accent"
               aria-label="Search football history"
             />
           </div>
@@ -93,12 +93,12 @@ export default function History() {
                 </div>
                 <Card hover className="min-w-0 flex-1 p-4 md:p-5">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className={cn("inline-flex items-center gap-1.5 font-mono text-[10.5px] uppercase tracking-wider", meta.color)}>
+                    <span className={cn("inline-flex items-center gap-1.5 font-mono text-micro uppercase tracking-wider", meta.color)}>
                       <meta.icon className="size-3.5" aria-hidden />
                       {meta.label}
                     </span>
                     <Badge className="lg:hidden">{m.year}</Badge>
-                    <span className="ml-auto rounded-lg bg-surface-3 px-2.5 py-1 font-mono text-[10.5px] text-ink-2">
+                    <span className="ml-auto rounded-lg bg-surface-3 px-2.5 py-1 font-mono text-micro text-ink-2">
                       {m.stat.label}: <strong className="text-ink">{m.stat.value}</strong>
                     </span>
                   </div>
@@ -107,14 +107,14 @@ export default function History() {
                       {m.title}
                     </Link>
                   </h3>
-                  <p className="mt-0.5 text-[13px] font-semibold text-ink-2">{m.subtitle}</p>
-                  <p className="mt-2 text-[13.5px] leading-relaxed text-ink-2">{m.detail}</p>
+                  <p className="mt-0.5 text-ui font-semibold text-ink-2">{m.subtitle}</p>
+                  <p className="mt-2 text-ui leading-relaxed text-ink-2">{m.detail}</p>
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {m.tags.slice(0, 5).map((t) => (
                       <button
                         key={t}
                         onClick={() => setQuery(t)}
-                        className="rounded-full border border-line px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-wide text-ink-3 transition-colors hover:border-line-strong hover:text-ink-2"
+                        className="rounded-full border border-line px-2.5 py-0.5 font-mono text-micro uppercase tracking-wide text-ink-3 transition-colors hover:border-line-strong hover:text-ink-2"
                       >
                         {t}
                       </button>

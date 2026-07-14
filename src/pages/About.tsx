@@ -53,7 +53,7 @@ export default function About() {
         </p>
         <button
           onClick={() => window.dispatchEvent(new Event("footiq:tour"))}
-          className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-4 py-2 text-[12.5px] font-semibold text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
+          className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-4 py-2 text-caption font-semibold text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
         >
           Take the 30-second tour
         </button>
@@ -64,7 +64,7 @@ export default function About() {
           <Card key={p.title} className="p-4 md:p-5">
             <p.icon className="size-5 text-accent-ink" aria-hidden />
             <h2 className="display mt-2.5 text-base font-bold text-ink">{p.title}</h2>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-ink-2">{p.body}</p>
+            <p className="mt-1.5 text-ui leading-relaxed text-ink-2">{p.body}</p>
           </Card>
         ))}
       </div>

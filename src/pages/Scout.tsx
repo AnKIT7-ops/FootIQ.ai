@@ -165,7 +165,7 @@ export default function Scout() {
                 if (e.target.value.trim() === "") setSubmitted("");
               }}
               placeholder='e.g. "left-footed winger under €120M who excels at pressing"'
-              className="h-13 w-full rounded-2xl border border-line bg-surface py-3.5 pl-11 pr-10 text-[14.5px] text-ink outline-none placeholder:text-ink-3 focus:border-accent"
+              className="h-13 w-full rounded-2xl border border-line bg-surface py-3.5 pl-11 pr-10 text-body text-ink outline-none placeholder:text-ink-3 focus:border-accent"
               aria-label="Describe the player you need"
             />
             {query !== "" && (
@@ -197,7 +197,7 @@ export default function Scout() {
           )}
           <button
             type="submit"
-            className="h-13 shrink-0 rounded-2xl bg-accent px-6 text-[14px] font-semibold text-[#04110c] transition-transform hover:scale-[1.02] active:scale-95"
+            className="h-13 shrink-0 rounded-2xl bg-accent px-6 text-body font-semibold text-[#04110c] transition-transform hover:scale-[1.02] active:scale-95"
           >
             Scout
           </button>
@@ -205,7 +205,7 @@ export default function Scout() {
 
         {submitted && parsed.chips.length > 0 && (
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 font-mono text-[10.5px] uppercase tracking-wider text-ink-3">
+            <span className="inline-flex items-center gap-1.5 font-mono text-micro uppercase tracking-wider text-ink-3">
               <SlidersHorizontal className="size-3.5" aria-hidden />
               Understood as
             </span>
@@ -246,15 +246,15 @@ export default function Scout() {
           {results.map(({ p, fit }, i) => (
             <motion.div key={p.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05, duration: 0.3 }}>
               <Card hover onClick={() => navigate(`/player/${p.id}`)} className="flex flex-wrap items-center gap-4 p-4 md:p-5">
-                <span className="hidden w-6 text-center font-mono text-[13px] text-ink-3 md:block">{i + 1}</span>
+                <span className="hidden w-6 text-center font-mono text-ui text-ink-3 md:block">{i + 1}</span>
                 <Avatar name={p.name} playerId={p.id} size={48} ringColor={getTeam(p.teamId).colors[0]} />
                 <div className="min-w-0 flex-1">
-                  <p className="text-[15px] font-bold text-ink">{p.name}</p>
-                  <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[12px] text-ink-3">
+                  <p className="text-prose font-bold text-ink">{p.name}</p>
+                  <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-caption text-ink-3">
                     <Crest teamId={p.teamId} size={16} /> {getTeam(p.teamId).short} · {p.role} · {p.age}y · {p.foot}-footed ·{" "}
                     <span className="font-mono font-semibold text-ink-2">{money(p.marketValue)}</span>
                   </p>
-                  <p className="mt-1.5 line-clamp-1 text-[12.5px] text-ink-2">{p.style}</p>
+                  <p className="mt-1.5 line-clamp-1 text-caption text-ink-2">{p.style}</p>
                 </div>
                 <div className="w-full sm:w-44">
                   <div className="mb-1 flex items-center justify-between">

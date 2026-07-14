@@ -17,11 +17,11 @@ export function MatchCard({ match, className, dense = false }: { match: Match; c
   return (
     <Card hover onClick={() => navigate(`/match/${match.id}`)} className={cn(dense ? "p-3" : "p-4", className)}>
       <div className="mb-2.5 flex items-center justify-between gap-2">
-        <span className="truncate font-mono text-[10.5px] uppercase tracking-wider text-ink-3">{match.competition}</span>
+        <span className="truncate font-mono text-micro uppercase tracking-wider text-ink-3">{match.competition}</span>
         {live ? (
           <Badge variant="live">{match.minute}'</Badge>
         ) : (
-          <span className="shrink-0 font-mono text-[10.5px] text-ink-3">{match.kickoff}</span>
+          <span className="shrink-0 font-mono text-micro text-ink-3">{match.kickoff}</span>
         )}
       </div>
       <div className="space-y-2">
@@ -31,7 +31,7 @@ export function MatchCard({ match, className, dense = false }: { match: Match; c
         ].map(({ team, score }) => (
           <div key={team.id} className="flex items-center gap-2.5">
             <Crest teamId={team.id} size={dense ? 22 : 26} />
-            <span className={cn("truncate text-[13.5px] font-semibold", played ? "text-ink" : "text-ink-2")}>{team.short}</span>
+            <span className={cn("truncate text-ui font-semibold", played ? "text-ink" : "text-ink-2")}>{team.short}</span>
             {played && (
               <span className={cn("tabular ml-auto font-display text-lg font-bold", live ? "text-accent-ink" : "text-ink")}>{score}</span>
             )}

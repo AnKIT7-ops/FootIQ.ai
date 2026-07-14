@@ -10,7 +10,7 @@ export function Breadcrumbs({ trail }: { trail: Crumb[] }) {
   if (trail.length === 0) return null;
   return (
     <nav aria-label="Breadcrumb" className="mb-4">
-      <ol className="flex flex-wrap items-center gap-1 font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-3">
+      <ol className="flex flex-wrap items-center gap-1 font-mono text-micro uppercase tracking-[0.14em] text-ink-3">
         <li>
           <Link to="/" className="transition-colors hover:text-ink">
             Home

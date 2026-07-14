@@ -50,14 +50,14 @@ export function Tabs({
               }
             }}
             className={cn(
-              "relative shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors",
+              "relative shrink-0 rounded-full px-3.5 py-1.5 text-ui font-medium transition-colors",
               selected ? "text-ink" : "text-ink-3 hover:text-ink-2",
             )}
           >
             {selected && (
               <motion.span
                 layoutId={`${id}-pill`}
-                className="absolute inset-0 rounded-full bg-surface-3 shadow-sm"
+                className="absolute inset-0 rounded-full bg-surface-3"
                 transition={{ type: "spring", stiffness: 500, damping: 38 }}
               />
             )}

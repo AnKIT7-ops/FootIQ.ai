@@ -25,3 +25,7 @@ Thumbs.db
 # templates stay in the repo
 !.env.example
 !server/.env.example
+
+# impeccable local cache (design config + sidecar are tracked)
+.impeccable/hook.cache.json
+.impeccable/live/sessions/

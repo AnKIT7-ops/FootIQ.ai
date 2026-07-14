@@ -14,7 +14,7 @@ export default function Disclaimer() {
     <ProsePage eyebrow="Read before you rely on anything" title="Disclaimer" updated="July 10, 2026">
       <Card className="flex gap-3 border-iq/30 bg-iq-soft p-4 md:p-5">
         <AlertTriangle className="mt-0.5 size-5 shrink-0 text-iq-ink" aria-hidden />
-        <p className="text-[14px] leading-relaxed text-ink">
+        <p className="text-body leading-relaxed text-ink">
           FootIQ is a <strong>demonstration platform in public beta</strong>. Insights are <strong>AI-generated</strong>, predictions are{" "}
           <strong>informational only</strong>, and statistics <strong>may be simulated</strong>. Nothing on this site is betting, financial
           or professional advice.

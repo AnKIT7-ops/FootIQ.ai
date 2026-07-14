@@ -27,7 +27,7 @@ export function AIMeta({
   const level = confidence >= 75 ? "High" : confidence >= 55 ? "Medium" : "Low";
   return (
     <div className={cn("rounded-2xl border border-iq/25 bg-iq-soft p-4", className)}>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-[10.5px] uppercase tracking-[0.14em] text-iq-ink">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-micro uppercase tracking-[0.14em] text-iq-ink">
         <span className="inline-flex items-center gap-1.5 font-semibold">
           <Sparkles className="size-3.5" aria-hidden /> AI-generated analysis
         </span>
@@ -45,8 +45,8 @@ export function AIMeta({
         <span>Generated {generatedAt.slice(0, 10)}</span>
       </div>
       {sources && sources.length > 0 && (
-        <p className="mt-2 text-[12px] leading-relaxed text-ink-2">
-          <span className="font-mono text-[10.5px] uppercase tracking-wider text-ink-3">Based on: </span>
+        <p className="mt-2 text-caption leading-relaxed text-ink-2">
+          <span className="font-mono text-micro uppercase tracking-wider text-ink-3">Based on: </span>
           {sources.map((s, i) => (
             <span key={s.path}>
               {i > 0 && " · "}
@@ -57,7 +57,7 @@ export function AIMeta({
           ))}
         </p>
       )}
-      <p className="mt-2 text-[11.5px] leading-relaxed text-ink-3">
+      <p className="mt-2 text-label leading-relaxed text-ink-3">
         Model inference from structured performance data — speculative analysis, not verified reporting. Not betting advice.
       </p>
       <FeedbackWidget subject={feedbackSubject} className="mt-3 border-t border-iq/15 pt-3" />

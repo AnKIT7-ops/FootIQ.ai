@@ -82,7 +82,7 @@ export function MomentumRiver({
       </svg>
       {tip && (
         <TooltipBox x={tip.x} y={tip.y} visible>
-          <span className="font-mono text-[11px] text-ink-3">{tip.i * 5}–{tip.i * 5 + 5}'</span>{" "}
+          <span className="font-mono text-label text-ink-3">{tip.i * 5}–{tip.i * 5 + 5}'</span>{" "}
           <span className="font-semibold text-ink">
             {data[tip.i] >= 0 ? homeLabel : awayLabel} {Math.round(Math.abs(data[tip.i]) * 100)}%
           </span>

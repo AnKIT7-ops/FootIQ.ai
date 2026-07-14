@@ -16,7 +16,7 @@ export function DataFreshness({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[9.5px] uppercase tracking-[0.12em]",
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-micro uppercase tracking-[0.12em]",
         live ? "border-accent/35 bg-accent-soft text-accent-ink" : "border-line bg-surface text-ink-3",
         className,
       )}
