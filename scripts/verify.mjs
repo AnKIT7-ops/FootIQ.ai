@@ -5,6 +5,9 @@ import path from "node:path";
 const OUT = path.join(import.meta.dirname, "shots");
 mkdirSync(OUT, { recursive: true });
 
+// Defaults to the local dev server; set VERIFY_BASE to sweep a deployed build.
+const BASE = (process.env.VERIFY_BASE ?? "http://localhost:5173").replace(/\/$/, "");
+
 const routes = [
   ["home", "/"],
   ["matches", "/matches"],
@@ -48,6 +51,17 @@ const browser = await puppeteer.launch({
 });
 
 const page = await browser.newPage();
+
+// Puppeteer starts from a clean profile, so the first-visit tour would cover
+// every screenshot. Mark it seen before any page script runs.
+await page.evaluateOnNewDocument(() => {
+  try {
+    localStorage.setItem("footiq-onboarded", "1");
+  } catch {
+    /* best-effort */
+  }
+});
+
 const problems = [];
 page.on("console", (msg) => {
   if (msg.type() === "error") problems.push(`[console.error] ${msg.text().slice(0, 300)}`);
@@ -60,7 +74,7 @@ page.on("requestfailed", (req) => {
 for (const [name, route] of routes) {
   problems.length = 0;
   try {
-    await page.goto(`http://localhost:5173${route}`, { waitUntil: "networkidle0", timeout: 30000 });
+    await page.goto(`${BASE}${route}`, { waitUntil: "networkidle0", timeout: 30000 });
     await new Promise((r) => setTimeout(r, 900));
     await page.screenshot({ path: path.join(OUT, `${name}.png`) });
     const horiz = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -80,7 +94,7 @@ for (const [name, route] of [
   ["contact-mobile", "/contact"],
 ]) {
   problems.length = 0;
-  await page.goto(`http://localhost:5173${route}`, { waitUntil: "networkidle0", timeout: 30000 });
+  await page.goto(`${BASE}${route}`, { waitUntil: "networkidle0", timeout: 30000 });
   await new Promise((r) => setTimeout(r, 900));
   await page.screenshot({ path: path.join(OUT, `${name}.png`) });
   const horiz = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
