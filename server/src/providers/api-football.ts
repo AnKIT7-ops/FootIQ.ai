@@ -11,6 +11,7 @@ const RAW_STANDINGS = z.object({
   response: z.array(
     z.object({
       league: z.object({
+        name: z.string(),
         standings: z.array(
           z.array(
             z.object({
@@ -89,10 +90,12 @@ export class ApiFootballProvider implements FootballDataProvider {
   async fetchStandings(): Promise<NormalizedTeamStanding[]> {
     const raw = RAW_STANDINGS.safeParse(await this.get(`/standings?league=${this.league}&season=${this.season}`));
     if (!raw.success) throw new ProviderError(this.name, `standings schema drift: ${raw.error.issues[0]?.message}`);
-    const table = raw.data.response[0]?.league.standings[0] ?? [];
+    const league = raw.data.response[0]?.league;
+    const table = league?.standings[0] ?? [];
     return table.map((row) => ({
       extId: `af-${row.team.id}`,
       name: row.team.name,
+      competition: league?.name ?? "",
       crestUrl: row.team.logo ?? undefined,
       position: row.rank,
       played: row.all.played,

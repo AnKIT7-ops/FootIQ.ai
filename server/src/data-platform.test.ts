@@ -67,7 +67,7 @@ describe("FootballDataOrgProvider", () => {
 describe("normalize merge", () => {
   it("overlays provider numbers onto a name-matched demo team, keeping its identity", () => {
     const merged = mergeStandings([
-      { extId: "fd-57", name: "Arsenal FC", tla: "ARS", position: 4, played: 30, won: 20, drawn: 6, lost: 4, gf: 66, ga: 30, points: 66, form: "WWLDW" },
+      { extId: "fd-57", name: "Arsenal FC", competition: "Premier League", tla: "ARS", position: 4, played: 30, won: 20, drawn: 6, lost: 4, gf: 66, ga: 30, points: 66, form: "WWLDW" },
     ]);
     const ars = merged.find((t) => t.id === "ars")!;
     expect(ars.position).toBe(4);
@@ -78,12 +78,16 @@ describe("normalize merge", () => {
 
   it("synthesizes a full Team for provider teams the demo has never seen", () => {
     const merged = mergeStandings([
-      { extId: "fd-999", name: "Ipswich Town FC", position: 18, played: 30, won: 5, drawn: 6, lost: 19, gf: 25, ga: 60, points: 21 },
+      { extId: "fd-999", name: "Ipswich Town FC", competition: "Premier League", position: 18, played: 30, won: 5, drawn: 6, lost: 19, gf: 25, ga: 60, points: 21 },
     ]);
     const ipswich = merged.find((t) => t.name === "Ipswich Town FC")!;
     expect(ipswich.id).toBe("fd-999");
     expect(ipswich.style.tempo).toBeGreaterThan(0); // deterministic dials present
-    expect(merged.filter((t) => t.id === "ars")).toHaveLength(1); // demo teams still present
+    // The snapshot is the synced competition and nothing else. It used to also
+    // carry demo clubs from other leagues, which polluted the league table;
+    // they stay reachable through the catalog, not through the standings.
+    expect(merged).toHaveLength(1);
+    expect(merged.map((t) => t.id)).not.toContain("rma");
   });
 
   it("maps matches to merged team ids and skips unresolvable sides", () => {
@@ -182,7 +186,7 @@ describe("sync pipeline → API", () => {
   it("serves provider-sourced teams after a sync, demo before", async () => {
     const provider = new MockProvider({
       standings: [
-        { extId: "m-1", name: "Arsenal FC", tla: "ARS", position: 9, played: 30, won: 10, drawn: 9, lost: 11, gf: 40, ga: 41, points: 39 },
+        { extId: "m-1", name: "Arsenal FC", competition: "Premier League", tla: "ARS", position: 9, played: 30, won: 10, drawn: 9, lost: 11, gf: 40, ga: 41, points: 39 },
       ],
     });
     const { app, services } = createServer(testEnv(), { services: { dataProvider: provider } });
@@ -196,6 +200,18 @@ describe("sync pipeline → API", () => {
     const after = await json(await app.request("/api/teams"));
     expect(after.meta.source).toBe("provider");
     expect(after.data.find((t: { id: string }) => t.id === "ars").position).toBe(9);
+
+    // Demo clubs from other competitions stay reachable for lookup and search...
+    expect(after.data.map((t: { id: string }) => t.id)).toContain("rma");
+
+    // ...but must never appear in the league table. Real Madrid carries 73
+    // fabricated demo points; ranking it inside a provider-sourced table put a
+    // made-up number above every real one, under the emerald "fact" chip.
+    const table = await json(await app.request("/api/teams/table"));
+    const ids = table.data.map((t: { id: string }) => t.id);
+    expect(ids).not.toContain("rma");
+    expect(ids).toContain("ars");
+    expect(new Set(table.data.map((t: { league: string }) => t.league)).size).toBe(1); // one league, always
   });
 });
 

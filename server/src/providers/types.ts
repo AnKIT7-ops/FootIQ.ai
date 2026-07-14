@@ -16,6 +16,8 @@ export interface NormalizedTeamStanding {
   /** Provider's id for the team, prefixed by provider name for uniqueness. */
   extId: string;
   name: string;
+  /** Competition this table belongs to, e.g. "Premier League". */
+  competition: string;
   /** Three-letter code when the source has one. */
   tla?: string;
   shortName?: string;

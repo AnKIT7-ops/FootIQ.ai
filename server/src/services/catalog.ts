@@ -34,12 +34,25 @@ export class CatalogService {
     private snapshots: SnapshotStore,
   ) {}
 
+  /** The synced competition's table, exactly as the sync wrote it. */
   private async teamsSourced(): Promise<Sourced<Team[]>> {
     const snap = await this.snapshots.get<Team[]>("teams");
     if (snap && snap.payload.length > 0 && snap.source !== "demo") {
       return { data: snap.payload, source: "provider" };
     }
     return { data: demo.teams, source: "demo" };
+  }
+
+  /**
+   * Every team we can resolve: the synced competition plus the demo clubs from
+   * other competitions. Lookup, search and browse want this superset; the
+   * league table must NOT (mixing leagues is what corrupted the standings).
+   */
+  private async catalogTeams(): Promise<Sourced<Team[]>> {
+    const { data, source } = await this.teamsSourced();
+    if (source === "demo") return { data, source };
+    const known = new Set(data.map((t) => t.id));
+    return { data: [...data, ...demo.teams.filter((t) => !known.has(t.id))], source };
   }
 
   private async matchesSourced(): Promise<Sourced<MatchesGrouped>> {
@@ -74,19 +87,30 @@ export class CatalogService {
   // ---- teams / standings (snapshot-backed) -----------------------------------
 
   async teams(): Promise<Sourced<Team[]>> {
-    return this.teamsSourced();
+    return this.catalogTeams();
   }
 
   async team(id: string): Promise<Sourced<Team>> {
-    const { data, source } = await this.teamsSourced();
+    const { data, source } = await this.catalogTeams();
     const t = data.find((x) => x.id === id) ?? demo.teamById.get(id);
     if (!t) throw ApiError.notFound("Team");
     return { data: t, source };
   }
 
+  /**
+   * A league table is ONE league. Positions are only comparable within a
+   * competition, so a mixed list sorted by position is meaningless — it lands
+   * two clubs on position 1. Keep the competition with the most teams (the
+   * synced one when a provider is live; the demo dataset's primary league
+   * otherwise) and drop the rest.
+   */
   async leagueTable(): Promise<Sourced<Team[]>> {
     const { data, source } = await this.teamsSourced();
-    return { data: [...data].sort((a, b) => a.position - b.position), source };
+    const counts = new Map<string, number>();
+    for (const t of data) counts.set(t.league, (counts.get(t.league) ?? 0) + 1);
+    const primary = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+    const table = data.filter((t) => t.league === primary).sort((a, b) => a.position - b.position);
+    return { data: table, source };
   }
 
   async teamPlayers(id: string) {
@@ -159,7 +183,7 @@ export class CatalogService {
     const cached = await this.cache.get<SearchResultDto[]>(cacheKey);
     if (cached) return cached;
 
-    const { data: teams } = await this.teamsSourced();
+    const { data: teams } = await this.catalogTeams();
     const results: (SearchResultDto & { score: number })[] = [];
     const score = (text: string): number => {
       const t = text.toLowerCase();
@@ -210,7 +234,7 @@ export class CatalogService {
     const cached = await this.cache.get<SearchResultDto[]>(cacheKey);
     if (cached) return cached;
 
-    const { data: teams } = await this.teamsSourced();
+    const { data: teams } = await this.catalogTeams();
     const out: SearchResultDto[] = [];
     // word-prefix matching: "art" hits "Mikel Arteta", "united" hits "Manchester United"
     const starts = (t: string) => {

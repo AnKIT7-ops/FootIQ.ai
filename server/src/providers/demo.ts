@@ -18,6 +18,7 @@ export class DemoProvider implements FootballDataProvider {
     return demo.leagueTable.map((t) => ({
       extId: `demo-${t.id}`,
       name: t.name,
+      competition: t.league,
       tla: t.tla,
       shortName: t.short,
       venue: t.stadium,

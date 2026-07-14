@@ -43,7 +43,7 @@ function synthesizeTeam(row: NormalizedTeamStanding): Team {
     colors: ["#334455", "#8899aa"],
     stadium: row.venue ?? "—",
     manager: row.coach ?? "—",
-    league: "Synced League",
+    league: row.competition || "Synced League",
     position: row.position,
     played: row.played,
     won: row.won,
@@ -72,36 +72,39 @@ function synthesizeTeam(row: NormalizedTeamStanding): Team {
   };
 }
 
-/** Standings overlay: matched demo teams keep their identity/squad, take provider numbers. */
+/**
+ * Standings overlay: matched demo teams keep their identity/squad, take provider
+ * numbers. The result is EXACTLY the synced competition's table — nothing else.
+ *
+ * Demo teams from other competitions are deliberately NOT appended here. They
+ * used to be, so their pages kept working, but the snapshot is what feeds the
+ * league table: carrying them in put four demo clubs with fabricated points
+ * (Real Madrid 73, Bayern 70…) into a provider-sourced Premier League table,
+ * outranking every real row — a fabricated number wearing the emerald
+ * "measured fact" chip. CatalogService unions them back for lookup and search,
+ * where they belong.
+ */
 export function mergeStandings(rows: NormalizedTeamStanding[]): Team[] {
   if (rows.length === 0) return demo.teams;
-  const merged: Team[] = [];
-  const claimed = new Set<string>();
-  for (const row of rows) {
+  return rows.map((row) => {
     const base = matchDemoTeam(row);
-    if (base) {
-      claimed.add(base.id);
-      merged.push({
-        ...base,
-        position: row.position,
-        played: row.played,
-        won: row.won,
-        drawn: row.drawn,
-        lost: row.lost,
-        gf: row.gf,
-        ga: row.ga,
-        points: row.points,
-        form: row.form?.slice(0, 5) || base.form,
-        stadium: row.venue ?? base.stadium,
-        manager: row.coach ?? base.manager,
-      });
-    } else {
-      merged.push(synthesizeTeam(row));
-    }
-  }
-  // demo teams outside the synced competition stay available (other leagues in the dataset)
-  for (const t of demo.teams) if (!claimed.has(t.id)) merged.push(t);
-  return merged;
+    if (!base) return synthesizeTeam(row);
+    return {
+      ...base,
+      league: row.competition || base.league,
+      position: row.position,
+      played: row.played,
+      won: row.won,
+      drawn: row.drawn,
+      lost: row.lost,
+      gf: row.gf,
+      ga: row.ga,
+      points: row.points,
+      form: row.form?.slice(0, 5) || base.form,
+      stadium: row.venue ?? base.stadium,
+      manager: row.coach ?? base.manager,
+    };
+  });
 }
 
 const kickoffDisplay = (iso: string): string => {

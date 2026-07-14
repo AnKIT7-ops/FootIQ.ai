@@ -12,6 +12,8 @@ import { ProviderError } from "./types";
  */
 
 const RAW_STANDINGS = z.object({
+  // A label, not a number — a missing one must not fail an otherwise good sync.
+  competition: z.object({ name: z.string() }).nullish(),
   standings: z.array(
     z.object({
       type: z.string(),
@@ -97,6 +99,7 @@ export class FootballDataOrgProvider implements FootballDataProvider {
     return table.map((row) => ({
       extId: `fd-${row.team.id}`,
       name: row.team.name,
+      competition: raw.data.competition?.name ?? this.competition,
       tla: row.team.tla ?? undefined,
       shortName: row.team.shortName ?? undefined,
       crestUrl: row.team.crest ?? undefined,
