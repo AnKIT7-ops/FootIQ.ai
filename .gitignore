@@ -20,6 +20,11 @@ coverage/
 .DS_Store
 Thumbs.db
 
+# local agent config — machine-specific, never part of a build
+.claude/
+.codex/
+.cursor/
+
 .vercel
 .env*
 # templates stay in the repo
