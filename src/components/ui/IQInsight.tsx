@@ -1,11 +1,15 @@
 import { type ReactNode } from "react";
 import { Sparkles } from "lucide-react";
 import { FeedbackWidget } from "@/components/ui/FeedbackWidget";
+import { DemoEngineChip } from "@/components/ui/DemoEngineChip";
 import { cn } from "@/lib/utils";
 
 /**
  * The IQ layer — every AI-inferred element on FootIQ wears this amber treatment,
  * so users can always tell measured fact (emerald) from model inference (amber).
+ *
+ * Amber says "inferred". It does not say who inferred it, so every block also
+ * carries provenance: omit `provider` and the demo-engine chip renders.
  */
 export function IQInsight({
   children,
@@ -13,6 +17,7 @@ export function IQInsight({
   className,
   compact = false,
   feedback,
+  provider,
 }: {
   children: ReactNode;
   title?: string;
@@ -20,6 +25,9 @@ export function IQInsight({
   compact?: boolean;
   /** Set to a subject label to render 👍/👎 under the insight (substantial blocks only). */
   feedback?: string;
+  /** Provider that produced this text (`AiResult.provider`). Omit for
+   *  client-generated prose — that renders the demo-engine chip. */
+  provider?: string;
 }) {
   return (
     <div
@@ -34,10 +42,13 @@ export function IQInsight({
         className="pointer-events-none absolute -right-10 -top-12 size-36 rounded-full opacity-25 blur-2xl"
         style={{ background: "var(--iq)" }}
       />
-      <p className="mb-1.5 flex items-center gap-1.5 font-mono text-micro font-semibold uppercase tracking-[0.14em] text-iq-ink">
-        <Sparkles className="size-3.5" aria-hidden />
-        {title}
-      </p>
+      <div className="mb-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+        <p className="flex items-center gap-1.5 font-mono text-micro font-semibold uppercase tracking-[0.14em] text-iq-ink">
+          <Sparkles className="size-3.5" aria-hidden />
+          {title}
+        </p>
+        <DemoEngineChip provider={provider} />
+      </div>
       <div className={cn("text-ink", compact ? "text-ui leading-relaxed" : "text-sm leading-relaxed")}>{children}</div>
       {feedback && <FeedbackWidget subject={feedback} className="mt-3 border-t border-iq/15 pt-3" />}
     </div>

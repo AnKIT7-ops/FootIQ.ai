@@ -20,7 +20,7 @@ FootIQ is an AI football operating system: live match intelligence, scouting, ta
 
 ## Positioning
 
-An AI football OS, not a scores site. Every screen should be doing something a scoreboard cannot: inferring, comparing, explaining, or predicting — and saying how confident it is.
+An AI football OS, not a scores site. Every screen should be doing something a scoreboard cannot: inferring, comparing, explaining, or predicting — and showing what it was built from.
 
 ## Brand Personality
 
@@ -37,7 +37,7 @@ Under the hood it wants to feel like **Linear or Raycast** — keyboard-first, d
 
 ## Design Principles
 
-- **Fact and inference never blur.** Emerald is measured, amber is inferred. Every AI element carries confidence, generation date, and the sources it derived from. This is the product's integrity, not a styling choice.
+- **Fact and inference never blur.** Emerald is measured, amber is inferred. Every AI element carries generation date and the sources it derived from — never a confidence number nobody can trace. This is the product's integrity, not a styling choice.
 - **Show your work.** Confidence beats certainty. A number the user can trace is worth more than a number that sounds impressive.
 - **Speed is the aesthetic.** Keyboard-first, instant, no ceremony. Motion conveys state; it never performs. Chrome disappears into the task.
 - **Depth without clutter.** Density is welcome — the audience wants it — but every element must earn its pixels. Reward attention, don't demand it.

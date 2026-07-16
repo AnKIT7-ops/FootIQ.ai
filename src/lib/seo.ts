@@ -5,7 +5,7 @@ export const SITE_URL: string = (import.meta.env.VITE_SITE_URL as string | undef
 
 export const SITE_NAME = "FootIQ";
 const DEFAULT_DESCRIPTION =
-  "FootIQ is the AI intelligence layer for football — match predictions, natural-language scouting, tactical analysis and transfer probabilities, all clearly labeled as model inference.";
+  "FootIQ is the AI intelligence layer for football — match predictions, natural-language scouting, tactical analysis and transfer probabilities, algorithmically generated and clearly marked apart from verified fact.";
 
 export interface Crumb {
   name: string;

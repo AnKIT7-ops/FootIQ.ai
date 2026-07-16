@@ -38,7 +38,7 @@ export default function Intelligence() {
   usePageMeta({
     title: "Football Intelligence Library",
     description:
-      "AI-generated football analysis, regenerated weekly: match previews, player deep-dives, team form checks, manager tactical DNA, transfer probabilities and the weekly Best XI.",
+      "Algorithmically generated football analysis, regenerated weekly: match previews, player deep-dives, team form checks, manager tactical DNA, transfer probabilities and the weekly Best XI.",
     path: "/intelligence",
     breadcrumbs: [{ name: "Intelligence", path: "/intelligence" }],
   });
@@ -106,9 +106,7 @@ export default function Intelligence() {
                 {a.title}
               </h2>
               <p className="mt-1.5 line-clamp-2 text-caption leading-relaxed text-ink-2">{a.dek}</p>
-              <p className="mt-auto pt-3 font-mono text-micro uppercase tracking-wider text-ink-3">
-                Confidence {a.confidence}% · {a.publishedAt}
-              </p>
+              <p className="mt-auto pt-3 font-mono text-micro uppercase tracking-wider text-ink-3">{a.publishedAt}</p>
             </Card>
           </Link>
         ))}

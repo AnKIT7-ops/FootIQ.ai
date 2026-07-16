@@ -151,11 +151,11 @@ export const news: NewsArticle[] = [
     aiSummary: [
       "Renewal talks opened; Bayern monitoring as Coman succession plan.",
       "Reported £70M clause NOT corroborated by second source — treat cautiously.",
-      "FootIQ reliability model scores this outlet 2/5 on transfer specifics.",
+      "This outlet scores 2/5 on FootIQ's source-reliability scale for transfer specifics.",
     ],
     body: [
       "Newcastle have opened talks over an improved deal for Anthony Gordon, with the winger's camp aware of serious interest from Bayern Munich, according to local reports.",
-      "The eye-catching detail — a £70M release clause in the proposed terms — has not been corroborated by any second source, and Newcastle have historically refused clauses on principle. Our reliability model flags the specific figure as low-confidence while rating the underlying renewal talks as probable.",
+      "The eye-catching detail — a £70M release clause in the proposed terms — has not been corroborated by any second source, and Newcastle have historically refused clauses on principle. The specific figure remains uncorroborated, while the underlying renewal talks look probable.",
       "Gordon's pressing profile makes him a natural fit for a Kompany side; his sprint data leads the Premier League for the second season running.",
     ],
     tags: ["Newcastle", "Gordon", "Bayern", "Rumour"],

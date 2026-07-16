@@ -10,6 +10,7 @@ import { Crest } from "@/components/ui/Crest";
 import { Tabs } from "@/components/ui/Tabs";
 import { StatTile, Meter } from "@/components/ui/StatTile";
 import { IQInsight, IQTag } from "@/components/ui/IQInsight";
+import { DemoEngineChip } from "@/components/ui/DemoEngineChip";
 import { Radar } from "@/components/charts/Radar";
 import { Sparkline } from "@/components/charts/Sparkline";
 import { Heatmap } from "@/components/charts/Heatmap";
@@ -162,10 +163,13 @@ export default function PlayerPage() {
             <Card className="p-4 md:p-5">
               <SectionHeader title="Biography" className="mb-2" />
               <p className="text-body leading-relaxed text-ink-2">{player.bio}</p>
-              <p className="mt-3 border-t border-line pt-3 text-body leading-relaxed text-ink-2">
-                <IQTag className="mr-2 align-[2px]">Playing style</IQTag>
-                {player.style}
-              </p>
+              <div className="mt-3 border-t border-line pt-3">
+                <p className="text-body leading-relaxed text-ink-2">
+                  <IQTag className="mr-2 align-[2px]">Playing style</IQTag>
+                  {player.style}
+                </p>
+                <DemoEngineChip className="mt-2" />
+              </div>
             </Card>
           </div>
         </div>

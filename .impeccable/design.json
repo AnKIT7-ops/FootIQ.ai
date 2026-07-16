@@ -26,7 +26,7 @@
         "displayName": "Signal Amber",
         "canonical": "#fbbf24",
         "light": "#d97706",
-        "purpose": "Model inference. Every AI block, tag, prediction and confidence score.",
+        "purpose": "Model inference. Every AI block, tag and prediction.",
         "tonalRamp": [
           "#451a03",
           "#78350f",
@@ -266,7 +266,7 @@
       },
       "data": {
         "displayName": "Data — Plex Mono tabular",
-        "purpose": "Every comparable number: score, rating, xG, confidence, fee."
+        "purpose": "Every comparable number: score, rating, xG, fee."
       }
     },
     "shadows": [
@@ -427,7 +427,7 @@
       "kind": "chip",
       "refersTo": "badge-iq",
       "description": "Amber = inferred. Marks any single value as model-derived.",
-      "html": "<span class=\"ds-badge-iq\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z\"/></svg>68% confidence</span>",
+      "html": "<span class=\"ds-badge-iq\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z\"/></svg>match</span>",
       "css": ".ds-badge-iq { display: inline-flex; align-items: center; gap: 4px; background: var(--iq-soft, rgba(251,191,36,0.1)); color: var(--iq-ink, #fcd34d); font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10.5px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; }"
     },
     {
@@ -475,12 +475,12 @@
       },
       {
         "name": "The Mono-Numbers Rule",
-        "body": "Every number a user might compare — score, rating, xG, confidence, price — is set in IBM Plex Mono with tabular-nums. Proportional digits in a data column are a bug.",
+        "body": "Every number a user might compare — score, rating, xG, price — is set in IBM Plex Mono with tabular-nums. Proportional digits in a data column are a bug.",
         "section": "typography"
       },
       {
         "name": "The Eyebrow Budget Rule",
-        "body": "The eyebrow utility is metadata, not scaffolding. It labels a datum (LIVE · 67', CONFIDENCE, UPDATED 2H AGO). Stamping a tracked-uppercase kicker above every section is the AI-landing-page tell and is forbidden here.",
+        "body": "The eyebrow utility is metadata, not scaffolding. It labels a datum (LIVE · 67', GENERATED 2026-07-16, UPDATED 2H AGO). Stamping a tracked-uppercase kicker above every section is the AI-landing-page tell and is forbidden here.",
         "section": "typography"
       },
       {
@@ -505,7 +505,7 @@
       }
     ],
     "dos": [
-      "Do wear amber on every model output, always with confidence, generation date and source links (AIMeta). The user must never have to guess what was measured and what was inferred.",
+      "Do wear amber on every model output, always with generation date and source links (AIMeta), plus the demo-engine chip when the output isn't from a live model. The user must never have to guess what was measured and what was inferred.",
       "Do pick every size below 18px from the six-step ramp (text-micro / label / caption / ui / body / prose). Arbitrary text-[Npx] values are a defect.",
       "Do set every comparable number in IBM Plex Mono with tabular-nums.",
       "Do build depth from the tonal ladder (#10151e → #161d29 → #1d2533) and 1px hairlines.",
@@ -515,7 +515,7 @@
       "Do validate contrast on both themes: body text ≥4.5:1, large text ≥3:1. Ink-3 (#5f6b7e) is for mono labels, never prose."
     ],
     "donts": [
-      "Don't build anything that could pass for a betting site — no odds-shouting, no casino urgency, no green-on-green. Predictions are stated with confidence intervals, never sold as tips.",
+      "Don't build anything that could pass for a betting site — no odds-shouting, no casino urgency, no green-on-green. Predictions are stated as probability breakdowns, never sold as tips.",
       "Don't reach for generic AI SaaS furniture: purple gradients, glowing orbs, \"AI-powered\" hero copy, decorative glassmorphism, identical icon-heading-text card grids.",
       "Don't drift toward legacy scores sites (ESPN, Livescore): ad-shaped slots, banner clutter, dense grey chrome.",
       "Don't adopt fantasy hype language or graphics — no clickbait arrows, no inflated numbers, no thumbnail energy.",

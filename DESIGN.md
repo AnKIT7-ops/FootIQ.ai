@@ -161,7 +161,7 @@ Floodlit night: a cold indigo stage lit by two disciplined signals, one green, o
 - **Pitch Emerald** (`#10b981`): the color of measured fact. Live scores, real stats, primary buttons, the active-nav rail, verified-source dots. It is the grass and it is the truth. Its lighter partner **Pitch Emerald Ink** (`#5eead4`) carries emerald text on dark surfaces where the raw hue would fail contrast; **Live Emerald** (`#34d399`) is reserved for the pulsing live-match dot.
 
 ### Secondary
-- **Signal Amber** (`#fbbf24`): the color of model inference — the AI raising its hand. Every `IQInsight`, `IQTag`, confidence score, prediction, and generated article wears it. **Signal Amber Ink** (`#fcd34d`) carries amber text. Amber is never used for a measured value, and emerald is never used for a guess. This is the product's honesty rule expressed as pigment.
+- **Signal Amber** (`#fbbf24`): the color of model inference — the AI raising its hand. Every `IQInsight`, `IQTag`, prediction, and generated article wears it. **Signal Amber Ink** (`#fcd34d`) carries amber text. Amber is never used for a measured value, and emerald is never used for a guess. This is the product's honesty rule expressed as pigment.
 
 ### Tertiary
 - **Chart palette** (`#10b981`, `#38bdf8`, `#fbbf24`, `#a78bfa`, `#fb7185`): five categorical series, validated for colorblind separation and contrast on both the dark (`#11161f`) and light (`#f7f6f3`) surfaces, each with a `-deep` fill step for marks. Used only inside data visualization. Sky, violet and rose exist nowhere else in the UI.
@@ -218,9 +218,9 @@ Headings at 18px and up use Tailwind's named steps (`text-lg` / `xl` / `2xl` / `
 
 **The Ramp Rule.** Six steps below 18px, and nothing else. If a design seems to need 13.5px, it needs 13px or 14px — the half-pixel is you avoiding a decision. Reach for an arbitrary value and you are re-opening the 345-literal-size drift this system was built to close.
 
-**The Mono-Numbers Rule.** Every number a user might compare — score, rating, xG, confidence, price — is set in IBM Plex Mono with `tabular-nums`. Proportional digits in a data column are a bug.
+**The Mono-Numbers Rule.** Every number a user might compare — score, rating, xG, price — is set in IBM Plex Mono with `tabular-nums`. Proportional digits in a data column are a bug.
 
-**The Eyebrow Budget Rule.** `.eyebrow` is metadata, not scaffolding. It labels a datum (`LIVE · 67'`, `CONFIDENCE`, `UPDATED 2H AGO`). Stamping a tracked-uppercase kicker above every section is the AI-landing-page tell and is forbidden here.
+**The Eyebrow Budget Rule.** `.eyebrow` is metadata, not scaffolding. It labels a datum (`LIVE · 67'`, `UPDATED 2H AGO`). Stamping a tracked-uppercase kicker above every section is the AI-landing-page tell and is forbidden here.
 
 **The Display-Stays-Out Rule.** Archivo never appears in a button, a label, an input, a table cell, or a chart. It is for headings. Product UI is set in Instrument Sans and Plex Mono.
 
@@ -279,7 +279,7 @@ The amber block is the product's conscience made visible. A `rounded-2xl` panel 
 ## 6. Do's and Don'ts
 
 ### Do:
-- **Do** wear amber on every model output, always with confidence, generation date and source links (`AIMeta`). The user must never have to guess what was measured and what was inferred.
+- **Do** wear amber on every model output, always with generation date and source links (`AIMeta`), plus the Demo engine chip when no real provider produced it. The user must never have to guess what was measured and what was inferred.
 - **Do** pick every size below 18px from the six-step ramp (`text-micro` / `label` / `caption` / `ui` / `body` / `prose`). An arbitrary `text-[Npx]` is a defect.
 - **Do** set every comparable number in IBM Plex Mono with `tabular-nums`.
 - **Do** build depth from the tonal ladder (`#10151e` → `#161d29` → `#1d2533`) and 1px hairlines.
@@ -289,7 +289,7 @@ The amber block is the product's conscience made visible. A `rounded-2xl` panel 
 - **Do** validate contrast on both themes: body text ≥4.5:1, large text ≥3:1. Ink-3 (`#5f6b7e`) is for mono labels, never prose.
 
 ### Don't:
-- **Don't** build anything that could pass for a **betting site** — no odds-shouting, no casino urgency, no green-on-green. Predictions are stated with confidence intervals, never sold as tips.
+- **Don't** build anything that could pass for a **betting site** — no odds-shouting, no casino urgency, no green-on-green. Predictions are stated as probabilities, never sold as tips.
 - **Don't** reach for **generic AI SaaS** furniture: purple gradients, glowing orbs, "AI-powered" hero copy, decorative glassmorphism, identical icon-heading-text card grids.
 - **Don't** drift toward **legacy scores sites** (ESPN, Livescore): ad-shaped slots, banner clutter, dense grey chrome.
 - **Don't** adopt **fantasy hype** language or graphics — no clickbait arrows, no inflated numbers, no thumbnail energy.

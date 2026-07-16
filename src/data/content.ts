@@ -80,8 +80,6 @@ export interface ContentArticle {
   readMinutes: number;
   sections: ContentSection[];
   tags: string[];
-  /** Model confidence 0–100, derived from the underlying data. */
-  confidence: number;
   /** Internal references — the structured pages this analysis is built from. */
   sources: ContentSource[];
   /** Server AI task that upgrades this article once a provider is configured. */
@@ -183,7 +181,6 @@ function matchPreview(m: Match): ContentArticle {
     readMinutes: minutes(sections),
     sections,
     tags: [home.name, away.name, m.competition, "preview"],
-    confidence: pred ? pred.confidence : 62,
     sources: [
       { label: `${home.name} team page`, path: teamPathFor(home) },
       { label: `${away.name} team page`, path: teamPathFor(away) },
@@ -236,7 +233,6 @@ function teamForm(t: Team): ContentArticle {
     readMinutes: minutes(sections),
     sections,
     tags: [t.name, t.league, "form"],
-    confidence: 70 + Math.round(rand() * 12),
     sources: [
       { label: `${t.name} team page`, path: teamPathFor(t) },
       { label: `${inForm.name} profile`, path: playerPathFor(inForm) },
@@ -288,7 +284,6 @@ function playerAnalysis(p: Player): ContentArticle {
     readMinutes: minutes(sections),
     sections,
     tags: [p.name, t.name, p.position, "scouting"],
-    confidence: 74 + Math.round(rand() * 14),
     sources: [
       { label: `${p.name} full profile`, path: playerPathFor(p) },
       { label: `${t.name} team page`, path: teamPathFor(t) },
@@ -338,12 +333,11 @@ function transferAnalysis(rumorIndex: number): ContentArticle {
     slug,
     kind: "transfer-analysis",
     title: `${name} → ${to.name}: AI Transfer Analysis`,
-    dek: `Probability, package, tactical fit and sentiment on the ${name} to ${to.name} rumour — clearly labelled model inference, not reporting.`,
+    dek: `Probability, package, tactical fit and sentiment on the ${name} to ${to.name} rumour — clearly marked as algorithmic analysis, not reporting.`,
     publishedAt: weekStamp(),
     readMinutes: minutes(sections),
     sections,
     tags: [name, from.name, to.name, "transfers"],
-    confidence: Math.round(r.probability * 0.6 + r.reliability * 8),
     sources: [
       ...(p ? [{ label: `${name} profile`, path: playerPathFor(p) }] : []),
       { label: `${from.name} team page`, path: teamPathFor(from) },
@@ -394,7 +388,6 @@ function managerStyle(t: Team): ContentArticle {
     readMinutes: minutes(sections),
     sections,
     tags: [t.manager, t.name, "tactics"],
-    confidence: 78 + Math.round(rand() * 10),
     sources: [
       { label: `${t.name} team page`, path: teamPathFor(t) },
       { label: "Tactical board", path: "/tactics" },
@@ -443,7 +436,6 @@ function bestXI(): ContentArticle {
     readMinutes: minutes(sections),
     sections,
     tags: ["best xi", "form", "weekly"],
-    confidence: 82,
     sources: xi.slice(0, 5).map((p) => ({ label: `${p.name} profile`, path: playerPathFor(p) })),
     aiTaskHint: "scout_report",
   };
@@ -483,7 +475,6 @@ function risingPlayers(): ContentArticle {
     readMinutes: minutes(sections),
     sections,
     tags: ["rising", "form", "scouting", "weekly"],
-    confidence: 76,
     sources: rising.map(({ p }) => ({ label: `${p.name} profile`, path: playerPathFor(p) })),
     aiTaskHint: "scout_report",
   };
@@ -523,7 +514,6 @@ function fantasyBriefing(): ContentArticle {
     readMinutes: minutes(sections),
     sections,
     tags: ["fantasy", `gameweek ${gameweek.number}`, "weekly"],
-    confidence: 71,
     sources: [
       { label: "Fantasy assistant", path: "/fantasy" },
       ...(cap ? [{ label: `${cap.name} profile`, path: playerPathFor(cap) }] : []),
@@ -579,7 +569,6 @@ function historicalComparisons(): ContentArticle[] {
       readMinutes: minutes(sections),
       sections,
       tags: [a.name, b.name, "comparison"],
-      confidence: 68 + Math.round(rand() * 10),
       sources: [
         { label: `${a.name} profile`, path: playerPathFor(a) },
         { label: `${b.name} profile`, path: playerPathFor(b) },
@@ -632,7 +621,6 @@ function weeklyDigest(library: ContentArticle[]): ContentArticle {
     readMinutes: minutes(sections),
     sections,
     tags: ["digest", "newsletter", "weekly"],
-    confidence: 80,
     sources: previews.map((p) => ({ label: p.title, path: `/intelligence/${p.slug}` })),
     aiTaskHint: "news_summary",
   };

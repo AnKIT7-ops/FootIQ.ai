@@ -26,7 +26,7 @@ export default function Home() {
   usePageMeta({
     title: "AI Football Intelligence",
     description:
-      "FootIQ is the AI intelligence layer for football — live match reads, outcome predictions, natural-language scouting and transfer probabilities, honestly labeled as model inference.",
+      "FootIQ is the AI intelligence layer for football — live match reads, outcome predictions, natural-language scouting and transfer probabilities, algorithmically generated and clearly marked apart from verified fact.",
     path: "/",
   });
   const featured = matchDetail("ars-liv");
@@ -158,7 +158,7 @@ export default function Home() {
         <div className="min-w-0 space-y-10">
           {/* breaking news */}
           <section aria-label="Breaking news">
-            <SectionHeader eyebrow="AI-summarized" title="Breaking News" action={<SeeAll to="/news" />} />
+            <SectionHeader eyebrow="Algorithmically summarized" title="Breaking News" action={<SeeAll to="/news" />} />
             <div className="space-y-3">
               {breakingNews.concat(news.slice(3, 6)).slice(0, 4).map((n) => (
                 <Card hover key={n.id} onClick={() => navigate(`/news/${n.id}`)} className="p-4 md:p-5">
@@ -395,7 +395,7 @@ export default function Home() {
             ))}
           </div>
           <p className="max-w-2xl text-label leading-relaxed text-ink-3">
-            FootIQ is a demo platform in public beta. Insights are AI-generated, predictions are informational only — never betting advice —
+            FootIQ is a demo platform in public beta. Insights are algorithmically generated, predictions are informational only — never betting advice —
             and statistics may be simulated. © 2026 FootIQ.
           </p>
         </div>

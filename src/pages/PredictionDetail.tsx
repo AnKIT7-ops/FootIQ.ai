@@ -81,13 +81,10 @@ export default function PredictionDetail() {
       />
 
       <Card className="p-5 md:p-6">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Crest teamId={home.id} size={40} />
-            <SectionHeader level={1} title={`${home.short} vs ${away.short}`} className="mb-0" />
-            <Crest teamId={away.id} size={40} />
-          </div>
-          <Badge variant="iq">Confidence {pred.confidence}%</Badge>
+        <div className="mb-4 flex items-center gap-3">
+          <Crest teamId={home.id} size={40} />
+          <SectionHeader level={1} title={`${home.short} vs ${away.short}`} className="mb-0" />
+          <Crest teamId={away.id} size={40} />
         </div>
         <p className="mb-5 font-mono text-label uppercase tracking-wider text-ink-3">
           {match.competition} · {match.venue} · expected {pred.expectedHome.toFixed(1)}–{pred.expectedAway.toFixed(1)}
@@ -152,7 +149,6 @@ export default function PredictionDetail() {
       </Card>
 
       <AIMeta
-        confidence={pred.confidence}
         generatedAt={weekStamp()}
         sources={[
           { label: `${home.name} team page`, path: teamPath(home) },

@@ -59,7 +59,7 @@ Triggers: Workers cron (`wrangler.toml [triggers] crons = ["*/30 * * * *"]`) →
 
 ## AI enrichment
 
-Raw numbers never ship alone: every AI task explains its reasoning by prompt design (registry instructs structure + "ground every claim"), the content engine articles carry confidence + sources (`AIMeta`), and recommendations return a `reason` per item. Enrichment tasks map 1:1 to synced data via `aiTaskHint` (see GROWTH.md).
+Raw numbers never ship alone: every AI task explains its reasoning by prompt design (registry instructs structure + "ground every claim"), the content engine articles carry sources (`AIMeta`), and recommendations return a `reason` per item. Enrichment tasks map 1:1 to synced data via `aiTaskHint` (see GROWTH.md).
 
 ## MLOps foundation
 

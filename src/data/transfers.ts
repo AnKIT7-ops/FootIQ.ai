@@ -64,7 +64,7 @@ export const transferRumors: TransferRumor[] = [
         { handle: "@BavarianFootballWorks", text: "Gordon + Olise on the wings with Kane's drop-off passing is a cheat code.", mood: "for" },
       ],
     },
-    aiNote: "Reliability model flags the clause figure as low-confidence. Newcastle's Champions League qualification probability (81%) further suppresses sale likelihood.",
+    aiNote: "The clause figure remains uncorroborated by a second source. Newcastle's Champions League qualification probability (81%) further suppresses sale likelihood.",
   },
   {
     id: "t3",

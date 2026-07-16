@@ -1,48 +1,43 @@
 import { Link } from "react-router-dom";
 import { Sparkles } from "lucide-react";
 import { FeedbackWidget } from "@/components/ui/FeedbackWidget";
+import { DemoEngineChip } from "@/components/ui/DemoEngineChip";
 import { cn } from "@/lib/utils";
 
 /**
- * AI provenance strip — every substantial AI-generated block carries one:
- * confidence, generation timestamp, source references and the disclaimer.
+ * AI provenance strip — every substantial algorithmically generated block carries one:
+ * generation timestamp, source references and the disclaimer.
  * Amber = model inference, per the FootIQ semantic accent rule.
+ *
+ * Deliberately carries no confidence number: nothing in the pipeline produces
+ * one (`AiResult` has no confidence field), and a number the user cannot trace
+ * is worth less than no number at all.
  */
 export function AIMeta({
-  confidence,
   generatedAt,
   sources,
   feedbackSubject,
+  provider,
   className,
 }: {
-  /** 0–100. */
-  confidence: number;
   /** ISO date or datetime. */
   generatedAt: string;
   sources?: { label: string; path: string }[];
   /** Labels the 👍/👎 signal, e.g. the report title. Widget always renders. */
   feedbackSubject?: string;
+  /** Provider that produced the text (`AiResult.provider`). Omit for
+   *  client-generated prose — that renders the demo-engine chip. */
+  provider?: string;
   className?: string;
 }) {
-  const level = confidence >= 75 ? "High" : confidence >= 55 ? "Medium" : "Low";
   return (
     <div className={cn("rounded-2xl border border-iq/25 bg-iq-soft p-4", className)}>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-micro uppercase tracking-[0.14em] text-iq-ink">
         <span className="inline-flex items-center gap-1.5 font-semibold">
-          <Sparkles className="size-3.5" aria-hidden /> AI-generated analysis
-        </span>
-        <span className="inline-flex items-center gap-1.5" title={`Model confidence ${confidence}%`}>
-          Confidence {level}
-          <span
-            role="img"
-            aria-label={`Confidence ${confidence} percent`}
-            className="inline-block h-1.5 w-16 overflow-hidden rounded-full bg-iq/20"
-          >
-            <span className="block h-full rounded-full bg-iq" style={{ width: `${Math.min(100, Math.max(0, confidence))}%` }} />
-          </span>
-          {confidence}%
+          <Sparkles className="size-3.5" aria-hidden /> FootIQ analysis
         </span>
         <span>Generated {generatedAt.slice(0, 10)}</span>
+        <DemoEngineChip provider={provider} />
       </div>
       {sources && sources.length > 0 && (
         <p className="mt-2 text-caption leading-relaxed text-ink-2">
@@ -58,7 +53,7 @@ export function AIMeta({
         </p>
       )}
       <p className="mt-2 text-label leading-relaxed text-ink-3">
-        Model inference from structured performance data — speculative analysis, not verified reporting. Not betting advice.
+        Generated from structured performance data — speculative analysis, not verified reporting. Not betting advice.
       </p>
       <FeedbackWidget subject={feedbackSubject} className="mt-3 border-t border-iq/15 pt-3" />
     </div>

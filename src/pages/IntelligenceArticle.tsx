@@ -71,7 +71,7 @@ export default function IntelligenceArticle() {
 
       <div className="flex flex-wrap items-center gap-2">
         <BookmarkButton entry={{ kind: "intel", refId: article.slug, title: article.title, path: `/intelligence/${article.slug}` }} />
-        <ShareBar title={article.title} path={`/intelligence/${article.slug}`} kind={contentKindLabels[article.kind]} stat={`Confidence ${article.confidence}%`} />
+        <ShareBar title={article.title} path={`/intelligence/${article.slug}`} kind={contentKindLabels[article.kind]} />
       </div>
 
       {article.sections.map((s, i) => (
@@ -97,7 +97,7 @@ export default function IntelligenceArticle() {
         </Card>
       ))}
 
-      <AIMeta confidence={article.confidence} generatedAt={article.publishedAt} sources={article.sources} />
+      <AIMeta generatedAt={article.publishedAt} sources={article.sources} />
 
       <Card className="p-5">
         <p className="eyebrow mb-1">Weekly in your inbox</p>
