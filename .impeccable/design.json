@@ -26,7 +26,7 @@
         "displayName": "Signal Amber",
         "canonical": "#fbbf24",
         "light": "#d97706",
-        "purpose": "Model inference. Every AI block, tag, prediction and confidence score.",
+        "purpose": "Model inference. Every AI block, tag and prediction.",
         "tonalRamp": [
           "#451a03",
           "#78350f",
@@ -266,7 +266,7 @@
       },
       "data": {
         "displayName": "Data — Plex Mono tabular",
-        "purpose": "Every comparable number: score, rating, xG, confidence, fee."
+        "purpose": "Every comparable number: score, rating, xG, fee."
       }
     },
     "shadows": [
@@ -480,7 +480,7 @@
       },
       {
         "name": "The Eyebrow Budget Rule",
-        "body": "The eyebrow utility is metadata, not scaffolding. It labels a datum (LIVE · 67', CONFIDENCE, UPDATED 2H AGO). Stamping a tracked-uppercase kicker above every section is the AI-landing-page tell and is forbidden here.",
+        "body": "The eyebrow utility is metadata, not scaffolding. It labels a datum (LIVE · 67', GENERATED 2026-07-16, UPDATED 2H AGO). Stamping a tracked-uppercase kicker above every section is the AI-landing-page tell and is forbidden here.",
         "section": "typography"
       },
       {
