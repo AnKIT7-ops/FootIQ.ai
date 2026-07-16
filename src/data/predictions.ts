@@ -28,7 +28,6 @@ export const predictions: Prediction[] = [
       "Rodri load management adds variance: his presence is worth ~7% to City's win probability and he is rated 85% likely to start.",
       "Chelsea's young core has won just once in eleven visits to the Etihad — but three of the last four were within one goal.",
     ],
-    confidence: 74,
   },
   {
     matchId: "tot-mun",
@@ -57,7 +56,6 @@ export const predictions: Prediction[] = [
       "United's 3-4-2-1 has out-xG'd every high-line opponent since February; the away-win tail is fatter than the market prices.",
       "Both keepers over-perform post-shot models — expect the scoreline to undershoot the chance count.",
     ],
-    confidence: 61,
   },
   {
     matchId: "new-avl",
@@ -86,7 +84,6 @@ export const predictions: Prediction[] = [
       "European rotation cost: Villa's xG drops 0.4 in league matches three days after continental fixtures — exactly this scenario.",
       "Watkins faces his probable summer suitor: the model does not price narrative, but you may.",
     ],
-    confidence: 68,
   },
   {
     matchId: "liv-mci",
@@ -115,7 +112,6 @@ export const predictions: Prediction[] = [
       "Haaland has scored in five straight against high lines; Wirtz has created 8 big chances in his last four at Anfield.",
       "Result likely decides the title: winner's championship probability moves by ~18%.",
     ],
-    confidence: 57,
   },
   {
     matchId: "rma-psg",
@@ -144,7 +140,6 @@ export const predictions: Prediction[] = [
       "Coin-flip by design: the two sides rank 1st and 2nd in FootIQ's Europe-wide strength index, separated by 0.02.",
       "History says Madrid in April; the model refuses to price ghosts, but notes the Bernabéu is worth +4% in knockouts.",
     ],
-    confidence: 52,
   },
   {
     matchId: "che-ars",
@@ -173,7 +168,6 @@ export const predictions: Prediction[] = [
       "Palmer's shadow-marking dilemma: Rice erases the pocket Palmer lives in — their direct minutes decide the draw probability.",
       "Title context: Arsenal win probability includes a +3% urgency premium in must-win April fixtures under Arteta.",
     ],
-    confidence: 66,
   },
 ];
 

@@ -5,18 +5,19 @@ import { cn } from "@/lib/utils";
 
 /**
  * AI provenance strip — every substantial AI-generated block carries one:
- * confidence, generation timestamp, source references and the disclaimer.
+ * generation timestamp, source references and the disclaimer.
  * Amber = model inference, per the FootIQ semantic accent rule.
+ *
+ * Deliberately carries no confidence number: nothing in the pipeline produces
+ * one (`AiResult` has no confidence field), and a number the user cannot trace
+ * is worth less than no number at all.
  */
 export function AIMeta({
-  confidence,
   generatedAt,
   sources,
   feedbackSubject,
   className,
 }: {
-  /** 0–100. */
-  confidence: number;
   /** ISO date or datetime. */
   generatedAt: string;
   sources?: { label: string; path: string }[];
@@ -24,23 +25,11 @@ export function AIMeta({
   feedbackSubject?: string;
   className?: string;
 }) {
-  const level = confidence >= 75 ? "High" : confidence >= 55 ? "Medium" : "Low";
   return (
     <div className={cn("rounded-2xl border border-iq/25 bg-iq-soft p-4", className)}>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-micro uppercase tracking-[0.14em] text-iq-ink">
         <span className="inline-flex items-center gap-1.5 font-semibold">
           <Sparkles className="size-3.5" aria-hidden /> AI-generated analysis
-        </span>
-        <span className="inline-flex items-center gap-1.5" title={`Model confidence ${confidence}%`}>
-          Confidence {level}
-          <span
-            role="img"
-            aria-label={`Confidence ${confidence} percent`}
-            className="inline-block h-1.5 w-16 overflow-hidden rounded-full bg-iq/20"
-          >
-            <span className="block h-full rounded-full bg-iq" style={{ width: `${Math.min(100, Math.max(0, confidence))}%` }} />
-          </span>
-          {confidence}%
         </span>
         <span>Generated {generatedAt.slice(0, 10)}</span>
       </div>

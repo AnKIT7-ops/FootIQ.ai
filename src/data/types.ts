@@ -211,7 +211,6 @@ export interface Prediction {
   btts: number;
   mvp: { playerId: string; p: number }[];
   reasoning: string[];
-  confidence: number;
 }
 
 export interface Clip {

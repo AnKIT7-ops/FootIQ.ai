@@ -123,7 +123,6 @@ ${JSON.stringify({
   over25: prediction.over25,
   btts: prediction.btts,
   modelReasoning: prediction.reasoning,
-  confidence: prediction.confidence,
 })}
 
 Structure: headline call, three factors driving it, one counter-scenario that would flip it.`,

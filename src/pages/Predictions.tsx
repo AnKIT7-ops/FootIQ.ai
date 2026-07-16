@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { Card, SectionHeader } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
 import { Crest } from "@/components/ui/Crest";
 import { Avatar } from "@/components/ui/Avatar";
 import { IQInsight } from "@/components/ui/IQInsight";
@@ -62,15 +61,12 @@ export default function Predictions() {
         <div className="space-y-6">
           {/* outcome probabilities */}
           <Card className="floodlight p-5 md:p-6">
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <Crest teamId={home.id} size={40} />
-                <p className="display text-xl font-bold text-ink md:text-2xl">
-                  {home.short} <span className="text-ink-3">vs</span> {away.short}
-                </p>
-                <Crest teamId={away.id} size={40} />
-              </div>
-              <Badge variant="iq">Model confidence {active.confidence}%</Badge>
+            <div className="mb-5 flex flex-wrap items-center gap-3">
+              <Crest teamId={home.id} size={40} />
+              <p className="display text-xl font-bold text-ink md:text-2xl">
+                {home.short} <span className="text-ink-3">vs</span> {away.short}
+              </p>
+              <Crest teamId={away.id} size={40} />
             </div>
 
             <div className="flex h-11 w-full gap-[3px] overflow-hidden rounded-2xl" role="img" aria-label={`Win probabilities: ${home.short} ${active.homeWin}%, draw ${active.draw}%, ${away.short} ${active.awayWin}%`}>

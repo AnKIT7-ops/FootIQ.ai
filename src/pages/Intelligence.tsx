@@ -106,9 +106,7 @@ export default function Intelligence() {
                 {a.title}
               </h2>
               <p className="mt-1.5 line-clamp-2 text-caption leading-relaxed text-ink-2">{a.dek}</p>
-              <p className="mt-auto pt-3 font-mono text-micro uppercase tracking-wider text-ink-3">
-                Confidence {a.confidence}% · {a.publishedAt}
-              </p>
+              <p className="mt-auto pt-3 font-mono text-micro uppercase tracking-wider text-ink-3">{a.publishedAt}</p>
             </Card>
           </Link>
         ))}
