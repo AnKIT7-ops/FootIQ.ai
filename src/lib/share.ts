@@ -15,7 +15,7 @@ export interface ShareCardOpts {
   title: string;
   /** Eyebrow above the title, e.g. "Player Analysis". */
   kind?: string;
-  /** Emphasis stat line under the title, e.g. "Confidence 78%". */
+  /** Emphasis stat line under the title, e.g. "Rating 7.82 · 14G 6A". */
   stat?: string;
   /** Site path shown in the footer and encoded in the shared URL. */
   path: string;
