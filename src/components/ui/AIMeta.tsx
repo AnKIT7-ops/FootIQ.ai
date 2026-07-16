@@ -34,7 +34,7 @@ export function AIMeta({
     <div className={cn("rounded-2xl border border-iq/25 bg-iq-soft p-4", className)}>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-micro uppercase tracking-[0.14em] text-iq-ink">
         <span className="inline-flex items-center gap-1.5 font-semibold">
-          <Sparkles className="size-3.5" aria-hidden /> AI-generated analysis
+          <Sparkles className="size-3.5" aria-hidden /> FootIQ analysis
         </span>
         <span>Generated {generatedAt.slice(0, 10)}</span>
         {isDemoEngine(provider) && (
@@ -61,7 +61,7 @@ export function AIMeta({
         </p>
       )}
       <p className="mt-2 text-label leading-relaxed text-ink-3">
-        Model inference from structured performance data — speculative analysis, not verified reporting. Not betting advice.
+        Generated from structured performance data — speculative analysis, not verified reporting. Not betting advice.
       </p>
       <FeedbackWidget subject={feedbackSubject} className="mt-3 border-t border-iq/15 pt-3" />
     </div>
