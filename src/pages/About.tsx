@@ -77,7 +77,7 @@ export default function About() {
         <p>
           <span className="font-semibold text-accent-ink">Emerald</span> marks measured fact — scores, minutes, distances, results.{" "}
           <span className="font-semibold text-iq-ink">Amber</span> marks model inference — predictions, fit scores, similarity ratings,
-          tactical reads. If it glows amber, a model produced it and it can be wrong. A 70% favourite still loses three times in ten.
+          tactical reads. If it glows amber, it's inference, not fact — and it can be wrong. A 70% favourite still loses three times in ten.
         </p>
       </ProseSection>
 

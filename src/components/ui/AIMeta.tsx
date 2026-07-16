@@ -5,7 +5,7 @@ import { isDemoEngine } from "@/lib/ai-provenance";
 import { cn } from "@/lib/utils";
 
 /**
- * AI provenance strip — every substantial AI-generated block carries one:
+ * AI provenance strip — every substantial algorithmically generated block carries one:
  * generation timestamp, source references and the disclaimer.
  * Amber = model inference, per the FootIQ semantic accent rule.
  *
