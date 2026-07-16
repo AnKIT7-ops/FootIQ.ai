@@ -55,7 +55,7 @@ const steps = [
     icon: BadgeCheck,
     eyebrow: "How to read FootIQ",
     title: "Green is fact. Amber is AI.",
-    body: "Verified data points are emerald. Anything a model inferred is amber and carries its confidence, generation time and sources — so you always know what you're looking at. AI analysis is speculative, never betting advice.",
+    body: "Verified data points are emerald. Anything a model inferred is amber and carries its generation time and sources — so you always know what you're looking at. AI analysis is speculative, never betting advice.",
     cta: { label: "Start exploring", to: null },
   },
 ] as const;

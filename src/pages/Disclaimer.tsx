@@ -38,12 +38,12 @@ export default function Disclaimer() {
         </p>
       </ProseSection>
 
-      <ProseSection title="3. Confidence scores">
+      <ProseSection title="3. AI provenance">
         <p>
-          Every substantial AI block carries a confidence value: <strong className="text-ink">High (75%+)</strong> means strong statistical
-          support, <strong className="text-ink">Medium (55–74%)</strong> means meaningful but incomplete signal, and{" "}
-          <strong className="text-ink">Low (below 55%)</strong> means the model is closer to guessing than knowing. Confidence measures the
-          model's internal consistency — it is <em>not</em> a probability that the statement is true.
+          Every substantial AI block carries a provenance strip instead of a confidence score: the date it was generated and links to the
+          structured team, player and match pages the analysis was built from. FootIQ deliberately shows no confidence percentage — no model
+          in the pipeline produces one, and a number nobody can trace back to real data is worse than no number at all. Treat every AI block
+          as <strong className="text-ink">speculative analysis</strong>, not verified reporting.
         </p>
       </ProseSection>
 
