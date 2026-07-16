@@ -20,7 +20,7 @@ Phase 3 turned the platform into an acquisition machine: a self-generating SEO c
 
 **Pipeline (matches the AI workflow spec):** entity data → prompt/template (versioned registry server-side, seeded templates client-side) → LLM when `AI_PROVIDER` configured / deterministic generator otherwise → cached (AiService per task+input+prompt-version) → rendered with `AIMeta` provenance. Articles declare `aiTaskHint` so the server upgrade path is 1:1.
 
-**AI quality rule (P12):** every article and prediction page carries `AIMeta` — confidence %, generation date, source references (internal links to the structured pages it was derived from), and the disclaimer. Amber = inference, emerald = measured fact, everywhere.
+**AI quality rule (P12):** every article and prediction page carries `AIMeta` — generation date, source references (internal links to the structured pages it was derived from), and the disclaimer. Amber = inference, emerald = measured fact, everywhere.
 
 ## URL architecture
 
