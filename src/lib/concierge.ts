@@ -49,7 +49,7 @@ export function answer(raw: string): string {
     return "Describe the player you need in plain language — e.g. 'left-footed winger under €30M who presses hard' — and AI Scout will rank matches with fit scores. → /scout";
   }
   if (q.includes("hello") || q.includes("hi") || q.length < 8) {
-    return "I'm the FootIQ concierge — ask me about any player, team, prediction, transfer or fantasy call. Everything I say is model inference (that's why I wear amber).";
+    return "I'm the FootIQ concierge — ask me about any player, team, prediction, transfer or fantasy call. Everything I say is algorithmically generated from FootIQ's data (that's why I wear amber).";
   }
   return "I can answer from live FootIQ data: try a player ('how good is Wirtz?'), a team ('Arsenal form'), a fixture ('predict Madrid vs PSG'), fantasy ('who to captain?') or transfers.";
 }

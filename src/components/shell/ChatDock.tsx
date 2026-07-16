@@ -91,7 +91,7 @@ export function ChatDock() {
             <div className="flex items-center gap-2 border-b border-line px-4 py-3">
               <Sparkles className="size-4 text-iq-ink" aria-hidden />
               <p className="font-mono text-label font-semibold uppercase tracking-[0.14em] text-iq-ink">FootIQ Concierge</p>
-              <span className="ml-auto font-mono text-micro uppercase tracking-wider text-ink-3">model inference</span>
+              <span className="ml-auto font-mono text-micro uppercase tracking-wider text-ink-3">algorithmically generated</span>
             </div>
 
             <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto p-4" aria-live="polite">
