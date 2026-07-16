@@ -14,7 +14,7 @@ const cats = ["All", "Transfers", "Match Report", "Tactics", "Injury", "Rumour",
 export default function News() {
   usePageMeta({
     title: "News Intelligence",
-    description: "Football news AI-summarized to 30-second reads, with source-reliability scoring on every story.",
+    description: "Football news algorithmically summarized to 30-second reads, with source-reliability scoring on every story.",
     path: "/news",
   });
   const [cat, setCat] = useState("All");

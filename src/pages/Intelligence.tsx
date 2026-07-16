@@ -38,7 +38,7 @@ export default function Intelligence() {
   usePageMeta({
     title: "Football Intelligence Library",
     description:
-      "AI-generated football analysis, regenerated weekly: match previews, player deep-dives, team form checks, manager tactical DNA, transfer probabilities and the weekly Best XI.",
+      "Algorithmically generated football analysis, regenerated weekly: match previews, player deep-dives, team form checks, manager tactical DNA, transfer probabilities and the weekly Best XI.",
     path: "/intelligence",
     breadcrumbs: [{ name: "Intelligence", path: "/intelligence" }],
   });

@@ -333,7 +333,7 @@ function transferAnalysis(rumorIndex: number): ContentArticle {
     slug,
     kind: "transfer-analysis",
     title: `${name} → ${to.name}: AI Transfer Analysis`,
-    dek: `Probability, package, tactical fit and sentiment on the ${name} to ${to.name} rumour — clearly labelled model inference, not reporting.`,
+    dek: `Probability, package, tactical fit and sentiment on the ${name} to ${to.name} rumour — clearly marked as algorithmic analysis, not reporting.`,
     publishedAt: weekStamp(),
     readMinutes: minutes(sections),
     sections,
