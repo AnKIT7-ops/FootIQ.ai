@@ -6,7 +6,7 @@ import { usePageMeta } from "@/lib/seo";
 export default function Disclaimer() {
   usePageMeta({
     title: "Disclaimer",
-    description: "FootIQ beta disclaimer: demo platform, AI-generated insights, informational predictions only — not betting advice.",
+    description: "FootIQ beta disclaimer: demo platform, algorithmically generated insights, informational predictions only — not betting advice.",
     path: "/disclaimer",
   });
 
@@ -15,7 +15,7 @@ export default function Disclaimer() {
       <Card className="flex gap-3 border-iq/30 bg-iq-soft p-4 md:p-5">
         <AlertTriangle className="mt-0.5 size-5 shrink-0 text-iq-ink" aria-hidden />
         <p className="text-body leading-relaxed text-ink">
-          FootIQ is a <strong>demonstration platform in public beta</strong>. Insights are <strong>AI-generated</strong>, predictions are{" "}
+          FootIQ is a <strong>demonstration platform in public beta</strong>. Insights are <strong>algorithmically generated</strong>, predictions are{" "}
           <strong>informational only</strong>, and statistics <strong>may be simulated</strong>. Nothing on this site is betting, financial
           or professional advice.
         </p>
@@ -30,11 +30,11 @@ export default function Disclaimer() {
         </p>
       </ProseSection>
 
-      <ProseSection title="2. AI-generated content">
+      <ProseSection title="2. Automated content">
         <p>
           Content highlighted in amber — insights, predictions, tactical reads, similarity scores, scouting fit scores and the concierge
-          assistant — is produced by <strong className="text-ink">automated models</strong>. Model output can be incomplete, outdated or
-          simply wrong. It reflects statistical patterns, not verified editorial reporting.
+          assistant — is produced by <strong className="text-ink">automated systems, not human editors</strong>. Output can be incomplete,
+          outdated or simply wrong. It reflects statistical patterns, not verified editorial reporting.
         </p>
       </ProseSection>
 
