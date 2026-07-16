@@ -9,13 +9,14 @@
     "preview": "vite preview",
     "verify": "node scripts/check-imports.mjs && node scripts/verify.mjs",
     "check:imports": "node scripts/check-imports.mjs",
+    "test": "vitest run",
     "og": "node scripts/og.mjs"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.50.0",
     "@fontsource-variable/archivo": "^5.2.5",
     "@fontsource-variable/instrument-sans": "^5.2.5",
     "@fontsource/ibm-plex-mono": "^5.2.5",
+    "@supabase/supabase-js": "^2.50.0",
     "lucide-react": "^0.525.0",
     "motion": "^12.19.1",
     "react": "^19.1.0",
@@ -30,6 +31,7 @@
     "puppeteer-core": "^25.3.0",
     "tailwindcss": "^4.1.11",
     "typescript": "~5.8.3",
-    "vite": "^7.0.0"
+    "vite": "^7.0.0",
+    "vitest": "^3.2.7"
   }
 }
