@@ -20,7 +20,7 @@ FootIQ is an AI football operating system: live match intelligence, scouting, ta
 
 ## Positioning
 
-An AI football OS, not a scores site. Every screen should be doing something a scoreboard cannot: inferring, comparing, explaining, or predicting — and saying how confident it is.
+An AI football OS, not a scores site. Every screen should be doing something a scoreboard cannot: inferring, comparing, explaining, or predicting — and showing what it was built from.
 
 ## Brand Personality
 
