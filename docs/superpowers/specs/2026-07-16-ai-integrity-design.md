@@ -99,27 +99,67 @@ It goes with the rest.
 typed, so deletion is compiler-guided). Then `npm run verify` for the route-wide
 screenshot + console-error + overflow sweep.
 
-### Part B — wire a real provider (blocked on user)
+### Part B — "Demo engine" badge (approved 2026-07-16)
+
+**Premise correction found while scoping.** The frontend never calls the AI backend.
+`src/lib/api/client.ts` exposes only `get/post/put/patch/delete` — no AI methods.
+`Scout.tsx` filters the `players` repository client-side; `ChatDock` imports the
+scripted `concierge` keyword ladder. Nothing in `src/` reaches `/api/ai/*`.
+
+Consequences:
+- The AI route surface (7 endpoints, prompt registry, A/B variants, quota, evals) has
+  never been invoked by the product. It is exercised only by tests.
+- `MockAiProvider` is not serving users — it is unreachable from the UI.
+- **A badge keyed on `AiResult.provider === "mock"` would badge nothing**, because no
+  `AiResult` reaches the frontend.
+
+Everything wearing amber today is client-generated: `content.ts` articles are
+deterministic templates, the concierge is keyword matching, Scout's insight is local
+filtering. No model has produced a word any user has read.
+
+**Design.** The honest question per surface is "did a real model produce this?" —
+false when client-generated, false when the provider is `mock`, true otherwise. One
+optional prop on `AIMeta`:
+
+```ts
+AIMeta({ provider }: { provider?: string })
+  provider === undefined   → "Demo engine" badge   // client-generated
+  provider === "mock"      → "Demo engine" badge   // server, no key configured
+  "claude" | "openai" | …  → no badge; show model name
+```
+
+The badge disappears automatically when a real provider is configured — no frontend
+change required at swap time.
+
+**Reuse, do not invent.** `src/lib/freshness.ts` + `DataFreshness` already implement
+this exact pattern for catalog data: a `useSyncExternalStore` signal fed passively
+from `meta.source` on every API response (zero extra requests), rendered as a chip
+that switches between "Live data" and "Demo data". The AI badge is its sibling and
+must match its visual language and mechanism. `GET /api/meta/health` already reports
+`aiProvider: ai.providerName`, so the server-side signal also exists.
+
+Both indicators then answer the same two questions consistently: is the *data* live,
+and is the *AI* real.
+
+### Part C — wire a real provider (blocked on user)
 
 Needs a funded API key. `createAiProvider` already handles selection and fallback;
-this is `AI_PROVIDER` + key in the Cloudflare Worker env, no code change. Until then
-prod serves `MockAiProvider`, which self-labels — acceptable, because it tells the
-truth about what it is.
-
-**Open question for review:** should the mock's honesty be enforced at the UI layer
-too? Right now `AiResult.provider` is `"mock"` and the frontend ignores it. A
-`provider === "mock"` check could render a "demo engine" tag rather than relying on
-the model's own text to disclose it. Small, and it makes the honesty structural
-instead of stylistic.
+this is `AI_PROVIDER` + key in the Cloudflare Worker env, no code change.
 
 ## Explicitly not in this chunk
 
-- **P5 + P6 (semantic search + copilot)** — chunk 2, own spec. Key realization: they
-  are one feature. "Fast left backs under 24" needs no embeddings and no vector DB —
-  it needs a model with a `search_players({position, maxAge, minPace})` tool. The LLM
-  does intent→filters; the existing O(n) catalog scan executes them. The chosen
-  filters are emerald fact, the ranking commentary is amber inference. Blocked on
-  Part B — a copilot on the mock provider is theatre.
+- **P5 + P6 (semantic search + copilot)** — chunk 2, own spec. Two realizations:
+  1. They are one feature. "Fast left backs under 24" needs no embeddings and no
+     vector DB — it needs a model with a `search_players({position, maxAge, minPace})`
+     tool. The LLM does intent→filters; the existing O(n) catalog scan executes them.
+     The chosen filters are emerald fact, the ranking commentary is amber inference.
+  2. It is not an "upgrade" of the AI Scout. Since the frontend has never called
+     `/api/ai/*` (see Part B), chunk 2 is the **first** connection between the UI and
+     the AI backend. Budget it as integration work, not a refactor: an `api.ai.*`
+     client surface, auth token plumbing, quota/error states, and streaming — none of
+     which exist on the frontend today.
+
+  Chunk 2 is gated on Part C. A copilot on the mock provider is theatre.
 - **P1, P2, P7, P11, P12** — deferred until real users generate real interaction data.
   Revisit when weekly returning users are consistently double digits.
 - **P3, P13** — not projects. They are the design rule, and Part A is what makes them
