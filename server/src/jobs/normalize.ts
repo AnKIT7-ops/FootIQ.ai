@@ -1,7 +1,10 @@
 import * as demo from "../data/demo";
-import type { Match, Team } from "../data/demo";
+import type { Match, MatchStatus, Team } from "../data/demo";
 import type { NormalizedMatch, NormalizedTeamStanding } from "../providers/types";
 import { hashCode, seeded } from "../../../src/lib/utils";
+
+/** Fixtures bucketed by status — the shape the matches snapshot holds. */
+export type MatchesGrouped = Record<MatchStatus, Match[]>;
 
 /**
  * Normalization merge — provider truth over demo richness.
@@ -37,6 +40,7 @@ function synthesizeTeam(row: NormalizedTeamStanding): Team {
   const formations = ["4-3-3", "4-2-3-1", "3-4-2-1", "4-4-2"];
   return {
     id: row.extId,
+    extId: row.extId,
     name: row.name,
     short: row.shortName ?? row.name.split(" ")[0],
     tla: row.tla ?? row.name.replace(/[^A-Z]/g, "").slice(0, 3).padEnd(3, "X"),
@@ -64,7 +68,7 @@ function synthesizeTeam(row: NormalizedTeamStanding): Team {
       directness: dial(30, 70),
       pressIntensity: dial(40, 80),
     },
-    styleTags: ["Synced", "Profile pending"],
+    styleTags: ["Balanced", "Profile pending"],
     aiReport: [
       `${row.name} joined the catalog from a live data sync — the tactical profile builds as more of their matches are ingested.`,
     ],
@@ -74,7 +78,7 @@ function synthesizeTeam(row: NormalizedTeamStanding): Team {
 
 /**
  * Standings overlay: matched demo teams keep their identity/squad, take provider
- * numbers. The result is EXACTLY the synced competition's table — nothing else.
+ * numbers. The result is EXACTLY the synced competitions' tables — nothing else.
  *
  * Demo teams from other competitions are deliberately NOT appended here. They
  * used to be, so their pages kept working, but the snapshot is what feeds the
@@ -83,52 +87,128 @@ function synthesizeTeam(row: NormalizedTeamStanding): Team {
  * outranking every real row — a fabricated number wearing the emerald
  * "measured fact" chip. CatalogService unions them back for lookup and search,
  * where they belong.
+ *
+ * Empty in, empty out. An empty table is a fact ("no standings synced"); demo
+ * teams returned from a provider-sourced sync are a lie the caller cannot
+ * detect, because the shape is identical either way.
+ *
+ * Multi-competition dedupe: a club in both its domestic league and a European
+ * cup returns one standings row per competition under the SAME provider id.
+ * First row wins, and competitions sync domestic-first, so Arsenal keeps
+ * "Premier League" (20 rows, position meaningful) rather than being overwritten
+ * by its Champions League row. Clubs seen ONLY in a cup keep that cup as their
+ * league — we genuinely have not seen their domestic table.
  */
 export function mergeStandings(rows: NormalizedTeamStanding[]): Team[] {
-  if (rows.length === 0) return demo.teams;
-  return rows.map((row) => {
+  const seen = new Set<string>();
+  const out: Team[] = [];
+  for (const row of rows) {
+    if (seen.has(row.extId)) continue;
+    seen.add(row.extId);
     const base = matchDemoTeam(row);
-    if (!base) return synthesizeTeam(row);
-    return {
-      ...base,
-      league: row.competition || base.league,
-      position: row.position,
-      played: row.played,
-      won: row.won,
-      drawn: row.drawn,
-      lost: row.lost,
-      gf: row.gf,
-      ga: row.ga,
-      points: row.points,
-      form: row.form?.slice(0, 5) || base.form,
-      stadium: row.venue ?? base.stadium,
-      manager: row.coach ?? base.manager,
-    };
+    out.push(
+      !base
+        ? synthesizeTeam(row)
+        : {
+            ...base,
+            // Remember who the provider thinks this is. The demo name stays
+            // (nicer, and it carries the squad/identity), so fixtures can only
+            // find this club again by id.
+            extId: row.extId,
+            league: row.competition || base.league,
+            position: row.position,
+            played: row.played,
+            won: row.won,
+            drawn: row.drawn,
+            lost: row.lost,
+            gf: row.gf,
+            ga: row.ga,
+            points: row.points,
+            form: row.form?.slice(0, 5) || base.form,
+            stadium: row.venue ?? base.stadium,
+            manager: row.coach ?? base.manager,
+          },
+    );
+  }
+  return out;
+}
+
+/**
+ * Minimal club built from a fixture alone — no table position, because we have
+ * no table for it. Its league is the competition the fixture belongs to, which
+ * is the one thing we genuinely know about it; leaving it blank put an empty
+ * entry in the competition picker.
+ */
+function teamFromFixture(extId: string, name: string, competition: string, tla?: string, crestUrl?: string): Team {
+  return synthesizeTeam({
+    extId,
+    name,
+    competition,
+    tla,
+    crestUrl,
+    position: 0,
+    played: 0,
+    won: 0,
+    drawn: 0,
+    lost: 0,
+    gf: 0,
+    ga: 0,
+    points: 0,
   });
 }
 
-const kickoffDisplay = (iso: string): string => {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return `${d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })} ${d
-    .toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" })}`;
-};
-
-/** Fixture merge: provider matches, ids stabilized, team refs resolved against the merged team list. */
+/**
+ * Fixture merge: provider matches, ids stabilized, team refs resolved against
+ * the merged team list.
+ *
+ * Resolution is by PROVIDER ID, not name. Names failed two ways in production:
+ * a demo-matched club keeps its demo name ("Bayern Munich") while its fixtures
+ * arrive as "FC Bayern München", and canonicalization cannot bridge that; and
+ * standings roll over to a new season at a different time than fixtures do, so
+ * in July the La Liga table is still 2025-26 while the fixtures are 2026-27 and
+ * every newly-promoted club (Málaga, Racing, Deportivo…) is missing from it.
+ * Both cases dropped real fixtures silently — indistinguishable from "no
+ * matches scheduled".
+ *
+ * So a fixture may INTRODUCE a club: if the standings have never heard of it,
+ * synthesize a minimal team from the fixture payload rather than discard the
+ * match. Returned alongside the fixtures for the caller to fold into the team
+ * snapshot. Name matching stays as a fallback for providers that don't expose
+ * team ids.
+ *
+ * Empty in, empty out — no demo fallback. This function used to return the
+ * bundled demo fixtures whenever the provider yielded zero rows, which is
+ * exactly the state a correctly-working sync reports during the off-season.
+ * The result was a permanently "live" 67th-minute Arsenal fixture served with
+ * provider provenance. Zero rows now means zero matches, and the UI says so.
+ *
+ * Kickoffs stay ISO 8601 — formatting is the frontend's job, in the reader's
+ * timezone. The old display string ("Sat 15 Mar 14:30", baked to UTC here)
+ * could not be sorted, compared, or localized downstream.
+ */
 export function mergeMatches(
   rows: NormalizedMatch[],
   teams: Team[],
-): { live: Match[]; upcoming: Match[]; finished: Match[] } {
-  if (rows.length === 0) {
-    return { live: demo.liveMatches, upcoming: demo.upcomingMatches, finished: demo.finishedMatches };
-  }
+): { grouped: MatchesGrouped; discoveredTeams: Team[] } {
+  const byExtId = new Map(teams.filter((t) => t.extId).map((t) => [t.extId!, t]));
   const byCanon = new Map(teams.map((t) => [canon(t.name), t]));
-  const grouped = { live: [] as Match[], upcoming: [] as Match[], finished: [] as Match[] };
+  const discovered = new Map<string, Team>();
+  const grouped: MatchesGrouped = { live: [], upcoming: [], finished: [], postponed: [], cancelled: [] };
+
+  const resolve = (extId: string, name: string, competition: string, tla?: string, crest?: string): Team => {
+    const known = byExtId.get(extId) ?? byCanon.get(canon(name));
+    if (known) return known;
+    let made = discovered.get(extId);
+    if (!made) {
+      made = teamFromFixture(extId, name, competition, tla, crest);
+      discovered.set(extId, made);
+    }
+    return made;
+  };
 
   for (const row of rows) {
-    const home = byCanon.get(canon(row.homeName));
-    const away = byCanon.get(canon(row.awayName));
-    if (!home || !away) continue; // a side we can't resolve — skip rather than render broken links
+    const home = resolve(row.homeExtId, row.homeName, row.competition, row.homeTla, row.homeCrestUrl);
+    const away = resolve(row.awayExtId, row.awayName, row.competition, row.awayTla, row.awayCrestUrl);
     grouped[row.status].push({
       id: row.extId,
       homeId: home.id,
@@ -138,11 +218,15 @@ export function mergeMatches(
       minute: row.minute,
       homeScore: row.homeScore,
       awayScore: row.awayScore,
-      kickoff: kickoffDisplay(row.kickoffIso),
+      kickoffIso: row.kickoffIso,
       venue: row.venue ?? home.stadium,
     });
   }
 
-  grouped.upcoming.sort((a, b) => a.kickoff.localeCompare(b.kickoff));
-  return grouped;
+  const byKickoff = (a: Match, b: Match) => a.kickoffIso.localeCompare(b.kickoffIso);
+  grouped.upcoming.sort(byKickoff);
+  grouped.postponed.sort(byKickoff);
+  grouped.cancelled.sort(byKickoff);
+  grouped.finished.sort((a, b) => byKickoff(b, a)); // most recent result first
+  return { grouped, discoveredTeams: [...discovered.values()] };
 }

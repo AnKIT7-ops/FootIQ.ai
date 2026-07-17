@@ -8,6 +8,7 @@ import { IQInsight } from "@/components/ui/IQInsight";
 import { news } from "@/lib/repositories/news";
 import { agoFromMinutes } from "@/lib/utils";
 import { usePageMeta } from "@/lib/seo";
+import { DemoDataNotice } from "@/components/ui/DemoDataNotice";
 
 const cats = ["All", "Transfers", "Match Report", "Tactics", "Injury", "Rumour", "Interview"];
 
@@ -25,6 +26,7 @@ export default function News() {
   return (
     <div className="space-y-6">
       <SectionHeader level={1} eyebrow="Every story, 30 seconds" title="News Intelligence" />
+      <DemoDataNotice domain="news" detail="These stories are illustrative sample data, not real reporting. No news provider is connected yet." />
       <Tabs id="news" tabs={cats.map((c) => ({ value: c, label: c }))} active={cat} onChange={setCat} className="max-w-full" />
 
       {lead && (

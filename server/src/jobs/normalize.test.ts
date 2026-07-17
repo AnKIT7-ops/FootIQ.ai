@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { mergeStandings } from "./normalize";
-import * as demo from "../data/demo";
+import { mergeMatches, mergeStandings } from "./normalize";
+import { matchDetailFor } from "../../../src/data/matches";
 import type { NormalizedTeamStanding } from "../providers/types";
 
 const row = (over: Partial<NormalizedTeamStanding> & { name: string; position: number }): NormalizedTeamStanding => ({
@@ -48,7 +48,63 @@ describe("mergeStandings", () => {
     expect(bournemouth.league).not.toBe("Synced League");
   });
 
-  it("falls back to the full demo dataset when the provider returns nothing", () => {
-    expect(mergeStandings([])).toEqual(demo.teams);
+  it("returns nothing when the provider returns nothing — never demo teams", () => {
+    // Inverted deliberately. This used to return the full demo dataset, which
+    // made "the sync found no standings" indistinguishable from "here are the
+    // standings" — the caller sees the same shape either way and cannot tell
+    // it is holding fiction. Empty in, empty out; the caller decides what to
+    // render for empty.
+    expect(mergeStandings([])).toEqual([]);
+  });
+
+  it("builds match detail for a synced fixture whose clubs are not in the demo set", () => {
+    // Regression: matchDetailFor defaulted to the demo team lookup, which
+    // throws "Unknown team" for a provider id like "fd-78" (Atlético). That
+    // blanked the homepage and made /api/matches/:id a 500 for EVERY real
+    // fixture — invisible to typecheck and to every test, because both sides
+    // of the call were individually correct.
+    const teams = mergeStandings([
+      { ...row({ name: "Atlético Madrid", position: 1 }), extId: "fd-78" },
+      { ...row({ name: "Villarreal CF", position: 2 }), extId: "fd-94" },
+    ]);
+    const byId = new Map(teams.map((t) => [t.id, t]));
+    const { grouped } = mergeMatches(
+      [
+        { extId: "fd-1", homeExtId: "fd-78", awayExtId: "fd-94", homeName: "Atlético Madrid", awayName: "Villarreal CF", competition: "Primera Division", status: "upcoming", kickoffIso: "2026-08-16T15:00:00Z" },
+        { extId: "fd-2", homeExtId: "fd-78", awayExtId: "fd-94", homeName: "Atlético Madrid", awayName: "Villarreal CF", competition: "Primera Division", status: "finished", kickoffIso: "2026-07-05T15:00:00Z", homeScore: 2, awayScore: 1 },
+      ],
+      teams,
+    );
+    const resolve = (id: string) => byId.get(id)!;
+
+    // The crash: resolving a synced club at all.
+    const upcoming = matchDetailFor(grouped.upcoming[0], resolve);
+    expect(upcoming.homeId).toBe("fd-78");
+
+    // ...and an unplayed fixture invents no play. Momentum, stats, lineups and
+    // events are claims about a match that hasn't happened.
+    expect(upcoming.events).toEqual([]);
+    expect(upcoming.momentum).toEqual([]);
+    expect(upcoming.home.possession).toBe(0);
+    expect(upcoming.homeLineup.players).toEqual([]);
+
+    // A finished match still gets its derived detail.
+    const finished = matchDetailFor(grouped.finished[0], resolve);
+    expect(finished.home.possession).toBeGreaterThan(0);
+    expect(finished.events.length).toBeGreaterThan(0);
+  });
+
+  it("keeps one row per club when a team appears in several competitions", () => {
+    // Arsenal is in both the Premier League and the Champions League tables and
+    // football-data returns the same team id for both. Domestic syncs first, so
+    // the domestic league is the one that sticks.
+    const merged = mergeStandings([
+      { ...row({ name: "Arsenal", position: 1, points: 30 }), extId: "fd-57" },
+      { ...row({ name: "Arsenal", position: 12, points: 8, competition: "UEFA Champions League" }), extId: "fd-57" },
+    ]);
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0].league).toBe("Premier League");
+    expect(merged[0].points).toBe(30);
   });
 });

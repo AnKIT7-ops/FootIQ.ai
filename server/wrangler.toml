@@ -1,17 +1,30 @@
 # Cloudflare Workers deployment (free tier: 100k requests/day).
 # Deploy: cd server && npx wrangler deploy
-# Secrets: npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY  (etc.)
+# Secrets: npx wrangler secret put FOOTBALL_DATA_API_KEY   (etc.)
 name = "footiq-api"
 main = "src/worker.ts"
 compatibility_date = "2026-07-01"
 compatibility_flags = ["nodejs_compat"]
 
 # Sync jobs (standings, fixtures, AI cache warm) — every 30 minutes.
+#
+# Do not tighten this without doing the arithmetic: the football-data.org free
+# tier allows 10 requests/minute, and a full pass costs 2 requests per
+# configured competition (standings + fixtures), serialized ~7s apart. Six
+# competitions ≈ 90s of wall clock. Live scores stay fresh via the 30s
+# Cache-Control on /api/matches, not via a faster cron.
 [triggers]
 crons = ["*/30 * * * *"]
 
-# Optional KV cache binding — create with `wrangler kv namespace create CACHE`,
-# then paste the id here. Without it the Worker uses in-memory caching.
+# REQUIRED for a working deployment (despite being commented out by default).
+#
+# The cron handler and the fetch handler do not share an isolate, so an
+# in-memory cache means the snapshot a sync writes is invisible to the requests
+# that need it — /api/matches would answer "unsynced" forever. Persist the
+# snapshot in KV (below) or in Supabase (SUPABASE_SERVICE_ROLE_KEY + the
+# catalog_snapshots table). One of the two is not optional.
+#
+#   wrangler kv namespace create CACHE   # then paste the id here
 # [[kv_namespaces]]
 # binding = "CACHE"
 # id = "..."
@@ -23,5 +36,17 @@ SUPABASE_URL = "https://zcemnioniooyyhpjpwbn.supabase.co"
 AI_PROVIDER = "claude"
 AI_MODEL = "claude-opus-4-8"
 DATA_PROVIDER = "football-data"
-FOOTBALL_DATA_COMPETITION = "PL"
+# The six competitions this key's free tier grants. Europa League and
+# Conference League are NOT on it — their codes would 403 per competition
+# (tolerated and logged, but pointless). Full free-tier set: PL, PD, BL1, SA,
+# FL1, CL, ELC, DED, PPL, BSA, EC, WC.
+#
+# NOTE: do not reintroduce the singular FOOTBALL_DATA_COMPETITION here. It is
+# kept as a deprecated alias that WINS when set, so leaving it in place would
+# silently pin production back to a single league.
+FOOTBALL_DATA_COMPETITIONS = "PL,PD,BL1,SA,FL1,CL"
+# Wide enough to span the European off-season: in mid-July the next fixtures
+# are five weeks out, and a narrow window makes a healthy sync look broken.
+FOOTBALL_DATA_WINDOW_PAST_DAYS = "14"
+FOOTBALL_DATA_WINDOW_FUTURE_DAYS = "60"
 # Non-secret config only. Secrets go via `wrangler secret put`.

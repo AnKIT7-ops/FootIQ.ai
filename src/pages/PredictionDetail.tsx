@@ -46,7 +46,7 @@ export default function PredictionDetail() {
           jsonLd: sportsEventJsonLd({
             home: home.name,
             away: away.name,
-            kickoff: match.kickoff,
+            kickoffIso: match.kickoffIso,
             venue: match.venue,
             path: predictionPath(match),
           }),

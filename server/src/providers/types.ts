@@ -36,12 +36,27 @@ export interface NormalizedTeamStanding {
   form?: string;
 }
 
-export type NormalizedMatchStatus = "live" | "upcoming" | "finished";
+export type NormalizedMatchStatus = "live" | "upcoming" | "finished" | "postponed" | "cancelled";
 
 export interface NormalizedMatch {
   extId: string;
+  /**
+   * Provider team ids, same namespace as NormalizedTeamStanding.extId. These
+   * are how fixtures resolve to teams — names are a fallback only. A club's
+   * name varies by source and season ("FC Bayern München" vs "Bayern Munich"),
+   * and standings can lag a season behind fixtures, so name matching silently
+   * drops real matches.
+   */
+  homeExtId: string;
+  awayExtId: string;
   homeName: string;
   awayName: string;
+  /** Provider crest/short name when the fixture payload carries them — lets a
+   * fixture introduce a club the standings have not heard of yet. */
+  homeTla?: string;
+  awayTla?: string;
+  homeCrestUrl?: string;
+  awayCrestUrl?: string;
   competition: string;
   status: NormalizedMatchStatus;
   /** ISO 8601 UTC kickoff. */

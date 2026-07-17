@@ -1,6 +1,7 @@
 import * as demo from "../data/demo";
 import { matchDetailFor } from "../../../src/data/matches";
-import type { Match, MatchDetail, Team } from "../data/demo";
+import type { MatchDetail, Team } from "../data/demo";
+import type { MatchesGrouped } from "../jobs/normalize";
 import type { CacheStore } from "../cache/types";
 import type { SnapshotStore } from "./snapshots";
 import type { DataSource, SearchResultDto } from "../../../shared/contracts";
@@ -11,11 +12,7 @@ interface Sourced<T> {
   source: DataSource;
 }
 
-interface MatchesGrouped {
-  live: Match[];
-  upcoming: Match[];
-  finished: Match[];
-}
+const EMPTY_MATCHES: MatchesGrouped = { live: [], upcoming: [], finished: [], postponed: [], cancelled: [] };
 
 /**
  * Football catalog reads behind the repository pattern:
@@ -55,17 +52,24 @@ export class CatalogService {
     return { data: [...data, ...demo.teams.filter((t) => !known.has(t.id))], source };
   }
 
-  private async matchesSourced(): Promise<Sourced<MatchesGrouped>> {
+  /**
+   * Fixtures from the last sync. No demo fallback: an empty snapshot means the
+   * synced competitions genuinely have no matches in the window (routine in the
+   * off-season), and a missing snapshot means the sync has not run or is
+   * failing. Both are reported honestly — `source: "provider"` with zero
+   * matches, or `source: null` for "we have nothing".
+   *
+   * This used to fall back to demo fixtures whenever the payload was empty,
+   * which is precisely the off-season state, so a working sync served a
+   * permanently-live demo match under provider provenance.
+   */
+  private async matchesSourced(): Promise<Sourced<MatchesGrouped> & { syncedAt: string | null }> {
     const snap = await this.snapshots.get<MatchesGrouped>("matches");
-    if (snap && snap.source !== "demo") {
-      const g = snap.payload;
-      if (g.live.length + g.upcoming.length + g.finished.length > 0) {
-        return { data: g, source: "provider" };
-      }
-    }
+    if (!snap) return { data: EMPTY_MATCHES, source: "unsynced", syncedAt: null };
     return {
-      data: { live: demo.liveMatches, upcoming: demo.upcomingMatches, finished: demo.finishedMatches },
-      source: "demo",
+      data: { ...EMPTY_MATCHES, ...snap.payload },
+      source: snap.source === "demo" ? "demo" : "provider",
+      syncedAt: snap.syncedAt,
     };
   }
 
@@ -97,20 +101,34 @@ export class CatalogService {
     return { data: t, source };
   }
 
+  /** Competitions present in the current snapshot, in sync order — drives the table's league picker. */
+  async competitions(): Promise<Sourced<string[]>> {
+    const { data, source } = await this.teamsSourced();
+    return { data: [...new Set(data.map((t) => t.league).filter(Boolean))], source };
+  }
+
   /**
    * A league table is ONE league. Positions are only comparable within a
    * competition, so a mixed list sorted by position is meaningless — it lands
-   * two clubs on position 1. Keep the competition with the most teams (the
-   * synced one when a provider is live; the demo dataset's primary league
-   * otherwise) and drop the rest.
+   * two clubs on position 1.
+   *
+   * Defaults to the first synced competition rather than the biggest: with six
+   * competitions the "most teams" heuristic silently returned the Champions
+   * League (36 rows) over the Premier League (20), and picked arbitrarily
+   * between the leagues tied at 20.
+   *
+   * Secondary sort by name keeps pre-season tables stable and alphabetical —
+   * before a ball is kicked every team is position 1 with 0 points, and
+   * position alone gives an arbitrary order that looks like a ranking.
    */
-  async leagueTable(): Promise<Sourced<Team[]>> {
+  async leagueTable(competition?: string): Promise<Sourced<Team[]> & { competition: string | null }> {
     const { data, source } = await this.teamsSourced();
-    const counts = new Map<string, number>();
-    for (const t of data) counts.set(t.league, (counts.get(t.league) ?? 0) + 1);
-    const primary = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
-    const table = data.filter((t) => t.league === primary).sort((a, b) => a.position - b.position);
-    return { data: table, source };
+    const target = competition ?? data[0]?.league ?? null;
+    if (!target) return { data: [], source, competition: null };
+    const table = data
+      .filter((t) => t.league === target)
+      .sort((a, b) => a.position - b.position || a.name.localeCompare(b.name));
+    return { data: table, source, competition: target };
   }
 
   async teamPlayers(id: string) {
@@ -120,16 +138,28 @@ export class CatalogService {
 
   // ---- matches (snapshot-backed) ----------------------------------------------
 
-  async matches(): Promise<Sourced<MatchesGrouped>> {
+  async matches(): Promise<Sourced<MatchesGrouped> & { syncedAt: string | null }> {
     return this.matchesSourced();
   }
 
   async match(id: string): Promise<Sourced<MatchDetail>> {
     if (demo.matchById.has(id)) return { data: demo.matchDetail(id), source: "demo" };
+    const { data: catalogTeams } = await this.catalogTeams();
+    const byId = new Map(catalogTeams.map((t) => [t.id, t]));
+    // Synced fixtures reference synced clubs. matchDetailFor defaults to the
+    // demo team lookup, which throws on anything outside the 12-team demo set —
+    // that made /api/matches/:id a guaranteed 500 for every real fixture.
+    const resolveTeam = (teamId: string) => {
+      const t = byId.get(teamId);
+      if (!t) throw ApiError.notFound("Team");
+      return t;
+    };
     const { data, source } = await this.matchesSourced();
-    const m = [...data.live, ...data.upcoming, ...data.finished].find((x) => x.id === id);
+    const m = [...data.live, ...data.upcoming, ...data.finished, ...data.postponed, ...data.cancelled].find(
+      (x) => x.id === id,
+    );
     if (!m) throw ApiError.notFound("Match");
-    return { data: matchDetailFor(m), source };
+    return { data: matchDetailFor(m, resolveTeam), source };
   }
 
   // ---- demo-tier domains ---------------------------------------------------------

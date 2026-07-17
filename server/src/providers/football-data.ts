@@ -49,8 +49,18 @@ const RAW_MATCHES = z.object({
       status: z.string(), // SCHEDULED | TIMED | IN_PLAY | PAUSED | FINISHED | ...
       minute: z.number().nullish(),
       competition: z.object({ name: z.string() }).optional(),
-      homeTeam: z.object({ name: z.string().nullish() }),
-      awayTeam: z.object({ name: z.string().nullish() }),
+      homeTeam: z.object({
+        id: z.number().nullish(),
+        name: z.string().nullish(),
+        tla: z.string().nullish(),
+        crest: z.string().nullish(),
+      }),
+      awayTeam: z.object({
+        id: z.number().nullish(),
+        name: z.string().nullish(),
+        tla: z.string().nullish(),
+        crest: z.string().nullish(),
+      }),
       score: z.object({
         fullTime: z.object({ home: z.number().nullish(), away: z.number().nullish() }),
       }),
@@ -59,26 +69,61 @@ const RAW_MATCHES = z.object({
   ),
 });
 
-const statusMap = (s: string): NormalizedMatch["status"] =>
-  s === "IN_PLAY" || s === "PAUSED" ? "live" : s === "FINISHED" ? "finished" : "upcoming";
+/**
+ * v4 statuses: SCHEDULED | TIMED | IN_PLAY | PAUSED | FINISHED | POSTPONED |
+ * SUSPENDED | CANCELLED | AWARDED. Anything unrecognized falls to "upcoming"
+ * — a fixture we can't classify is still a fixture, never a live match.
+ */
+const statusMap = (s: string): NormalizedMatch["status"] => {
+  switch (s) {
+    case "IN_PLAY":
+    case "PAUSED":
+      return "live";
+    case "FINISHED":
+    case "AWARDED":
+      return "finished";
+    case "POSTPONED":
+    case "SUSPENDED":
+      return "postponed";
+    case "CANCELLED":
+      return "cancelled";
+    default:
+      return "upcoming";
+  }
+};
+
+/** Free tier: 10 requests/minute. Stay under it with margin — a 429 costs the whole sync. */
+const MIN_REQUEST_SPACING_MS = 7_000;
 
 export class FootballDataOrgProvider implements FootballDataProvider {
   readonly name = "football-data.org";
+  private lastRequestAt = 0;
 
   constructor(
     private apiKey: string | undefined,
-    /** Competition code, e.g. "PL". */
-    private competition: string,
+    /** Competition codes, synced in order, e.g. ["PL", "PD"]. */
+    private competitions: string[],
+    /** Ingest window in days, past and future. */
+    private window: { pastDays: number; futureDays: number },
     // wrapped: calling a stored bare `fetch` as `this.fetchImpl()` rebinds `this`
     // to the provider — Workers rejects that with "Illegal invocation"
     private fetchImpl: typeof fetch = (input, init) => fetch(input, init),
+    private sleep: (ms: number) => Promise<void> = (ms) => new Promise((r) => setTimeout(r, ms)),
   ) {}
 
   available(): boolean {
-    return Boolean(this.apiKey);
+    return Boolean(this.apiKey) && this.competitions.length > 0;
+  }
+
+  /** Serialize requests with spacing — the free tier's 10/min is per key, not per competition. */
+  private async throttle(): Promise<void> {
+    const wait = this.lastRequestAt + MIN_REQUEST_SPACING_MS - Date.now();
+    if (wait > 0) await this.sleep(wait);
+    this.lastRequestAt = Date.now();
   }
 
   private async get(path: string): Promise<unknown> {
+    await this.throttle();
     let res: Response;
     try {
       res = await this.fetchImpl(`https://api.football-data.org/v4${path}`, {
@@ -92,49 +137,85 @@ export class FootballDataOrgProvider implements FootballDataProvider {
     return res.json();
   }
 
+  /**
+   * Run a fetch per competition, tolerating per-competition failure.
+   *
+   * One competition 403ing (not on this key's tier) or 404ing must not throw
+   * away the five that succeeded — a partial catalog is strictly better than
+   * none, and the alternative is one unavailable league silently blanking the
+   * whole app. Total failure still throws, so the job registry records it and
+   * the last good snapshot stands.
+   */
+  private async perCompetition<T>(
+    kind: string,
+    fetchOne: (code: string) => Promise<T[]>,
+  ): Promise<T[]> {
+    const out: T[] = [];
+    const failures: string[] = [];
+    for (const code of this.competitions) {
+      try {
+        out.push(...(await fetchOne(code)));
+      } catch (err) {
+        failures.push(`${code}: ${err instanceof Error ? err.message : "unknown"}`);
+      }
+    }
+    if (failures.length === this.competitions.length) {
+      throw new ProviderError(this.name, `all ${kind} fetches failed — ${failures.join("; ")}`);
+    }
+    return out;
+  }
+
   async fetchStandings(): Promise<NormalizedTeamStanding[]> {
-    const raw = RAW_STANDINGS.safeParse(await this.get(`/competitions/${this.competition}/standings`));
-    if (!raw.success) throw new ProviderError(this.name, `standings schema drift: ${raw.error.issues[0]?.message}`);
-    const table = raw.data.standings.find((s) => s.type === "TOTAL")?.table ?? [];
-    return table.map((row) => ({
-      extId: `fd-${row.team.id}`,
-      name: row.team.name,
-      competition: raw.data.competition?.name ?? this.competition,
-      tla: row.team.tla ?? undefined,
-      shortName: row.team.shortName ?? undefined,
-      crestUrl: row.team.crest ?? undefined,
-      position: row.position,
-      played: row.playedGames,
-      won: row.won,
-      drawn: row.draw,
-      lost: row.lost,
-      gf: row.goalsFor,
-      ga: row.goalsAgainst,
-      points: row.points,
-      form: row.form?.replaceAll(",", "") ?? undefined,
-    }));
+    return this.perCompetition("standings", async (code) => {
+      const raw = RAW_STANDINGS.safeParse(await this.get(`/competitions/${code}/standings`));
+      if (!raw.success) throw new ProviderError(this.name, `standings schema drift: ${raw.error.issues[0]?.message}`);
+      const table = raw.data.standings.find((s) => s.type === "TOTAL")?.table ?? [];
+      return table.map((row) => ({
+        extId: `fd-${row.team.id}`,
+        name: row.team.name,
+        competition: raw.data.competition?.name ?? code,
+        tla: row.team.tla ?? undefined,
+        shortName: row.team.shortName ?? undefined,
+        crestUrl: row.team.crest ?? undefined,
+        position: row.position,
+        played: row.playedGames,
+        won: row.won,
+        drawn: row.draw,
+        lost: row.lost,
+        gf: row.goalsFor,
+        ga: row.goalsAgainst,
+        points: row.points,
+        form: row.form?.replaceAll(",", "") ?? undefined,
+      }));
+    });
   }
 
   async fetchMatches(): Promise<NormalizedMatch[]> {
-    const from = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
-    const to = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10);
-    const raw = RAW_MATCHES.safeParse(
-      await this.get(`/competitions/${this.competition}/matches?dateFrom=${from}&dateTo=${to}`),
-    );
-    if (!raw.success) throw new ProviderError(this.name, `matches schema drift: ${raw.error.issues[0]?.message}`);
-    return raw.data.matches
-      .filter((m) => m.homeTeam.name && m.awayTeam.name)
-      .map((m) => ({
-        extId: `fd-${m.id}`,
-        homeName: m.homeTeam.name!,
-        awayName: m.awayTeam.name!,
-        competition: m.competition?.name ?? this.competition,
-        status: statusMap(m.status),
-        kickoffIso: m.utcDate,
-        minute: m.minute ?? undefined,
-        homeScore: m.score.fullTime.home ?? undefined,
-        awayScore: m.score.fullTime.away ?? undefined,
-        venue: m.venue ?? undefined,
-      }));
+    const from = new Date(Date.now() - this.window.pastDays * 864e5).toISOString().slice(0, 10);
+    const to = new Date(Date.now() + this.window.futureDays * 864e5).toISOString().slice(0, 10);
+    return this.perCompetition("matches", async (code) => {
+      const raw = RAW_MATCHES.safeParse(await this.get(`/competitions/${code}/matches?dateFrom=${from}&dateTo=${to}`));
+      if (!raw.success) throw new ProviderError(this.name, `matches schema drift: ${raw.error.issues[0]?.message}`);
+      return raw.data.matches
+        .filter((m) => m.homeTeam.name && m.awayTeam.name && m.homeTeam.id && m.awayTeam.id)
+        .map((m) => ({
+          extId: `fd-${m.id}`,
+          homeExtId: `fd-${m.homeTeam.id}`,
+          awayExtId: `fd-${m.awayTeam.id}`,
+          homeName: m.homeTeam.name!,
+          awayName: m.awayTeam.name!,
+          homeTla: m.homeTeam.tla ?? undefined,
+          awayTla: m.awayTeam.tla ?? undefined,
+          homeCrestUrl: m.homeTeam.crest ?? undefined,
+          awayCrestUrl: m.awayTeam.crest ?? undefined,
+          competition: m.competition?.name ?? code,
+          status: statusMap(m.status),
+          kickoffIso: m.utcDate,
+          minute: m.minute ?? undefined,
+          homeScore: m.score.fullTime.home ?? undefined,
+          awayScore: m.score.fullTime.away ?? undefined,
+          venue: m.venue ?? undefined,
+        }));
+    });
   }
 }

@@ -158,13 +158,14 @@ export function sportsTeamJsonLd(t: { name: string; stadium: string; manager: st
   };
 }
 
-export function sportsEventJsonLd(opts: { home: string; away: string; kickoff: string; venue: string; path: string }): Record<string, unknown> {
+/** `kickoffIso` must be ISO 8601 — schema.org startDate rejects display strings like "Sat 15:00". */
+export function sportsEventJsonLd(opts: { home: string; away: string; kickoffIso: string; venue: string; path: string }): Record<string, unknown> {
   return {
     "@context": "https://schema.org",
     "@type": "SportsEvent",
     name: `${opts.home} vs ${opts.away}`,
     sport: "Soccer",
-    startDate: opts.kickoff,
+    startDate: opts.kickoffIso,
     location: { "@type": "Place", name: opts.venue },
     homeTeam: { "@type": "SportsTeam", name: opts.home },
     awayTeam: { "@type": "SportsTeam", name: opts.away },

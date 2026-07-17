@@ -1,7 +1,7 @@
 // relative on purpose: the data layer is imported by the API server too, and
 // must stay resolvable without Vite's "@" alias
 import { hashCode, seeded, clamp } from "../lib/utils";
-import type { LineupPlayer, Position } from "./types";
+import type { LineupPlayer, Position, Team } from "./types";
 import { playersOf } from "./players";
 import { getTeam } from "./teams";
 
@@ -203,9 +203,18 @@ const FORMATION_SLOTS: Record<string, Array<[number, number, Position]>> = {
   ],
 };
 
-/** Build a plausible XI mixing star players into formation slots. */
-export function lineupFor(teamId: string, opponentSeed: string): { formation: string; players: LineupPlayer[] } {
-  const team = getTeam(teamId);
+/**
+ * Build a plausible XI mixing star players into formation slots.
+ *
+ * `team` may be passed by callers holding a provider-synced club: the bundled
+ * `getTeam` throws for any id outside the demo set, which crashed every real
+ * fixture's detail page.
+ */
+export function lineupFor(
+  teamId: string,
+  opponentSeed: string,
+  team: Team = getTeam(teamId),
+): { formation: string; players: LineupPlayer[] } {
   const formation = FORMATION_SLOTS[team.style.formation] ? team.style.formation : "4-3-3";
   const slots = FORMATION_SLOTS[formation];
   const stars = playersOf(teamId);

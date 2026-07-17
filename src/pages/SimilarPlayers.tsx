@@ -12,6 +12,7 @@ import { getTeam } from "@/lib/repositories/teams";
 import { cn, money } from "@/lib/utils";
 import { usePageMeta } from "@/lib/seo";
 import type { Player } from "@/data/types";
+import { DemoDataNotice } from "@/components/ui/DemoDataNotice";
 
 const axes = Object.keys(attributeLabels) as Array<keyof Player["attributes"]>;
 
@@ -71,6 +72,7 @@ export default function SimilarPlayers() {
   return (
     <div className="space-y-6">
       <SectionHeader level={1} eyebrow="Similarity engine" title="Similar Players" />
+      <DemoDataNotice domain="player" detail="Player profiles, ratings and per-90 statistics on FootIQ are illustrative sample data. No player-statistics provider is connected — football-data.org's free tier covers fixtures and tables only." />
 
       {/* base picker + filters — one control row (dataviz interaction spec) */}
       <Card className="flex flex-wrap items-end gap-x-5 gap-y-4 p-4">

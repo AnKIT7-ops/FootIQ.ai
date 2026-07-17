@@ -21,6 +21,9 @@ const json = async (r: Response): Promise<{ ok: boolean; data: any; meta?: any }
 
 // ---- provider normalization --------------------------------------------------
 
+/** Tests inject a no-op sleep, so throttling never actually delays a run. */
+const WINDOW = { pastDays: 14, futureDays: 60 };
+
 describe("FootballDataOrgProvider", () => {
   const rawStandings = {
     standings: [
@@ -46,7 +49,7 @@ describe("FootballDataOrgProvider", () => {
 
   it("normalizes standings and validates the raw schema", async () => {
     const fetchImpl = vi.fn(async () => new Response(JSON.stringify(rawStandings), { status: 200 }));
-    const p = new FootballDataOrgProvider("key", "PL", fetchImpl as unknown as typeof fetch);
+    const p = new FootballDataOrgProvider("key", ["PL"], WINDOW, fetchImpl as unknown as typeof fetch, async () => {});
     const rows = await p.fetchStandings();
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ name: "Arsenal FC", tla: "ARS", position: 1, points: 71, form: "WWDWL" });
@@ -55,12 +58,12 @@ describe("FootballDataOrgProvider", () => {
 
   it("throws ProviderError on schema drift instead of passing garbage", async () => {
     const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ standings: [{ nope: true }] }), { status: 200 }));
-    const p = new FootballDataOrgProvider("key", "PL", fetchImpl as unknown as typeof fetch);
+    const p = new FootballDataOrgProvider("key", ["PL"], WINDOW, fetchImpl as unknown as typeof fetch, async () => {});
     await expect(p.fetchStandings()).rejects.toThrow(/schema drift/);
   });
 
   it("is unavailable without a key", () => {
-    expect(new FootballDataOrgProvider(undefined, "PL").available()).toBe(false);
+    expect(new FootballDataOrgProvider(undefined, ["PL"], WINDOW).available()).toBe(false);
   });
 });
 
@@ -90,24 +93,67 @@ describe("normalize merge", () => {
     expect(merged.map((t) => t.id)).not.toContain("rma");
   });
 
-  it("maps matches to merged team ids and skips unresolvable sides", () => {
-    const teams = mergeStandings([]);
-    const grouped = mergeMatches(
+  it("maps matches onto known teams and discovers clubs the standings lack", () => {
+    const { grouped, discoveredTeams } = mergeMatches(
       [
-        { extId: "fd-1", homeName: "Arsenal FC", awayName: "Liverpool FC", competition: "PL", status: "finished", kickoffIso: "2026-07-05T16:30:00Z", homeScore: 2, awayScore: 1 },
-        { extId: "fd-2", homeName: "Unknown XI", awayName: "Mystery FC", competition: "PL", status: "upcoming", kickoffIso: "2026-07-20T14:00:00Z" },
+        { extId: "fd-1", homeExtId: "fd-57", awayExtId: "fd-64", homeName: "Arsenal FC", awayName: "Liverpool FC", competition: "PL", status: "finished", kickoffIso: "2026-07-05T16:30:00Z", homeScore: 2, awayScore: 1 },
+        { extId: "fd-2", homeExtId: "fd-901", awayExtId: "fd-902", homeName: "Unknown XI", awayName: "Mystery FC", competition: "PL", status: "upcoming", kickoffIso: "2026-07-20T14:00:00Z" },
+      ],
+      demo.teams,
+    );
+    // Known clubs still resolve to their demo identity.
+    expect(grouped.finished).toHaveLength(1);
+    expect(grouped.finished[0]).toMatchObject({ homeId: "ars", awayId: "liv", homeScore: 2 });
+
+    // Unknown clubs no longer cause the fixture to vanish. This used to be
+    // asserted as `upcoming).toHaveLength(0)` — the behaviour that dropped 35
+    // of 193 real fixtures, because standings roll over to a new season later
+    // than fixtures do and every promoted club was therefore "unresolvable".
+    expect(grouped.upcoming).toHaveLength(1);
+    expect(discoveredTeams.map((t) => t.id).sort()).toEqual(["fd-901", "fd-902"]);
+  });
+
+  it("resolves a fixture by provider id even when our name for the club differs", () => {
+    // Bayern is stored under the demo name "Bayern Munich"; the provider calls
+    // it "FC Bayern München". Name canonicalization cannot bridge that, so id
+    // resolution is the only thing keeping these fixtures alive.
+    const teams = mergeStandings([
+      { extId: "fd-5", name: "FC Bayern München", competition: "Bundesliga", tla: "FCB", position: 1, played: 1, won: 1, drawn: 0, lost: 0, gf: 3, ga: 0, points: 3 },
+    ]);
+    const { grouped, discoveredTeams } = mergeMatches(
+      [
+        { extId: "fd-9", homeExtId: "fd-5", awayExtId: "fd-5", homeName: "FC Bayern München", awayName: "FC Bayern München", competition: "Bundesliga", status: "upcoming", kickoffIso: "2026-08-22T14:00:00Z" },
       ],
       teams,
     );
-    expect(grouped.finished).toHaveLength(1);
-    expect(grouped.finished[0]).toMatchObject({ homeId: "ars", awayId: "liv", homeScore: 2 });
-    expect(grouped.upcoming).toHaveLength(0); // both sides unresolvable — skipped
+    expect(grouped.upcoming).toHaveLength(1);
+    expect(grouped.upcoming[0].homeId).toBe(teams[0].id);
+    expect(discoveredTeams).toHaveLength(0); // matched, not re-invented
   });
 
-  it("empty provider rows fall back to the full demo dataset", () => {
-    expect(mergeStandings([])).toHaveLength(demo.teams.length);
-    const g = mergeMatches([], demo.teams);
-    expect(g.upcoming.length).toBe(demo.upcomingMatches.length);
+  it("reports an empty provider window as empty — never as demo fixtures", () => {
+    // The off-season regression, pinned. Both merges used to substitute the
+    // bundled demo dataset when the provider returned zero rows, so a healthy
+    // sync during a break in the calendar published a permanently-live 67th
+    // minute demo match under provider provenance.
+    expect(mergeStandings([])).toEqual([]);
+    const { grouped: g } = mergeMatches([], demo.teams);
+    expect(g.live).toEqual([]);
+    expect(g.upcoming).toEqual([]);
+    expect(g.finished).toEqual([]);
+  });
+
+  it("buckets postponed and cancelled fixtures instead of calling them upcoming", () => {
+    const { grouped: g } = mergeMatches(
+      [
+        { extId: "fd-3", homeExtId: "fd-57", awayExtId: "fd-64", homeName: "Arsenal FC", awayName: "Liverpool FC", competition: "PL", status: "postponed", kickoffIso: "2026-08-22T14:00:00Z" },
+        { extId: "fd-4", homeExtId: "fd-61", awayExtId: "fd-57", homeName: "Chelsea FC", awayName: "Arsenal FC", competition: "PL", status: "cancelled", kickoffIso: "2026-08-23T14:00:00Z" },
+      ],
+      demo.teams,
+    );
+    expect(g.postponed).toHaveLength(1);
+    expect(g.cancelled).toHaveLength(1);
+    expect(g.upcoming).toHaveLength(0);
   });
 });
 

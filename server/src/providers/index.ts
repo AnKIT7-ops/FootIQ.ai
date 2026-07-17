@@ -1,4 +1,4 @@
-import type { Env } from "../config/env";
+import { footballDataCompetitions, type Env } from "../config/env";
 import type { Logger } from "../lib/logger";
 import type { FootballDataProvider } from "./types";
 import { FootballDataOrgProvider } from "./football-data";
@@ -23,7 +23,10 @@ export function createDataProvider(env: Env, logger: Logger): FootballDataProvid
   const selected: FootballDataProvider = (() => {
     switch (env.DATA_PROVIDER) {
       case "football-data":
-        return new FootballDataOrgProvider(env.FOOTBALL_DATA_API_KEY, env.FOOTBALL_DATA_COMPETITION);
+        return new FootballDataOrgProvider(env.FOOTBALL_DATA_API_KEY, footballDataCompetitions(env), {
+          pastDays: env.FOOTBALL_DATA_WINDOW_PAST_DAYS,
+          futureDays: env.FOOTBALL_DATA_WINDOW_FUTURE_DAYS,
+        });
       case "api-football":
         return new ApiFootballProvider(env.API_FOOTBALL_KEY, env.API_FOOTBALL_LEAGUE, season);
       default:

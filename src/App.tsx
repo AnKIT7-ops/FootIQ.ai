@@ -19,6 +19,7 @@ const PredictionDetail = lazy(() => import("@/pages/PredictionDetail"));
 const HistoryMoment = lazy(() => import("@/pages/HistoryMoment"));
 const Insights = lazy(() => import("@/pages/Insights"));
 const Matches = lazy(() => import("@/pages/Matches"));
+const Schedule = lazy(() => import("@/pages/Schedule"));
 const MatchCenter = lazy(() => import("@/pages/MatchCenter"));
 const News = lazy(() => import("@/pages/News"));
 const NewsArticle = lazy(() => import("@/pages/NewsArticle"));
@@ -109,6 +110,7 @@ function Shell() {
               <Routes location={location}>
                 <Route path="/" element={<Home />} />
                 <Route path="/matches" element={<Matches />} />
+                <Route path="/schedule" element={<Schedule />} />
                 <Route path="/match/:id" element={<MatchCenter />} />
                 <Route path="/matches/:id" element={<MatchCenter />} />
                 <Route path="/news" element={<News />} />

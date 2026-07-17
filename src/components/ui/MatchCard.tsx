@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getTeam } from "@/lib/repositories/teams";
+import { kickoffLabel } from "@/lib/kickoff";
 import type { Match } from "@/data/types";
 import { Crest } from "./Crest";
 import { Badge } from "./Badge";
@@ -12,7 +13,9 @@ export function MatchCard({ match, className, dense = false }: { match: Match; c
   const home = getTeam(match.homeId);
   const away = getTeam(match.awayId);
   const live = match.status === "live";
-  const played = match.status !== "upcoming";
+  const off = match.status === "postponed" || match.status === "cancelled";
+  // A postponed fixture has no score to show, and a cancelled one never will.
+  const played = match.status === "live" || match.status === "finished";
 
   return (
     <Card hover onClick={() => navigate(`/match/${match.id}`)} className={cn(dense ? "p-3" : "p-4", className)}>
@@ -20,8 +23,10 @@ export function MatchCard({ match, className, dense = false }: { match: Match; c
         <span className="truncate font-mono text-micro uppercase tracking-wider text-ink-3">{match.competition}</span>
         {live ? (
           <Badge variant="live">{match.minute}'</Badge>
+        ) : off ? (
+          <span className="shrink-0 font-mono text-micro uppercase tracking-wider text-ink-3">{match.status}</span>
         ) : (
-          <span className="shrink-0 font-mono text-micro text-ink-3">{match.kickoff}</span>
+          <span className="shrink-0 font-mono text-micro text-ink-3">{kickoffLabel(match.kickoffIso)}</span>
         )}
       </div>
       <div className="space-y-2">

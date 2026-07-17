@@ -17,6 +17,7 @@ import { usePageMeta } from "@/lib/seo";
 import { ShareBar } from "@/components/ui/ShareBar";
 import { track } from "@/lib/analytics";
 import type { Player } from "@/data/types";
+import { DemoDataNotice } from "@/components/ui/DemoDataNotice";
 
 const axes = Object.keys(attributeLabels) as Array<keyof Player["attributes"]>;
 
@@ -47,6 +48,14 @@ export default function Compare() {
           />
         }
       />
+      {/* Teams compare on synced league-table numbers, so they carry no notice.
+          Player stats and manager records have no provider behind them. */}
+      {mode === "players" && (
+        <DemoDataNotice domain="player" detail="Player ratings and per-90 statistics here are illustrative sample data. No player-statistics provider is connected." />
+      )}
+      {mode === "managers" && (
+        <DemoDataNotice domain="manager" detail="Manager records and profiles here are illustrative sample data. No manager-data provider is connected." />
+      )}
       {mode === "players" && <PlayerCompare />}
       {mode === "teams" && <TeamCompare />}
       {mode === "managers" && <ManagerCompare />}

@@ -38,11 +38,13 @@ export class DemoProvider implements FootballDataProvider {
   async fetchMatches(): Promise<NormalizedMatch[]> {
     return demo.matches.map((m) => ({
       extId: `demo-${m.id}`,
+      homeExtId: `demo-${m.homeId}`,
+      awayExtId: `demo-${m.awayId}`,
       homeName: demo.teamById.get(m.homeId)?.name ?? m.homeId,
       awayName: demo.teamById.get(m.awayId)?.name ?? m.awayId,
       competition: m.competition,
       status: m.status,
-      kickoffIso: m.kickoff,
+      kickoffIso: m.kickoffIso,
       minute: m.minute,
       homeScore: m.homeScore,
       awayScore: m.awayScore,

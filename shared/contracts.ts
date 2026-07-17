@@ -34,12 +34,20 @@ export interface ApiMeta {
   requestId?: string;
   /** Where the data came from — lets ops distinguish live vs demo serving. */
   source?: DataSource;
+  /** ISO 8601 timestamp of the sync that produced this payload, when applicable. */
+  syncedAt?: string | null;
   /** Cursor pagination (cursor > offset: O(limit) regardless of depth). */
   cursor?: string | null;
   cached?: boolean;
 }
 
-export type DataSource = "database" | "provider" | "demo" | "cache";
+/**
+ * Where a payload came from. "unsynced" is not a source but its absence — no
+ * sync has ever written this domain, so the empty payload means "we don't
+ * know", NOT "there is nothing". Callers must render those two differently:
+ * one is a spinner or an error, the other is "no matches today".
+ */
+export type DataSource = "database" | "provider" | "demo" | "cache" | "unsynced";
 
 export type ApiErrorCode =
   | "bad_request"

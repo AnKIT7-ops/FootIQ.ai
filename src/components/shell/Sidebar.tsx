@@ -1,9 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { motion } from "motion/react";
-import {
-  LayoutDashboard, Radio, Newspaper, ArrowLeftRight, Sparkles, Search,
-  GitCompareArrows, Users, ClipboardList, Landmark, Trophy, Clapperboard, UserRound,
-} from "lucide-react";
+import { ArrowLeftRight, CalendarDays, Clapperboard, ClipboardList, GitCompareArrows, Landmark, LayoutDashboard, Newspaper, Radio, Search, Sparkles, Trophy, UserRound, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "./Logo";
 
@@ -13,6 +10,7 @@ const groups: Array<{ title: string; items: Array<{ to: string; label: string; i
     items: [
       { to: "/", label: "Home", icon: LayoutDashboard },
       { to: "/matches", label: "Match Center", icon: Radio },
+      { to: "/schedule", label: "Schedule", icon: CalendarDays },
       { to: "/news", label: "News", icon: Newspaper },
       { to: "/transfers", label: "Transfers", icon: ArrowLeftRight },
       { to: "/highlights", label: "Highlights", icon: Clapperboard },

@@ -45,8 +45,8 @@ const RAW_FIXTURES = z.object({
       }),
       league: z.object({ name: z.string() }),
       teams: z.object({
-        home: z.object({ name: z.string() }),
-        away: z.object({ name: z.string() }),
+        home: z.object({ id: z.number().nullish(), name: z.string(), logo: z.string().nullish() }),
+        away: z.object({ id: z.number().nullish(), name: z.string(), logo: z.string().nullish() }),
       }),
       goals: z.object({ home: z.number().nullish(), away: z.number().nullish() }),
     }),
@@ -118,8 +118,14 @@ export class ApiFootballProvider implements FootballDataProvider {
     if (!raw.success) throw new ProviderError(this.name, `fixtures schema drift: ${raw.error.issues[0]?.message}`);
     return raw.data.response.map((r) => ({
       extId: `af-${r.fixture.id}`,
+      // Same namespace as this provider's standings extIds — fixtures resolve
+      // to teams by id, never by name (see mergeMatches).
+      homeExtId: `af-${r.teams.home.id}`,
+      awayExtId: `af-${r.teams.away.id}`,
       homeName: r.teams.home.name,
       awayName: r.teams.away.name,
+      homeCrestUrl: r.teams.home.logo ?? undefined,
+      awayCrestUrl: r.teams.away.logo ?? undefined,
       competition: r.league.name,
       status: LIVE.has(r.fixture.status.short) ? "live" : FINISHED.has(r.fixture.status.short) ? "finished" : "upcoming",
       kickoffIso: r.fixture.date,
