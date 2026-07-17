@@ -5,7 +5,17 @@ import { FootballDataOrgProvider } from "./football-data";
 import { ApiFootballProvider } from "./api-football";
 import { DemoProvider } from "./demo";
 
-export type { FootballDataProvider, NormalizedMatch, NormalizedTeamStanding } from "./types";
+export type {
+  FootballDataProvider,
+  MatchDepthProvider,
+  NormalizedCompetition,
+  NormalizedLineup,
+  NormalizedMatch,
+  NormalizedMatchEvent,
+  NormalizedMatchStatistics,
+  NormalizedTeam,
+  NormalizedTeamStanding,
+} from "./types";
 export { ProviderError } from "./types";
 export { DemoProvider, MockProvider } from "./demo";
 export { FootballDataOrgProvider } from "./football-data";

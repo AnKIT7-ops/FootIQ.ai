@@ -4,27 +4,54 @@ import { Tabs } from "@/components/ui/Tabs";
 import { MatchCard } from "@/components/ui/MatchCard";
 import { DataState } from "@/components/ui/DataState";
 import { useMatchesState } from "@/lib/repositories/matches";
+import { nextSeasonStart, useCompetitions } from "@/lib/repositories/competitions";
 import { dayOffset, isThisWeek, isToday, isTomorrow, kickoffDayHeading, kickoffDayKey } from "@/lib/kickoff";
 import { usePageMeta } from "@/lib/seo";
 import type { Match } from "@/data/types";
+import type { CompetitionDto } from "@shared/contracts";
 
-type Range = "today" | "tomorrow" | "week" | "live" | "completed";
+type Range = "today" | "tomorrow" | "week" | "all" | "live" | "completed";
 
+/**
+ * "All upcoming" is not padding. Between seasons the next fixture can be five
+ * weeks out, so Today/Tomorrow/This Week are all legitimately empty while the
+ * sync holds ~200 real fixtures — without this range they are unreachable and
+ * the page looks broken rather than out of season.
+ */
 const RANGES: { value: Range; label: string }[] = [
   { value: "today", label: "Today" },
   { value: "tomorrow", label: "Tomorrow" },
   { value: "week", label: "This Week" },
+  { value: "all", label: "All upcoming" },
   { value: "live", label: "Live" },
   { value: "completed", label: "Completed" },
 ];
 
 const EMPTY_COPY: Record<Range, { title: string; body: string }> = {
-  today: { title: "No matches today", body: "Nothing is scheduled today in the competitions we follow. Try This Week for the next fixtures." },
+  today: { title: "No matches today", body: "Nothing is scheduled today in the competitions we follow." },
   tomorrow: { title: "No matches tomorrow", body: "Nothing is scheduled tomorrow in the competitions we follow." },
-  week: { title: "No matches this week", body: "Nothing is scheduled in the next seven days — common between seasons. Fixtures appear here as soon as they're published." },
+  week: { title: "No matches this week", body: "Nothing is scheduled in the next seven days — common between seasons." },
+  all: { title: "No upcoming fixtures", body: "No fixtures are published in the window we sync." },
   live: { title: "No live matches", body: "Nothing is being played right now." },
   completed: { title: "No recent results", body: "No matches have finished in the window we sync." },
 };
+
+/**
+ * "No matches today" is true in mid-July but useless — it reads like a fault.
+ * When nothing has kicked off yet, say when it does and where the fixtures are;
+ * the season dates are real provider data, so this replaces a shrug with a fact.
+ */
+function offSeasonBody(next: CompetitionDto | null, fallback: string, hasUpcoming: boolean): string {
+  if (!next?.season) return fallback;
+  const when = new Date(next.season.startDateIso).toLocaleDateString(undefined, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+  // Only point at a tab that actually has something in it.
+  const where = hasUpcoming ? " All upcoming has the published fixtures." : "";
+  return `The ${next.name} season starts on ${when}.${where}`;
+}
 
 /**
  * Schedule — fixtures by date, filterable by competition.
@@ -42,6 +69,7 @@ export default function Schedule() {
   });
 
   const { data, status } = useMatchesState();
+  const comps = useCompetitions();
   const [range, setRange] = useState<Range>("today");
   const [competition, setCompetition] = useState<string>("all");
 
@@ -65,7 +93,9 @@ export default function Schedule() {
             ? scheduled.filter((m) => isToday(m.kickoffIso))
             : range === "tomorrow"
               ? scheduled.filter((m) => isTomorrow(m.kickoffIso))
-              : scheduled.filter((m) => isThisWeek(m.kickoffIso));
+              : range === "week"
+                ? scheduled.filter((m) => isThisWeek(m.kickoffIso))
+                : scheduled;
     return competition === "all" ? byRange : byRange.filter((m) => m.competition === competition);
   }, [range, competition, scheduled, data.live, data.finished]);
 
@@ -154,7 +184,16 @@ export default function Schedule() {
           emptyBody="No matches for this competition in the selected range. Try another competition or a wider range."
         />
       ) : (
-        <DataState status={status} empty={list.length === 0} emptyTitle={EMPTY_COPY[range].title} emptyBody={EMPTY_COPY[range].body} />
+        <DataState
+          status={status}
+          empty={list.length === 0}
+          emptyTitle={EMPTY_COPY[range].title}
+          emptyBody={
+            range === "today" || range === "tomorrow" || range === "week"
+              ? offSeasonBody(nextSeasonStart(comps), EMPTY_COPY[range].body, scheduled.length > 0)
+              : EMPTY_COPY[range].body
+          }
+        />
       )}
     </div>
   );

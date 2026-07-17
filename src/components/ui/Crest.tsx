@@ -4,13 +4,20 @@ import { getTeam } from "@/lib/repositories/teams";
 import { teamLogoUrl } from "@/data/images";
 
 /**
- * Team crest: real club logo from the FotMob CDN when reachable,
- * falling back to the original generated SVG shield offline / on error.
+ * Team crest, best available source first:
+ *
+ *   1. the provider's own crest, synced with the club — correct by construction
+ *      and covers every synced club, including ones the demo set never had
+ *   2. the bundled FotMob mapping, which is keyed to DEMO ids only
+ *   3. a generated SVG shield
+ *
+ * The provider crest leads because the mapping in (2) is a hardcoded guess that
+ * knows nothing about the ~100 clubs that arrive from a sync.
  */
 export function Crest({ teamId, size = 36, className }: { teamId: string; size?: number; className?: string }) {
   const [failed, setFailed] = useState(false);
   const team = getTeam(teamId);
-  const url = teamLogoUrl(teamId);
+  const url = team.crestUrl ?? teamLogoUrl(teamId);
 
   if (url && !failed) {
     return (

@@ -96,6 +96,13 @@ export interface Team {
   stadium: string;
   manager: string;
   league: string;
+  /**
+   * Real club badge from the provider. Absent for demo-only clubs, where the
+   * Crest component falls back to its generated mark.
+   */
+  crestUrl?: string;
+  /** Year founded, when the provider supplies it. */
+  founded?: number;
   position: number;
   played: number;
   won: number;

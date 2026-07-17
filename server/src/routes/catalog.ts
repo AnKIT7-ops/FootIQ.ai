@@ -25,13 +25,29 @@ export function catalogRoutes(catalog: CatalogService) {
     ok(c, catalog.similarPlayers(c.req.valid("param").id), demoMeta),
   );
 
+  // Cache-Control by volatility, matching the sync cadence behind each domain:
+  // club identity is re-fetched daily, tables every 30 minutes, live scores
+  // every 30 seconds (see /matches). A longer max-age than the sync interval
+  // would serve data the sync has already superseded.
   r.get("/teams", async (c) => {
     const { data, source } = await catalog.teams();
+    c.header("Cache-Control", "public, max-age=86400");
     return ok(c, data, { source });
   });
-  /** Competitions available in the current snapshot — the table's league picker reads this. */
+  /**
+   * Competitions and their current-season state (season dates, matchday).
+   * Cached hard: this changes at most once a day.
+   */
+  r.get("/competitions", async (c) => {
+    const { data, source, syncedAt } = await catalog.competitions();
+    c.header("Cache-Control", "public, max-age=86400");
+    return ok(c, data, { source, syncedAt });
+  });
+
+  /** Competition NAMES present in the team snapshot — the table's league picker reads this. */
   r.get("/teams/competitions", async (c) => {
-    const { data, source } = await catalog.competitions();
+    const { data, source } = await catalog.competitionNames();
+    c.header("Cache-Control", "public, max-age=900");
     return ok(c, data, { source });
   });
   // Every row carries its own `league`, so the resolved competition needs no
@@ -41,6 +57,7 @@ export function catalogRoutes(catalog: CatalogService) {
     validate("query", z.object({ competition: z.string().min(1).max(80).optional() })),
     async (c) => {
       const { data, source } = await catalog.leagueTable(c.req.valid("query").competition);
+      c.header("Cache-Control", "public, max-age=900");
       return ok(c, data, { source });
     },
   );

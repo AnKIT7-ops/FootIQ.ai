@@ -1,6 +1,6 @@
 import * as demo from "../data/demo";
 import type { Match, MatchStatus, Team } from "../data/demo";
-import type { NormalizedMatch, NormalizedTeamStanding } from "../providers/types";
+import type { NormalizedMatch, NormalizedTeam, NormalizedTeamStanding } from "../providers/types";
 import { hashCode, seeded } from "../../../src/lib/utils";
 
 /** Fixtures bucketed by status — the shape the matches snapshot holds. */
@@ -129,6 +129,85 @@ export function mergeStandings(rows: NormalizedTeamStanding[]): Team[] {
             manager: row.coach ?? base.manager,
           },
     );
+  }
+  return out;
+}
+
+/** "Red / White / Blue" → the two colours the UI actually uses. */
+function parseClubColors(raw: string | undefined): [string, string] | undefined {
+  if (!raw) return undefined;
+  const NAMED: Record<string, string> = {
+    red: "#e11d48", blue: "#2563eb", white: "#f8fafc", black: "#0f172a", yellow: "#facc15",
+    green: "#16a34a", orange: "#f97316", purple: "#7c3aed", maroon: "#7f1d1d", navy: "#1e3a5f",
+    claret: "#7a263a", sky: "#38bdf8", gold: "#d4af37", silver: "#cbd5e1", grey: "#94a3b8",
+    gray: "#94a3b8", burgundy: "#800020", pink: "#ec4899", brown: "#78350f",
+  };
+  const hits = raw
+    .toLowerCase()
+    .split(/[/,]/)
+    .map((s) => s.trim().split(/\s+/).find((w) => NAMED[w]))
+    .filter((w): w is string => Boolean(w))
+    .map((w) => NAMED[w]);
+  if (hits.length === 0) return undefined;
+  return [hits[0], hits[1] ?? hits[0]];
+}
+
+/**
+ * Club identity from the provider, folded onto the existing catalog.
+ *
+ * Provider truth wins for every field it actually supplies — crest, venue,
+ * founded, colours, coach. The team's `id` does NOT change: demo players
+ * reference their club by id ("ars"), so re-keying teams to provider ids would
+ * orphan every player, empty every squad, and break Compare/Scout/Similar. The
+ * id is a join key; the DATA behind it is now real.
+ *
+ * Clubs the catalog has never seen are added outright, so a competition's full
+ * roster exists even where the demo set never had it.
+ */
+export function mergeTeams(existing: Team[], rows: NormalizedTeam[]): Team[] {
+  if (rows.length === 0) return existing;
+  const byExtId = new Map(existing.filter((t) => t.extId).map((t) => [t.extId!, t]));
+  const byName = new Map(existing.map((t) => [canon(t.name), t]));
+  const out = [...existing];
+  const indexOf = new Map(existing.map((t, i) => [t.id, i]));
+
+  for (const row of rows) {
+    const base = byExtId.get(row.extId) ?? byName.get(canon(row.name));
+    const colors = parseClubColors(row.clubColors);
+    if (!base) {
+      // A club we've never seen: synthesize the FootIQ-specific dials, then
+      // overlay the real identity on top.
+      const made = synthesizeTeam({
+        extId: row.extId, name: row.name, competition: row.competition, tla: row.tla,
+        shortName: row.shortName, crestUrl: row.crestUrl, venue: row.venue,
+        position: 0, played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, points: 0,
+      });
+      out.push({
+        ...made,
+        crestUrl: row.crestUrl ?? made.crestUrl,
+        founded: row.founded,
+        stadium: row.venue ?? made.stadium,
+        manager: row.coach ?? made.manager,
+        ...(colors ? { colors } : {}),
+      });
+      continue;
+    }
+    const i = indexOf.get(base.id);
+    if (i === undefined) continue;
+    out[i] = {
+      ...base,
+      extId: row.extId,
+      // Identity from the provider; `id`, squad and tactical dials stay put.
+      short: row.shortName ?? base.short,
+      tla: row.tla ?? base.tla,
+      crestUrl: row.crestUrl ?? base.crestUrl,
+      founded: row.founded ?? base.founded,
+      stadium: row.venue ?? base.stadium,
+      // Free tier leaves coach null for every club — don't overwrite a real
+      // demo manager name with nothing.
+      manager: row.coach ?? base.manager,
+      ...(colors ? { colors } : {}),
+    };
   }
   return out;
 }

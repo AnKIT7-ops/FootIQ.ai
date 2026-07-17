@@ -2,9 +2,10 @@ import * as demo from "../data/demo";
 import { matchDetailFor } from "../../../src/data/matches";
 import type { MatchDetail, Team } from "../data/demo";
 import type { MatchesGrouped } from "../jobs/normalize";
+import type { NormalizedCompetition } from "../providers/types";
 import type { CacheStore } from "../cache/types";
 import type { SnapshotStore } from "./snapshots";
-import type { DataSource, SearchResultDto } from "../../../shared/contracts";
+import type { CompetitionDto, DataSource, SearchResultDto } from "../../../shared/contracts";
 import { ApiError } from "../lib/errors";
 
 interface Sourced<T> {
@@ -65,7 +66,12 @@ export class CatalogService {
    */
   private async matchesSourced(): Promise<Sourced<MatchesGrouped> & { syncedAt: string | null }> {
     const snap = await this.snapshots.get<MatchesGrouped>("matches");
-    if (!snap) return { data: EMPTY_MATCHES, source: "unsynced", syncedAt: null };
+    // No snapshot at all = we have no idea what's on. That's an outage, not an
+    // empty schedule, so it must NOT return 200 with an empty list — a caller
+    // cannot tell those apart, and "no matches today" is a claim we can't back.
+    // An empty snapshot, by contrast, is a real answer: the sync ran and the
+    // window genuinely holds no fixtures (routine in the off-season).
+    if (!snap) throw ApiError.unavailable("Data temporarily unavailable.");
     return {
       data: { ...EMPTY_MATCHES, ...snap.payload },
       source: snap.source === "demo" ? "demo" : "provider",
@@ -101,10 +107,49 @@ export class CatalogService {
     return { data: t, source };
   }
 
-  /** Competitions present in the current snapshot, in sync order — drives the table's league picker. */
-  async competitions(): Promise<Sourced<string[]>> {
+  /** Competition names present in the current team snapshot — drives the table's league picker. */
+  async competitionNames(): Promise<Sourced<string[]>> {
     const { data, source } = await this.teamsSourced();
     return { data: [...new Set(data.map((t) => t.league).filter(Boolean))], source };
+  }
+
+  /**
+   * Competitions with their current-season state.
+   *
+   * `state` is derived here rather than left to callers: every consumer would
+   * otherwise re-implement the same two date comparisons, and get the
+   * "ended" case wrong the same way (see CompetitionDto).
+   */
+  async competitions(): Promise<Sourced<CompetitionDto[]> & { syncedAt: string | null }> {
+    const snap = await this.snapshots.get<NormalizedCompetition[]>("competitions");
+    if (!snap || snap.payload.length === 0) {
+      throw ApiError.unavailable("Data temporarily unavailable.");
+    }
+    const now = Date.now();
+    const data = snap.payload.map((c) => {
+      const s = c.currentSeason;
+      return {
+        code: c.code,
+        name: c.name,
+        type: c.type,
+        area: c.area,
+        emblemUrl: c.emblemUrl,
+        season: s
+          ? {
+              startDateIso: s.startDateIso,
+              endDateIso: s.endDateIso,
+              currentMatchday: s.currentMatchday,
+              state:
+                new Date(s.startDateIso).getTime() > now
+                  ? ("upcoming" as const)
+                  : new Date(s.endDateIso).getTime() < now
+                    ? ("ended" as const)
+                    : ("in-progress" as const),
+            }
+          : undefined,
+      };
+    });
+    return { data, source: snap.source === "demo" ? "demo" : "provider", syncedAt: snap.syncedAt };
   }
 
   /**

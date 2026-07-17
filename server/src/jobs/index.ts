@@ -1,11 +1,11 @@
 import * as demo from "../data/demo";
 import type { Team } from "../data/demo";
-import type { FootballDataProvider } from "../providers";
-import type { SnapshotStore } from "../services/snapshots";
+import type { FootballDataProvider, NormalizedCompetition, NormalizedTeam } from "../providers";
+import type { SnapshotKind, SnapshotStore } from "../services/snapshots";
 import type { AiService } from "../ai/service";
 import { prompts } from "../ai/prompts";
 import { JobRegistry } from "../jobs/registry";
-import { mergeMatches, mergeStandings, type MatchesGrouped } from "./normalize";
+import { mergeMatches, mergeStandings, mergeTeams, type MatchesGrouped } from "./normalize";
 
 export type { Job, JobRun } from "./registry";
 export { JobRegistry } from "./registry";
@@ -17,6 +17,29 @@ export type { MatchesGrouped } from "./normalize";
  * cache + DB). Reads never block on these — the API serves the last snapshot
  * or demo data while a sync runs or fails.
  */
+/**
+ * How long a snapshot stays fresh enough to skip its sync.
+ *
+ * The cron fires every 30 minutes, but club identity and season metadata do not
+ * change on that cadence — re-fetching them each tick would burn 7 of the
+ * free tier's 10 requests/minute for data that is identical. Fixtures and
+ * tables have no TTL: every tick refreshes them.
+ */
+const SNAPSHOT_TTL_MS: Partial<Record<SnapshotKind, number>> = {
+  team_identity: 24 * 60 * 60_000,
+  competitions: 24 * 60 * 60_000,
+};
+
+/** True when the last write is still inside the kind's TTL. */
+async function isFresh(snapshots: SnapshotStore, kind: SnapshotKind): Promise<boolean> {
+  const ttl = SNAPSHOT_TTL_MS[kind];
+  if (!ttl) return false;
+  const snap = await snapshots.get(kind);
+  if (!snap?.syncedAt) return false;
+  const age = Date.now() - new Date(snap.syncedAt).getTime();
+  return Number.isFinite(age) && age >= 0 && age < ttl;
+}
+
 export function registerJobs(
   registry: JobRegistry,
   deps: { provider: FootballDataProvider; snapshots: SnapshotStore; ai: AiService },
@@ -24,8 +47,43 @@ export function registerJobs(
   const { provider, snapshots, ai } = deps;
 
   registry.register({
+    name: "sync_competitions",
+    description: "Competitions and current-season state → competitions snapshot (24h TTL)",
+    async run() {
+      if (!provider.fetchCompetitions) return "provider has no competitions capability";
+      if (await isFresh(snapshots, "competitions")) return "skipped — snapshot still fresh (24h TTL)";
+      const rows = await provider.fetchCompetitions();
+      if (rows.length === 0) throw new Error("competitions sync produced 0 rows — keeping last snapshot");
+      await snapshots.set<NormalizedCompetition[]>("competitions", rows, provider.name);
+      const now = Date.now();
+      const live = rows.filter(
+        (c) =>
+          c.currentSeason &&
+          new Date(c.currentSeason.startDateIso).getTime() <= now &&
+          new Date(c.currentSeason.endDateIso).getTime() >= now,
+      ).length;
+      return `${rows.length} competitions (${live} in progress) (${provider.name})`;
+    },
+  });
+
+  registry.register({
+    name: "sync_team_identity",
+    description: "Club crest/venue/founded/colours per competition → team_identity snapshot (24h TTL)",
+    async run() {
+      if (!provider.fetchTeams) return "provider has no teams capability";
+      if (await isFresh(snapshots, "team_identity")) return "skipped — snapshot still fresh (24h TTL)";
+      const rows = await provider.fetchTeams();
+      if (rows.length === 0) throw new Error("teams sync produced 0 rows — keeping last snapshot");
+      await snapshots.set<NormalizedTeam[]>("team_identity", rows, provider.name);
+      const withCrest = rows.filter((r) => r.crestUrl).length;
+      const withCoach = rows.filter((r) => r.coach).length;
+      return `${rows.length} clubs (${withCrest} crests, ${withCoach} coaches) (${provider.name})`;
+    },
+  });
+
+  registry.register({
     name: "sync_standings",
-    description: "League tables for every configured competition → teams snapshot",
+    description: "League tables for every configured competition, enriched with club identity → teams snapshot",
     async run() {
       if (!provider.fetchStandings) return "provider has no standings capability";
       const rows = await provider.fetchStandings();
@@ -35,9 +93,17 @@ export function registerJobs(
       // tolerates per-competition errors), so keep the last good snapshot and
       // fail loudly instead of publishing nothing.
       if (merged.length === 0) throw new Error("standings sync produced 0 teams — keeping last snapshot");
-      await snapshots.set<Team[]>("teams", merged, provider.name);
-      const leagues = new Set(merged.map((t) => t.league));
-      return `${rows.length} rows → ${merged.length} teams across ${leagues.size} competitions (${provider.name})`;
+
+      // Re-apply club identity from the cached snapshot on EVERY pass. This
+      // rebuild would otherwise drop crests/venues until the next daily fetch.
+      // No network: identity is read from cache.
+      const identity = (await snapshots.get<NormalizedTeam[]>("team_identity"))?.payload ?? [];
+      const enriched = mergeTeams(merged, identity);
+
+      await snapshots.set<Team[]>("teams", enriched, provider.name);
+      const leagues = new Set(enriched.map((t) => t.league));
+      const crests = enriched.filter((t) => t.crestUrl).length;
+      return `${rows.length} rows → ${enriched.length} teams across ${leagues.size} competitions, ${crests} with crests (${provider.name})`;
     },
   });
 

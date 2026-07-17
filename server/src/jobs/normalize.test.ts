@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mergeMatches, mergeStandings } from "./normalize";
+import { mergeMatches, mergeStandings, mergeTeams } from "./normalize";
 import { matchDetailFor } from "../../../src/data/matches";
 import type { NormalizedTeamStanding } from "../providers/types";
 
@@ -92,6 +92,41 @@ describe("mergeStandings", () => {
     const finished = matchDetailFor(grouped.finished[0], resolve);
     expect(finished.home.possession).toBeGreaterThan(0);
     expect(finished.events.length).toBeGreaterThan(0);
+  });
+
+  it("enriches a club with provider identity without re-keying its id", () => {
+    // The id is a join key: demo players reference their club by it. Re-keying
+    // teams to provider ids would orphan every player and empty every squad.
+    const teams = mergeStandings([row({ name: "Arsenal", position: 1 })]);
+    const [arsenal] = mergeTeams(teams, [
+      {
+        extId: teams[0].extId!,
+        name: "Arsenal FC",
+        crestUrl: "https://crests.football-data.org/57.png",
+        venue: "Emirates Stadium",
+        founded: 1886,
+        clubColors: "Red / White",
+        competition: "Premier League",
+      },
+    ]);
+
+    expect(arsenal.id).toBe("ars"); // join key intact
+    expect(arsenal.crestUrl).toBe("https://crests.football-data.org/57.png");
+    expect(arsenal.founded).toBe(1886);
+    expect(arsenal.stadium).toBe("Emirates Stadium");
+    expect(arsenal.colors[0]).toBe("#e11d48"); // "Red / White" parsed
+  });
+
+  it("files an identity-only club under the competition NAME, never its code", () => {
+    // Standings file competitions by name ("Primera Division"); the teams
+    // endpoint is called by code ("PD"). Using the code here put both in the
+    // league picker as if they were two different competitions.
+    const merged = mergeTeams([], [
+      { extId: "fd-500", name: "Málaga CF", competition: "Primera Division", crestUrl: "https://x/500.png" },
+    ]);
+    expect(merged).toHaveLength(1);
+    expect(merged[0].league).toBe("Primera Division");
+    expect(merged[0].league).not.toBe("PD");
   });
 
   it("keeps one row per club when a team appears in several competitions", () => {

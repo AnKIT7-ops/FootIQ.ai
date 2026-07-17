@@ -1,5 +1,11 @@
 import { z } from "zod";
-import type { FootballDataProvider, NormalizedMatch, NormalizedTeamStanding } from "./types";
+import type {
+  FootballDataProvider,
+  NormalizedCompetition,
+  NormalizedMatch,
+  NormalizedTeam,
+  NormalizedTeamStanding,
+} from "./types";
 import { ProviderError } from "./types";
 
 /**
@@ -69,10 +75,56 @@ const RAW_MATCHES = z.object({
   ),
 });
 
+const RAW_TEAMS = z.object({
+  // The competition's display name. Without it, clubs introduced by this
+  // endpoint were filed under the CODE ("PD") while standings filed the same
+  // competition under its NAME ("Primera Division") — the league picker showed
+  // both, as if they were different competitions.
+  competition: z.object({ name: z.string() }).nullish(),
+  teams: z.array(
+    z.object({
+      id: z.number(),
+      name: z.string(),
+      shortName: z.string().nullish(),
+      tla: z.string().nullish(),
+      crest: z.string().nullish(),
+      website: z.string().nullish(),
+      founded: z.number().nullish(),
+      clubColors: z.string().nullish(),
+      venue: z.string().nullish(),
+      // Present in the schema but unpopulated on the free tier (0/20 clubs).
+      coach: z.object({ name: z.string().nullish() }).nullish(),
+    }),
+  ),
+});
+
+const RAW_COMPETITIONS = z.object({
+  competitions: z.array(
+    z.object({
+      id: z.number(),
+      name: z.string(),
+      code: z.string(),
+      type: z.string().nullish(),
+      emblem: z.string().nullish(),
+      area: z.object({ name: z.string().nullish() }).nullish(),
+      currentSeason: z
+        .object({
+          startDate: z.string().nullish(),
+          endDate: z.string().nullish(),
+          currentMatchday: z.number().nullish(),
+        })
+        .nullish(),
+    }),
+  ),
+});
+
 /**
  * v4 statuses: SCHEDULED | TIMED | IN_PLAY | PAUSED | FINISHED | POSTPONED |
  * SUSPENDED | CANCELLED | AWARDED. Anything unrecognized falls to "upcoming"
  * — a fixture we can't classify is still a fixture, never a live match.
+ *
+ * PAUSED is half-time: still a live match, and the UI distinguishes it via
+ * `half` rather than by inventing a minute that isn't ticking.
  */
 const statusMap = (s: string): NormalizedMatch["status"] => {
   switch (s) {
@@ -190,6 +242,65 @@ export class FootballDataOrgProvider implements FootballDataProvider {
     });
   }
 
+  /** Club identity per competition — one request each, so this is a 24h-TTL sync, not a 30-minute one. */
+  async fetchTeams(): Promise<NormalizedTeam[]> {
+    return this.perCompetition("teams", async (code) => {
+      const raw = RAW_TEAMS.safeParse(await this.get(`/competitions/${code}/teams`));
+      if (!raw.success) throw new ProviderError(this.name, `teams schema drift: ${raw.error.issues[0]?.message}`);
+      return raw.data.teams.map((t) => ({
+        extId: `fd-${t.id}`,
+        name: t.name,
+        shortName: t.shortName ?? undefined,
+        tla: t.tla ?? undefined,
+        crestUrl: t.crest ?? undefined,
+        venue: t.venue ?? undefined,
+        founded: t.founded ?? undefined,
+        // Free tier returns coach.name === null for every club. Kept because
+        // the field is real and a paid tier populates it — undefined, never "—".
+        coach: t.coach?.name ?? undefined,
+        clubColors: t.clubColors ?? undefined,
+        website: t.website ?? undefined,
+        // The NAME, matching what standings report — never the code.
+        competition: raw.data.competition?.name ?? code,
+      }));
+    });
+  }
+
+  /**
+   * Competitions and their current season state.
+   *
+   * ONE request for all of them — /competitions returns every competition the
+   * key can see, each with its currentSeason. Fetching /competitions/{code} per
+   * code would be six requests for the same data.
+   */
+  async fetchCompetitions(): Promise<NormalizedCompetition[]> {
+    const raw = RAW_COMPETITIONS.safeParse(await this.get(`/competitions`));
+    if (!raw.success) throw new ProviderError(this.name, `competitions schema drift: ${raw.error.issues[0]?.message}`);
+    const wanted = new Set(this.competitions);
+    return raw.data.competitions
+      .filter((c) => wanted.has(c.code.toUpperCase()))
+      .map((c) => {
+        const s = c.currentSeason;
+        return {
+          code: c.code,
+          extId: `fd-${c.id}`,
+          name: c.name,
+          type: c.type ?? undefined,
+          emblemUrl: c.emblem ?? undefined,
+          area: c.area?.name ?? undefined,
+          currentSeason:
+            s?.startDate && s.endDate
+              ? {
+                  startDateIso: s.startDate,
+                  endDateIso: s.endDate,
+                  // Null before kickoff — a season that hasn't started has no matchday.
+                  currentMatchday: s.currentMatchday ?? null,
+                }
+              : undefined,
+        };
+      });
+  }
+
   async fetchMatches(): Promise<NormalizedMatch[]> {
     const from = new Date(Date.now() - this.window.pastDays * 864e5).toISOString().slice(0, 10);
     const to = new Date(Date.now() + this.window.futureDays * 864e5).toISOString().slice(0, 10);
@@ -210,6 +321,7 @@ export class FootballDataOrgProvider implements FootballDataProvider {
           awayCrestUrl: m.awayTeam.crest ?? undefined,
           competition: m.competition?.name ?? code,
           status: statusMap(m.status),
+          halfTime: m.status === "PAUSED" || undefined,
           kickoffIso: m.utcDate,
           minute: m.minute ?? undefined,
           homeScore: m.score.fullTime.home ?? undefined,
