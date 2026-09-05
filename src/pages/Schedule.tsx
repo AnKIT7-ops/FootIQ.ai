@@ -3,6 +3,7 @@ import { SectionHeader } from "@/components/ui/Card";
 import { Tabs } from "@/components/ui/Tabs";
 import { MatchCard } from "@/components/ui/MatchCard";
 import { DataState } from "@/components/ui/DataState";
+import { SeasonStatus } from "@/components/ui/SeasonStatus";
 import { useMatchesState } from "@/lib/repositories/matches";
 import { nextSeasonStart, useCompetitions } from "@/lib/repositories/competitions";
 import { dayOffset, isThisWeek, isToday, isTomorrow, kickoffDayHeading, kickoffDayKey } from "@/lib/kickoff";
@@ -126,6 +127,11 @@ export default function Schedule() {
         title="Schedule"
         action={<Tabs id="schedule-range" tabs={RANGES} active={range} onChange={(v) => setRange(v as Range)} />}
       />
+
+      {/* Season state per competition — no extra request; it rides on the
+          competitions snapshot. Answers "why is this page empty?" before the
+          reader has to ask. */}
+      <SeasonStatus competitions={comps} className="mb-4" />
 
       {competitions.length > 1 && (
         <div className="no-scrollbar -mx-4 mb-5 flex gap-1.5 overflow-x-auto px-4 md:mx-0 md:px-0" role="group" aria-label="Filter by competition">
