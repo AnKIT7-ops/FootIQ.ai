@@ -10,6 +10,7 @@ import { getTeam } from "@/lib/repositories/teams";
 import { getPlayer } from "@/lib/repositories/players";
 import { cn } from "@/lib/utils";
 import { usePageMeta } from "@/lib/seo";
+import { DemoDataNotice } from "@/components/ui/DemoDataNotice";
 
 const catLabel: Record<string, string> = {
   all: "All",
@@ -34,6 +35,7 @@ export default function Highlights() {
   return (
     <div className="space-y-6">
       <SectionHeader level={1} eyebrow="Short-form, vertical, endless" title="Highlights" />
+      <DemoDataNotice domain="highlight" detail="These clips are placeholder sample data. No video provider is connected." />
       <Tabs id="clips" tabs={clipCategories.map((c) => ({ value: c, label: catLabel[c] }))} active={cat} onChange={setCat} />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">

@@ -5,6 +5,111 @@
  */
 
 // ---------------------------------------------------------------------------
+// Football DTOs — the frontend-facing shape of provider data
+//
+// The frontend never sees a provider payload. Every source normalizes into
+// these, so which vendor answered is invisible above the provider layer and a
+// new provider is a normalizer, not a refactor.
+// ---------------------------------------------------------------------------
+
+/** A competition and where it currently sits in its season. */
+export interface CompetitionDto {
+  /** Provider-agnostic code, e.g. "PL". */
+  code: string;
+  name: string;
+  /** "LEAGUE" | "CUP". */
+  type?: string;
+  area?: string;
+  emblemUrl?: string;
+  season?: {
+    /** ISO 8601 dates — formatting belongs to the UI. */
+    startDateIso: string;
+    endDateIso: string;
+    /** Null before the season kicks off. */
+    currentMatchday: number | null;
+    /**
+     * Where the season sits right now.
+     *
+     * Three states, not a `started` boolean: competitions roll over at
+     * different times, so in mid-July the Premier League is "upcoming" while
+     * the Champions League season that finished in May is "ended". A boolean
+     * called both of the latter "started", which is true and useless — it
+     * can't distinguish a season in progress from one that's over.
+     */
+    state: "upcoming" | "in-progress" | "ended";
+  };
+}
+
+/**
+ * Per-side match statistics.
+ *
+ * Every field is optional because coverage is per-source and per-competition;
+ * an absent field means "not supplied", which the UI must render as absent
+ * rather than as zero. NOT YET POPULATED — see MatchDepthProvider in
+ * server/src/providers/types.ts for why (no configured source serves current-
+ * season statistics).
+ */
+export interface MatchStatisticsDto {
+  home: SideStatisticsDto;
+  away: SideStatisticsDto;
+}
+
+export interface SideStatisticsDto {
+  possession?: number;
+  shots?: number;
+  shotsOnTarget?: number;
+  expectedGoals?: number;
+  corners?: number;
+  fouls?: number;
+  offsides?: number;
+  passes?: number;
+  passAccuracy?: number;
+  saves?: number;
+}
+
+export type MatchEventTypeDto =
+  | "goal"
+  | "own-goal"
+  | "penalty"
+  | "penalty-missed"
+  | "assist"
+  | "yellow"
+  | "red"
+  | "sub"
+  | "var"
+  | "kickoff"
+  | "half"
+  | "full";
+
+/** A timeline event. Not yet populated — see MatchStatisticsDto. */
+export interface MatchEventDto {
+  minute: number;
+  extraMinute?: number;
+  type: MatchEventTypeDto;
+  /** Our team id, already resolved out of the provider's namespace. */
+  teamId?: string;
+  player?: string;
+  assist?: string;
+  detail?: string;
+}
+
+export interface LineupPlayerDto {
+  name: string;
+  number?: number;
+  position?: string;
+  captain?: boolean;
+}
+
+/** A team's XI. Not yet populated — see MatchStatisticsDto. */
+export interface LineupDto {
+  teamId: string;
+  formation?: string;
+  coach?: string;
+  startXI: LineupPlayerDto[];
+  substitutes: LineupPlayerDto[];
+}
+
+// ---------------------------------------------------------------------------
 // Response envelope
 // ---------------------------------------------------------------------------
 
@@ -34,12 +139,20 @@ export interface ApiMeta {
   requestId?: string;
   /** Where the data came from — lets ops distinguish live vs demo serving. */
   source?: DataSource;
+  /** ISO 8601 timestamp of the sync that produced this payload, when applicable. */
+  syncedAt?: string | null;
   /** Cursor pagination (cursor > offset: O(limit) regardless of depth). */
   cursor?: string | null;
   cached?: boolean;
 }
 
-export type DataSource = "database" | "provider" | "demo" | "cache";
+/**
+ * Where a payload came from. "unsynced" is not a source but its absence — no
+ * sync has ever written this domain, so the empty payload means "we don't
+ * know", NOT "there is nothing". Callers must render those two differently:
+ * one is a spinner or an error, the other is "no matches today".
+ */
+export type DataSource = "database" | "provider" | "demo" | "cache" | "unsynced";
 
 export type ApiErrorCode =
   | "bad_request"

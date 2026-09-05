@@ -6,6 +6,7 @@ import { MockProvider } from "./providers/demo";
 import { mergeMatches, mergeStandings } from "./jobs/normalize";
 import { JobRegistry } from "./jobs/registry";
 import { MemoryCache } from "./cache/memory";
+import { ProviderTraceStore } from "./providers/trace";
 import { TieredCache } from "./cache/tiered";
 import { createLogger } from "./lib/logger";
 import * as demo from "./data/demo";
@@ -20,6 +21,9 @@ const json = async (r: Response): Promise<{ ok: boolean; data: any; meta?: any }
   (await r.json()) as { ok: boolean; data: any; meta?: any };
 
 // ---- provider normalization --------------------------------------------------
+
+/** Tests inject a no-op sleep, so throttling never actually delays a run. */
+const WINDOW = { pastDays: 14, futureDays: 60 };
 
 describe("FootballDataOrgProvider", () => {
   const rawStandings = {
@@ -46,7 +50,7 @@ describe("FootballDataOrgProvider", () => {
 
   it("normalizes standings and validates the raw schema", async () => {
     const fetchImpl = vi.fn(async () => new Response(JSON.stringify(rawStandings), { status: 200 }));
-    const p = new FootballDataOrgProvider("key", "PL", fetchImpl as unknown as typeof fetch);
+    const p = new FootballDataOrgProvider("key", ["PL"], WINDOW, fetchImpl as unknown as typeof fetch, async () => {});
     const rows = await p.fetchStandings();
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ name: "Arsenal FC", tla: "ARS", position: 1, points: 71, form: "WWDWL" });
@@ -55,12 +59,103 @@ describe("FootballDataOrgProvider", () => {
 
   it("throws ProviderError on schema drift instead of passing garbage", async () => {
     const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ standings: [{ nope: true }] }), { status: 200 }));
-    const p = new FootballDataOrgProvider("key", "PL", fetchImpl as unknown as typeof fetch);
+    const p = new FootballDataOrgProvider("key", ["PL"], WINDOW, fetchImpl as unknown as typeof fetch, async () => {});
     await expect(p.fetchStandings()).rejects.toThrow(/schema drift/);
   });
 
   it("is unavailable without a key", () => {
-    expect(new FootballDataOrgProvider(undefined, "PL").available()).toBe(false);
+    expect(new FootballDataOrgProvider(undefined, ["PL"], WINDOW).available()).toBe(false);
+  });
+
+  describe("provider traces", () => {
+    const traceStore = (mode: "off" | "failures" | "all") =>
+      new ProviderTraceStore(new MemoryCache(), mode, silent);
+
+    it("keeps the raw payload of a DRIFTED response — the case raw-on-success can't cover", async () => {
+      // The whole point: validation runs before normalization, so a drifted
+      // payload produces no entity to hang `raw` off. The trace is filed
+      // against the FETCH, so the evidence survives.
+      const drifted = { standings: [{ nope: true }] };
+      const traces = traceStore("failures");
+      const p = new FootballDataOrgProvider(
+        "key", ["PL"], WINDOW,
+        vi.fn(async () => new Response(JSON.stringify(drifted), { status: 200 })) as unknown as typeof fetch,
+        async () => {},
+        traces,
+      );
+
+      await expect(p.fetchStandings()).rejects.toThrow(/schema drift/);
+
+      const recorded = await traces.list();
+      const failure = recorded.find((t) => !t.ok && t.error?.includes("schema drift"));
+      expect(failure).toBeDefined();
+      // The exact bytes that broke it, inspectable without re-requesting.
+      expect(failure!.raw).toEqual(drifted);
+      expect(failure!.endpoint).toBe("/competitions/PL/standings");
+    });
+
+    it("keeps a non-JSON error body verbatim", async () => {
+      // An HTML 502 or a rate-limit page is exactly what you want to see;
+      // res.json() would have thrown it away.
+      const traces = traceStore("failures");
+      const p = new FootballDataOrgProvider(
+        "key", ["PL"], WINDOW,
+        vi.fn(async () => new Response("<html>502 Bad Gateway</html>", { status: 502 })) as unknown as typeof fetch,
+        async () => {},
+        traces,
+      );
+      await expect(p.fetchStandings()).rejects.toThrow(/HTTP 502/);
+
+      const failure = (await traces.list()).find((t) => !t.ok);
+      expect(failure?.raw).toContain("502 Bad Gateway");
+      expect(failure?.httpStatus).toBe(502);
+    });
+
+    it("records nothing on success in `failures` mode, but does in `all`", async () => {
+      const okResponse = () =>
+        vi.fn(async () => new Response(JSON.stringify(rawStandings), { status: 200 })) as unknown as typeof fetch;
+
+      const quiet = traceStore("failures");
+      await new FootballDataOrgProvider("key", ["PL"], WINDOW, okResponse(), async () => {}, quiet).fetchStandings();
+      expect(await quiet.list()).toHaveLength(0); // zero steady-state cost
+
+      const loud = traceStore("all");
+      await new FootballDataOrgProvider("key", ["PL"], WINDOW, okResponse(), async () => {}, loud).fetchStandings();
+      const [trace] = await loud.list();
+      expect(trace.ok).toBe(true);
+      expect(trace.raw).toEqual(rawStandings);
+      expect(trace.bytes).toBeGreaterThan(0);
+    });
+
+    it("a drifted payload does NOT overwrite the last known-good trace", async () => {
+      // The bug this pins: schema drift arrives with HTTP 200. Recording
+      // success at the HTTP layer meant the drifted body was filed as "ok"
+      // (evicting the real baseline) AND as "fail" — both slots holding the
+      // same broken payload, so there was nothing left to diff against.
+      // "ok" means the payload validated, not that the socket behaved.
+      const traces = traceStore("all");
+      const provider = (fetchImpl: typeof fetch) =>
+        new FootballDataOrgProvider("key", ["PL"], WINDOW, fetchImpl, async () => {}, traces);
+
+      await provider(
+        vi.fn(async () => new Response(JSON.stringify(rawStandings), { status: 200 })) as unknown as typeof fetch,
+      ).fetchStandings();
+
+      const drifted = { standings: [{ nope: true }] };
+      await expect(
+        provider(
+          vi.fn(async () => new Response(JSON.stringify(drifted), { status: 200 })) as unknown as typeof fetch,
+        ).fetchStandings(),
+      ).rejects.toThrow();
+
+      const all = await traces.list();
+      const success = all.find((t) => t.ok);
+      const failure = all.find((t) => !t.ok);
+
+      // The good payload survived the drift — this is the whole feature.
+      expect(success?.raw).toEqual(rawStandings);
+      expect(failure?.raw).toEqual(drifted);
+    });
   });
 });
 
@@ -90,24 +185,67 @@ describe("normalize merge", () => {
     expect(merged.map((t) => t.id)).not.toContain("rma");
   });
 
-  it("maps matches to merged team ids and skips unresolvable sides", () => {
-    const teams = mergeStandings([]);
-    const grouped = mergeMatches(
+  it("maps matches onto known teams and discovers clubs the standings lack", () => {
+    const { grouped, discoveredTeams } = mergeMatches(
       [
-        { extId: "fd-1", homeName: "Arsenal FC", awayName: "Liverpool FC", competition: "PL", status: "finished", kickoffIso: "2026-07-05T16:30:00Z", homeScore: 2, awayScore: 1 },
-        { extId: "fd-2", homeName: "Unknown XI", awayName: "Mystery FC", competition: "PL", status: "upcoming", kickoffIso: "2026-07-20T14:00:00Z" },
+        { extId: "fd-1", homeExtId: "fd-57", awayExtId: "fd-64", homeName: "Arsenal FC", awayName: "Liverpool FC", competition: "PL", status: "finished", kickoffIso: "2026-07-05T16:30:00Z", homeScore: 2, awayScore: 1 },
+        { extId: "fd-2", homeExtId: "fd-901", awayExtId: "fd-902", homeName: "Unknown XI", awayName: "Mystery FC", competition: "PL", status: "upcoming", kickoffIso: "2026-07-20T14:00:00Z" },
+      ],
+      demo.teams,
+    );
+    // Known clubs still resolve to their demo identity.
+    expect(grouped.finished).toHaveLength(1);
+    expect(grouped.finished[0]).toMatchObject({ homeId: "ars", awayId: "liv", homeScore: 2 });
+
+    // Unknown clubs no longer cause the fixture to vanish. This used to be
+    // asserted as `upcoming).toHaveLength(0)` — the behaviour that dropped 35
+    // of 193 real fixtures, because standings roll over to a new season later
+    // than fixtures do and every promoted club was therefore "unresolvable".
+    expect(grouped.upcoming).toHaveLength(1);
+    expect(discoveredTeams.map((t) => t.id).sort()).toEqual(["fd-901", "fd-902"]);
+  });
+
+  it("resolves a fixture by provider id even when our name for the club differs", () => {
+    // Bayern is stored under the demo name "Bayern Munich"; the provider calls
+    // it "FC Bayern München". Name canonicalization cannot bridge that, so id
+    // resolution is the only thing keeping these fixtures alive.
+    const teams = mergeStandings([
+      { extId: "fd-5", name: "FC Bayern München", competition: "Bundesliga", tla: "FCB", position: 1, played: 1, won: 1, drawn: 0, lost: 0, gf: 3, ga: 0, points: 3 },
+    ]);
+    const { grouped, discoveredTeams } = mergeMatches(
+      [
+        { extId: "fd-9", homeExtId: "fd-5", awayExtId: "fd-5", homeName: "FC Bayern München", awayName: "FC Bayern München", competition: "Bundesliga", status: "upcoming", kickoffIso: "2026-08-22T14:00:00Z" },
       ],
       teams,
     );
-    expect(grouped.finished).toHaveLength(1);
-    expect(grouped.finished[0]).toMatchObject({ homeId: "ars", awayId: "liv", homeScore: 2 });
-    expect(grouped.upcoming).toHaveLength(0); // both sides unresolvable — skipped
+    expect(grouped.upcoming).toHaveLength(1);
+    expect(grouped.upcoming[0].homeId).toBe(teams[0].id);
+    expect(discoveredTeams).toHaveLength(0); // matched, not re-invented
   });
 
-  it("empty provider rows fall back to the full demo dataset", () => {
-    expect(mergeStandings([])).toHaveLength(demo.teams.length);
-    const g = mergeMatches([], demo.teams);
-    expect(g.upcoming.length).toBe(demo.upcomingMatches.length);
+  it("reports an empty provider window as empty — never as demo fixtures", () => {
+    // The off-season regression, pinned. Both merges used to substitute the
+    // bundled demo dataset when the provider returned zero rows, so a healthy
+    // sync during a break in the calendar published a permanently-live 67th
+    // minute demo match under provider provenance.
+    expect(mergeStandings([])).toEqual([]);
+    const { grouped: g } = mergeMatches([], demo.teams);
+    expect(g.live).toEqual([]);
+    expect(g.upcoming).toEqual([]);
+    expect(g.finished).toEqual([]);
+  });
+
+  it("buckets postponed and cancelled fixtures instead of calling them upcoming", () => {
+    const { grouped: g } = mergeMatches(
+      [
+        { extId: "fd-3", homeExtId: "fd-57", awayExtId: "fd-64", homeName: "Arsenal FC", awayName: "Liverpool FC", competition: "PL", status: "postponed", kickoffIso: "2026-08-22T14:00:00Z" },
+        { extId: "fd-4", homeExtId: "fd-61", awayExtId: "fd-57", homeName: "Chelsea FC", awayName: "Arsenal FC", competition: "PL", status: "cancelled", kickoffIso: "2026-08-23T14:00:00Z" },
+      ],
+      demo.teams,
+    );
+    expect(g.postponed).toHaveLength(1);
+    expect(g.cancelled).toHaveLength(1);
+    expect(g.upcoming).toHaveLength(0);
   });
 });
 

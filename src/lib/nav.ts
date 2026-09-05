@@ -14,6 +14,7 @@ export const pageEntries: NavEntry[] = [
   { label: "Home", to: "/", sub: "Personalized dashboard", keywords: "dashboard feed home start" },
   { label: "Intelligence", to: "/intelligence", sub: "AI analysis library", keywords: "intelligence articles reports previews best xi analysis library" },
   { label: "Match Center", to: "/matches", sub: "Live scores & analysis", keywords: "live matches scores xg" },
+  { label: "Schedule", to: "/schedule", sub: "Fixtures by date", keywords: "schedule fixtures calendar today tomorrow kickoff when" },
   { label: "News", to: "/news", sub: "Algorithmically summarized football news", keywords: "news articles stories breaking" },
   { label: "Transfer Center", to: "/transfers", sub: "Rumors with probability", keywords: "transfers rumors market fees" },
   { label: "AI Predictions", to: "/predictions", sub: "Match outcome probabilities", keywords: "predictions odds probability betting" },

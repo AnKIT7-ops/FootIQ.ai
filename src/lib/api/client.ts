@@ -78,7 +78,7 @@ export async function apiFetch<T>(
     if (res.status >= 500) throw new ApiUnavailableError(body.error.message);
     throw new ApiRequestError(body.error.code, body.error.message, res.status, body.error.details);
   }
-  noteMeta(body.meta);
+  noteMeta(body.meta, path);
   return body.data;
 }
 

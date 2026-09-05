@@ -14,7 +14,7 @@
  */
 import { players } from "@/lib/repositories/players";
 import { teams } from "@/lib/repositories/teams";
-import { matches } from "@/lib/repositories/matches";
+import { resolutionPool } from "@/lib/repositories/matches";
 import { news } from "@/lib/repositories/news";
 import { historicalMoments } from "@/lib/repositories/history";
 import type { HistoricalMoment, Match, NewsArticle, Player, Team } from "@/data/types";
@@ -59,9 +59,15 @@ export function resolveManager(param: string | undefined): Team | null {
   return teams.find((t) => managerSlug(t) === param) ?? null;
 }
 
+/**
+ * Synced fixtures first, then the bundled demo set — demo-tier domains
+ * (predictions, fantasy) still link to demo fixture ids/slugs, and those stopped
+ * resolving when the matches repository dropped its demo seed.
+ */
 export function resolveMatch(param: string | undefined): Match | null {
   if (!param) return null;
-  return matches.find((m) => matchSlug(m) === param) ?? matches.find((m) => m.id === param) ?? null;
+  const pool = resolutionPool();
+  return pool.find((m) => matchSlug(m) === param) ?? pool.find((m) => m.id === param) ?? null;
 }
 
 export function resolveNews(param: string | undefined): NewsArticle | null {

@@ -13,15 +13,20 @@ import { MomentumRiver } from "@/components/charts/MomentumRiver";
 import { CompareBars } from "@/components/charts/CompareBars";
 import { Formation } from "@/components/charts/Formation";
 import { Heatmap } from "@/components/charts/Heatmap";
-import { matchDetail } from "@/lib/repositories/matches";
+import { matchDetail, useMatchesState } from "@/lib/repositories/matches";
 import { getTeam } from "@/lib/repositories/teams";
 import { heatmapFor } from "@/data/generators";
 import { cn } from "@/lib/utils";
 import { sportsEventJsonLd, usePageMeta } from "@/lib/seo";
 import { matchPath, predictionPath, resolveMatch } from "@/lib/slugs";
 import { ShareBar } from "@/components/ui/ShareBar";
-import type { MatchEvent } from "@/data/types";
+import type { MatchDetail, MatchEvent } from "@/data/types";
 import { recordView } from "@/lib/recent";
+import { kickoffLabel } from "@/lib/kickoff";
+import { DemoDataNotice } from "@/components/ui/DemoDataNotice";
+import { predictionByMatch } from "@/lib/repositories/predictions";
+import { DemoEngineChip } from "@/components/ui/DemoEngineChip";
+import { DataState } from "@/components/ui/DataState";
 
 const eventIcon = (e: MatchEvent) => {
   switch (e.type) {
@@ -42,19 +47,55 @@ const eventIcon = (e: MatchEvent) => {
   }
 };
 
+/**
+ * Resolves the URL to a fixture, or renders "not found".
+ *
+ * An unresolvable id yields null, NOT the demo fixture. This used to fall back
+ * to `matchDetail("ars-liv")` on any miss, so a stale link, a typo, or a
+ * fixture that aged out of the sync window all rendered the hardcoded Arsenal
+ * 2-1 Liverpool demo match — permanently live at 67' — as though it were that
+ * URL's real match. The body is a separate component so its hooks stay
+ * unconditional.
+ */
 export default function MatchCenter() {
   const { id } = useParams();
+  const { data, status } = useMatchesState();
   const detail = useMemo(() => {
+    const resolved = resolveMatch(id)?.id ?? id;
+    if (!resolved) return null;
     try {
-      return matchDetail(resolveMatch(id)?.id ?? id ?? "ars-liv");
+      return matchDetail(resolved);
     } catch {
-      return matchDetail("ars-liv");
+      return null;
     }
-  }, [id]);
+    // `data` is not read here, but re-resolving after fixtures hydrate is the
+    // point: on a cold load the id isn't known yet.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, data]);
+
+  if (!detail) {
+    return (
+      <div className="py-10">
+        <DataState
+          status={status}
+          empty
+          emptyTitle="Match not found"
+          emptyBody="We don't have this fixture. It may have aged out of the window we sync, or the link may be stale."
+        />
+      </div>
+    );
+  }
+  return <MatchBody detail={detail} />;
+}
+
+function MatchBody({ detail }: { detail: MatchDetail }) {
   const [tab, setTab] = useState("overview");
   const home = getTeam(detail.homeId);
   const away = getTeam(detail.awayId);
   const live = detail.status === "live";
+  // Has a ball been kicked? Gates every section that describes actual play.
+  const played = detail.status === "live" || detail.status === "finished";
+  const prediction = predictionByMatch.get(detail.id);
   useEffect(() => {
     recordView({ kind: "match", id: detail.id, label: `${home.short} vs ${away.short}`, sub: "Match center", path: `/matches/${detail.id}` });
   }, [detail.id, home.short, away.short]);
@@ -65,7 +106,7 @@ export default function MatchCenter() {
         : `${home.short} vs ${away.short}`,
     description: `${home.name} vs ${away.name} — live momentum, xG, lineups, AI commentary and win probability in the FootIQ Match Center.`,
     path: matchPath(detail),
-    jsonLd: sportsEventJsonLd({ home: home.name, away: away.name, kickoff: detail.kickoff, venue: detail.venue, path: matchPath(detail) }),
+    jsonLd: sportsEventJsonLd({ home: home.name, away: away.name, kickoffIso: detail.kickoffIso, venue: detail.venue, path: matchPath(detail) }),
     breadcrumbs: [
       { name: "Matches", path: "/matches" },
       { name: `${home.short} vs ${away.short}`, path: matchPath(detail) },
@@ -92,7 +133,7 @@ export default function MatchCenter() {
           {detail.competition}
         </h1>
         <div className="flex flex-wrap items-center gap-2">
-          {live ? <Badge variant="live">Live · {detail.minute}'</Badge> : <Badge>{detail.status === "finished" ? "Full-time" : detail.kickoff}</Badge>}
+          {live ? <Badge variant="live">Live · {detail.minute}'</Badge> : <Badge>{detail.status === "finished" ? "Full-time" : kickoffLabel(detail.kickoffIso)}</Badge>}
           <span className="font-mono text-label uppercase tracking-wider text-ink-3">
             {detail.competition} · {detail.venue}
           </span>
@@ -120,7 +161,7 @@ export default function MatchCenter() {
             title={`${home.short} vs ${away.short}`}
             path={matchPath(detail)}
             kind={detail.competition}
-            stat={detail.homeScore != null && detail.awayScore != null ? `${detail.homeScore}–${detail.awayScore}` : `xG ${detail.home.xG.toFixed(2)} vs ${detail.away.xG.toFixed(2)}`}
+            stat={detail.homeScore != null && detail.awayScore != null ? `${detail.homeScore}–${detail.awayScore}` : kickoffLabel(detail.kickoffIso)}
           />
           <Link
             to={predictionPath(detail)}
@@ -131,20 +172,44 @@ export default function MatchCenter() {
         </div>
       </motion.div>
 
-      <Tabs
-        id="match"
-        className="w-full justify-start"
-        tabs={[
-          { value: "overview", label: "Overview" },
-          { value: "stats", label: "Stats" },
-          { value: "lineups", label: "Lineups" },
-          { value: "iq", label: "FootIQ" },
-        ]}
-        active={tab}
-        onChange={setTab}
-      />
+      {/* Momentum, stats, lineups and the event feed all describe play that
+          happened. Before kickoff there is none, so those tabs are withheld
+          rather than filled with a plausible-looking invention about a real
+          fixture. FootIQ (preview inference) stays — it is amber-marked. */}
+      {!played ? (
+        <div className="rounded-xl border border-line bg-surface-2 px-4 py-3.5">
+          <p className="text-caption leading-relaxed text-ink-3">
+            <span className="font-semibold text-ink-2">
+              {detail.status === "postponed" ? "This match was postponed." : detail.status === "cancelled" ? "This match was cancelled." : "This match hasn't kicked off yet."}
+            </span>{" "}
+            {detail.status === "upcoming"
+              ? "Momentum, stats, lineups and the event feed appear once it's under way."
+              : "No stats or lineups exist for it."}
+          </p>
+        </div>
+      ) : (
+        <Tabs
+          id="match"
+          className="w-full justify-start"
+          tabs={[
+            { value: "overview", label: "Overview" },
+            { value: "stats", label: "Stats" },
+            { value: "lineups", label: "Lineups" },
+            { value: "iq", label: "FootIQ" },
+          ]}
+          active={tab}
+          onChange={setTab}
+        />
+      )}
 
-      {tab === "overview" && (
+      {played && (
+        <DemoDataNotice
+          domain="match analysis"
+          detail="The scoreline, kickoff, competition and venue are provider-synced facts. Momentum, xG, possession, player ratings, heatmaps and the event feed are derived sample data — no match-statistics provider is connected."
+        />
+      )}
+
+      {played && tab === "overview" && (
         <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
           <div className="space-y-6">
             <Card className="p-4 md:p-5">
@@ -198,7 +263,7 @@ export default function MatchCenter() {
         </div>
       )}
 
-      {tab === "stats" && (
+      {played && tab === "stats" && (
         <div className="grid gap-6 lg:grid-cols-2">
           <Card className="p-4 md:p-5">
             <SectionHeader title="All Stats" className="mb-4" />
@@ -229,7 +294,7 @@ export default function MatchCenter() {
         </div>
       )}
 
-      {tab === "lineups" && (
+      {played && tab === "lineups" && (
         <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
           <Card className="p-4 md:p-5">
             <div className="mb-3 flex items-center justify-between">
@@ -285,12 +350,12 @@ export default function MatchCenter() {
         </div>
       )}
 
-      {tab === "iq" && (
+      {(!played || tab === "iq") && (
         <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
           <div className="space-y-4">
             <IQInsight title="Tactical read" feedback="Match tactical read">{detail.tacticalNote}</IQInsight>
             <Card className="p-4 md:p-5">
-              <SectionHeader eyebrow="Live model feed" title="AI Commentary" className="mb-3" />
+              <SectionHeader eyebrow={played ? "Live model feed" : "Pre-match read"} title="AI Commentary" className="mb-3" />
               <ol className="space-y-4">
                 {[...detail.aiCommentary].reverse().map((c, i) => (
                   <li key={i} className="flex gap-3">
@@ -299,7 +364,7 @@ export default function MatchCenter() {
                     </span>
                     <div>
                       <p className="font-mono text-micro uppercase tracking-wider text-ink-3">
-                        {c.minute}' · {c.kind}
+                        {c.minute > 0 ? `${c.minute}' · ` : ""}{c.kind}
                       </p>
                       <p className="mt-1 text-ui leading-relaxed text-ink-2">{c.text}</p>
                     </div>
@@ -309,14 +374,40 @@ export default function MatchCenter() {
             </Card>
           </div>
           <div className="space-y-4">
-            <Card className="p-4 md:p-5">
-              <SectionHeader eyebrow="Model estimate" title="Win Probability" className="mb-4" />
-              <WinProb home={home.short} away={away.short} detail={{ h: live ? 64 : 45, d: live ? 22 : 26, a: live ? 14 : 29 }} />
-            </Card>
-            <IQInsight compact title="What decides it">
-              Set pieces: {home.short} lead the league in corner conversion while {away.short} rank bottom-six defending them. Expect the
-              next dead ball inside 25m to swing win probability by up to 9%.
-            </IQInsight>
+            {/*
+              Win probability renders ONLY when a prediction actually exists for
+              this match. It used to pass `{ h: live ? 64 : 45, d: ..., a: ... }`
+              — two hardcoded triplets shown for every fixture in the app under
+              the label "Model estimate", captioned "updates every event". No
+              model produced them and they never updated. Same class of
+              fabrication as the confidence numbers deleted in chunk 1, so the
+              same treatment: delete the literals rather than dress them up.
+            */}
+            {prediction ? (
+              <Card className="p-4 md:p-5">
+                <SectionHeader eyebrow="Model estimate" title="Win Probability" className="mb-4" />
+                <WinProb home={home.short} away={away.short} detail={{ h: prediction.homeWin, d: prediction.draw, a: prediction.awayWin }} />
+                <div className="mt-3 border-t border-line pt-2.5">
+                  <DemoEngineChip />
+                </div>
+              </Card>
+            ) : (
+              <Card className="p-4 md:p-5">
+                <SectionHeader eyebrow="Model estimate" title="Win Probability" className="mb-3" />
+                <p className="text-caption leading-relaxed text-ink-3">
+                  No win probability for this fixture. FootIQ has no prediction model connected, so rather than show a
+                  number nothing produced, it shows nothing.
+                </p>
+              </Card>
+            )}
+            {/*
+              Removed: a "What decides it" card reading "{home} lead the league
+              in corner conversion while {away} rank bottom-six defending them."
+              Hardcoded for every fixture, so it asserted a specific, checkable,
+              false league statistic about whichever two real clubs were on
+              screen. Amber marks inference — it does not license inventing a
+              measured fact. Restore only from real set-piece data.
+            */}
           </div>
         </div>
       )}
@@ -355,9 +446,10 @@ function WinProb({ home, away, detail }: { home: string; away: string; detail: {
       {rows.map((r) => (
         <Meter key={r.label} label={r.label} value={r.v} color={r.color} />
       ))}
+      {/* "Updates every event" was never true — nothing recomputes these. */}
       <p className="pt-1 font-mono text-micro uppercase tracking-wider text-ink-3">
         <ArrowLeftRight className="mr-1 inline size-3" aria-hidden />
-        Updates every event · probabilities, not promises
+        Probabilities, not promises
       </p>
     </div>
   );

@@ -25,14 +25,42 @@ export function catalogRoutes(catalog: CatalogService) {
     ok(c, catalog.similarPlayers(c.req.valid("param").id), demoMeta),
   );
 
+  // Cache-Control by volatility, matching the sync cadence behind each domain:
+  // club identity is re-fetched daily, tables every 30 minutes, live scores
+  // every 30 seconds (see /matches). A longer max-age than the sync interval
+  // would serve data the sync has already superseded.
   r.get("/teams", async (c) => {
     const { data, source } = await catalog.teams();
+    c.header("Cache-Control", "public, max-age=86400");
     return ok(c, data, { source });
   });
-  r.get("/teams/table", async (c) => {
-    const { data, source } = await catalog.leagueTable();
+  /**
+   * Competitions and their current-season state (season dates, matchday).
+   * Cached hard: this changes at most once a day.
+   */
+  r.get("/competitions", async (c) => {
+    const { data, source, syncedAt } = await catalog.competitions();
+    c.header("Cache-Control", "public, max-age=86400");
+    return ok(c, data, { source, syncedAt });
+  });
+
+  /** Competition NAMES present in the team snapshot — the table's league picker reads this. */
+  r.get("/teams/competitions", async (c) => {
+    const { data, source } = await catalog.competitionNames();
+    c.header("Cache-Control", "public, max-age=900");
     return ok(c, data, { source });
   });
+  // Every row carries its own `league`, so the resolved competition needs no
+  // separate envelope field — read it off data[0].league.
+  r.get(
+    "/teams/table",
+    validate("query", z.object({ competition: z.string().min(1).max(80).optional() })),
+    async (c) => {
+      const { data, source } = await catalog.leagueTable(c.req.valid("query").competition);
+      c.header("Cache-Control", "public, max-age=900");
+      return ok(c, data, { source });
+    },
+  );
   r.get("/teams/:id", validate("param", idParam), async (c) => {
     const { data, source } = await catalog.team(c.req.valid("param").id);
     return ok(c, data, { source });
@@ -41,12 +69,19 @@ export function catalogRoutes(catalog: CatalogService) {
     ok(c, await catalog.teamPlayers(c.req.valid("param").id), demoMeta),
   );
 
+  /**
+   * Fixtures. Cache-Control is split by content: a live match's minute and
+   * score go stale in seconds, everything else changes only when a sync runs.
+   * `syncedAt` lets a client tell "no matches today" from "nothing synced".
+   */
   r.get("/matches", async (c) => {
-    const { data, source } = await catalog.matches();
-    return ok(c, data, { source });
+    const { data, source, syncedAt } = await catalog.matches();
+    c.header("Cache-Control", data.live.length > 0 ? "public, max-age=30" : "public, max-age=300");
+    return ok(c, data, { source, syncedAt });
   });
   r.get("/matches/:id", validate("param", idParam), async (c) => {
     const { data, source } = await catalog.match(c.req.valid("param").id);
+    c.header("Cache-Control", data.status === "live" ? "public, max-age=30" : "public, max-age=300");
     return ok(c, data, { source });
   });
 

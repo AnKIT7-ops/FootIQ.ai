@@ -17,6 +17,7 @@ import { usePageMeta } from "@/lib/seo";
 import { bump } from "@/lib/metrics";
 import { track } from "@/lib/analytics";
 import type { Player } from "@/data/types";
+import { DemoDataNotice } from "@/components/ui/DemoDataNotice";
 
 interface ParsedQuery {
   maxPrice?: number;
@@ -146,6 +147,7 @@ export default function Scout() {
   return (
     <div className="space-y-6">
       <SectionHeader level={1} eyebrow="Describe them. We'll find them." title="AI Scout" />
+      <DemoDataNotice domain="player" detail="Player profiles, ratings and per-90 statistics on FootIQ are illustrative sample data. No player-statistics provider is connected — football-data.org's free tier covers fixtures and tables only." />
 
       <Card className="floodlight p-5 md:p-7">
         <form

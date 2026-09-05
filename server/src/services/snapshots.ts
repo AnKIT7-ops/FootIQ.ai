@@ -14,7 +14,17 @@ import type { Logger } from "../lib/logger";
  * per-entity queries (not whole-collection reads) become the access pattern.
  */
 
-export type SnapshotKind = "teams" | "matches";
+/**
+ * `team_identity` holds the provider's raw club metadata (crest, venue,
+ * founded, colours) separately from `teams` (the merged catalog).
+ *
+ * They are separate because the standings sync REBUILDS `teams` from scratch
+ * every 30 minutes, while identity is only re-fetched every 24h. Storing them
+ * together meant each standings pass wiped the enrichment until the next daily
+ * fetch — clubs would lose their crests for 23 hours out of 24. Keeping the raw
+ * identity lets every standings pass re-apply it from cache, no network.
+ */
+export type SnapshotKind = "teams" | "matches" | "competitions" | "team_identity";
 
 export interface Snapshot<T = unknown> {
   kind: SnapshotKind;

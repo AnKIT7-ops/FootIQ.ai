@@ -10,6 +10,7 @@ import type { KVNamespaceLike } from "./cache/kv";
 import { createServiceClient } from "./db/supabase";
 import { AiService, createAiProvider } from "./ai/service";
 import { createDataProvider } from "./providers";
+import { ProviderTraceStore } from "./providers/trace";
 import { SnapshotStore } from "./services/snapshots";
 import { JobRegistry } from "./jobs/registry";
 import { registerJobs } from "./jobs";
@@ -54,7 +55,8 @@ export function createServer(env: Env, opts?: { kv?: KVNamespaceLike; services?:
   const cache = opts?.services?.cache ?? createCache(env, opts?.kv);
   const db = opts?.services?.db !== undefined ? opts.services.db : createServiceClient(env);
   const email = opts?.services?.email ?? new ConsoleEmailProvider(logger);
-  const dataProvider = opts?.services?.dataProvider ?? createDataProvider(env, logger);
+  const traces = new ProviderTraceStore(cache, env.PROVIDER_TRACE, logger);
+  const dataProvider = opts?.services?.dataProvider ?? createDataProvider(env, logger, traces);
   const snapshots = opts?.services?.snapshots ?? new SnapshotStore(cache, db, logger);
   const ai = opts?.services?.ai ?? new AiService(createAiProvider(env, logger), cache, logger);
   const jobs = opts?.services?.jobs ?? new JobRegistry(cache, db, logger);
@@ -74,6 +76,7 @@ export function createServer(env: Env, opts?: { kv?: KVNamespaceLike; services?:
       opts?.services?.storage ?? (db ? new SupabaseStorageProvider(db) : new NoopStorageProvider()),
     errors: opts?.services?.errors ?? createErrorReporter(env, logger),
     dataProvider,
+    traces,
     snapshots,
     jobs,
   };

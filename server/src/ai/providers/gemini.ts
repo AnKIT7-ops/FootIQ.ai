@@ -30,8 +30,13 @@ export class GeminiProvider implements AiProvider {
         }),
         signal: AbortSignal.timeout(60_000),
       });
-    } catch {
-      throw new AiProviderError(this.name, "Connection failed.", true);
+    } catch (err) {
+      // Server-log only (app.ts's error handler never forwards `internal` to
+      // the client) — without the cause, "Connection failed." is the same
+      // message whether the key is wrong, the model id is wrong, or the
+      // network genuinely stalled, and those need different fixes.
+      const cause = err instanceof Error ? err.message : String(err);
+      throw new AiProviderError(this.name, `Connection failed: ${cause}`, true);
     }
     if (!res.ok) {
       throw new AiProviderError(this.name, `API error ${res.status}.`, res.status === 429 || res.status >= 500);

@@ -1,4 +1,4 @@
-import { useFreshness } from "@/lib/freshness";
+import { relativeTime, useFreshness } from "@/lib/freshness";
 import { backendConfigured } from "@/lib/config";
 import { cn } from "@/lib/utils";
 
@@ -8,11 +8,15 @@ import { cn } from "@/lib/utils";
  * freshness signal (no requests of its own).
  */
 export function DataFreshness({ className }: { className?: string }) {
-  const { source } = useFreshness();
+  const { source, syncedAt } = useFreshness();
   const resolved = source === "unknown" && !backendConfigured ? "demo" : source;
   if (resolved === "unknown") return null; // backend configured but no response yet — say nothing rather than guess
 
   const live = resolved === "provider";
+  // Age of the SYNC, not of the page load — the only version of this that can
+  // reveal a stalled sync. Needs no extra request: it rides on response meta.
+  const age = live ? relativeTime(syncedAt) : null;
+
   return (
     <span
       className={cn(
@@ -22,12 +26,13 @@ export function DataFreshness({ className }: { className?: string }) {
       )}
       title={
         live
-          ? "League standings and fixtures are synced from football-data.org"
+          ? `League standings and fixtures are synced from football-data.org${syncedAt ? ` — last sync ${new Date(syncedAt).toLocaleString()}` : ""}`
           : "You're browsing the curated demo dataset — every feature works end-to-end"
       }
     >
       <span className={cn("size-1.5 rounded-full", live ? "bg-accent" : "bg-ink-3")} aria-hidden />
       {live ? "Live data" : "Demo data"}
+      {age && <span className="text-ink-3 normal-case">· {age}</span>}
     </span>
   );
 }

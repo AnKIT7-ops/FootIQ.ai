@@ -6,12 +6,13 @@ import { Badge, FormPills, Reliability } from "@/components/ui/Badge";
 import { Crest } from "@/components/ui/Crest";
 import { Avatar } from "@/components/ui/Avatar";
 import { MatchCard } from "@/components/ui/MatchCard";
+import { DataState } from "@/components/ui/DataState";
 import { IQInsight } from "@/components/ui/IQInsight";
 import { WaitlistForm } from "@/components/ui/Waitlist";
 import { PersonalRows } from "@/components/ui/PersonalRows";
 import { MomentumRiver } from "@/components/charts/MomentumRiver";
 import { Sparkline } from "@/components/charts/Sparkline";
-import { liveMatches, upcomingMatches, matchDetail } from "@/lib/repositories/matches";
+import { matchDetail, useMatchesState } from "@/lib/repositories/matches";
 import { news, breakingNews } from "@/lib/repositories/news";
 import { trendingTransfers } from "@/lib/repositories/transfers";
 import { clips } from "@/lib/repositories/clips";
@@ -19,6 +20,7 @@ import { getTeam, leagueTable } from "@/lib/repositories/teams";
 import { getPlayer } from "@/lib/repositories/players";
 import { agoFromMinutes, cn, money } from "@/lib/utils";
 import { useLiveMinute } from "@/lib/hooks";
+import { kickoffLabel, kickoffTime } from "@/lib/kickoff";
 import { usePageMeta } from "@/lib/seo";
 import { legalEntries } from "@/lib/nav";
 
@@ -29,10 +31,23 @@ export default function Home() {
       "FootIQ is the AI intelligence layer for football — live match reads, outcome predictions, natural-language scouting and transfer probabilities, algorithmically generated and clearly marked apart from verified fact.",
     path: "/",
   });
-  const featured = matchDetail("ars-liv");
-  const home = getTeam(featured.homeId);
-  const away = getTeam(featured.awayId);
-  const minute = useLiveMinute(featured.minute ?? 67);
+  const { data: matchData, status: matchStatus } = useMatchesState();
+  /**
+   * The hero features whatever is actually most relevant: a live match if one
+   * is being played, otherwise the next scheduled fixture, otherwise nothing.
+   *
+   * This used to be `matchDetail("ars-liv")` — a hardcoded demo fixture, frozen
+   * at 2-1 with a ticking 67th minute. It rendered as the site's headline
+   * regardless of the real football calendar, which is the single most visible
+   * thing this chunk exists to kill.
+   */
+  const featuredMatch = matchData.live[0] ?? matchData.upcoming[0] ?? null;
+  const featured = featuredMatch ? matchDetail(featuredMatch.id) : null;
+  const featuredLive = featured?.status === "live";
+  const home = featured ? getTeam(featured.homeId) : null;
+  const away = featured ? getTeam(featured.awayId) : null;
+  // Unconditional: hooks cannot sit behind the `featured` null check.
+  const minute = useLiveMinute(featured?.minute ?? 0);
   const navigate = useNavigate();
 
   return (
@@ -98,60 +113,88 @@ export default function Home() {
       {/* personalization — invisible until the user follows/browses something */}
       <PersonalRows />
 
-      {/* hero: featured live match */}
-      <section aria-label="Featured live match">
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="floodlight card relative overflow-hidden p-5 md:p-8"
-        >
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="live">Live · {minute}'</Badge>
-            <span className="font-mono text-label uppercase tracking-wider text-ink-3">{featured.competition} · {featured.venue}</span>
-            <span className="ml-auto hidden font-mono text-label text-ink-3 md:block">{featured.headline}</span>
-          </div>
-
-          <div className="mt-6 grid items-center gap-6 lg:grid-cols-[1fr_auto_1fr]">
-            <TeamSide team={home} align="right" />
-            <div className="order-first text-center lg:order-none">
-              <p className="display select-none text-6xl font-black leading-none text-ink md:text-7xl">
-                {featured.homeScore}
-                <span className="mx-3 text-ink-3">–</span>
-                {featured.awayScore}
-              </p>
-              <button
-                onClick={() => navigate("/match/ars-liv")}
-                className="group mt-4 inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-ui font-semibold text-[#04110c] transition-transform hover:scale-[1.03] active:scale-95"
-              >
-                <Radio className="size-4" aria-hidden />
-                Open Match Center
-                <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
-              </button>
+      {/* hero: the most relevant real match — live now, or up next */}
+      {featured && home && away && (
+        <section aria-label={featuredLive ? "Featured live match" : "Next fixture"}>
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="floodlight card relative overflow-hidden p-5 md:p-8"
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              {featuredLive ? <Badge variant="live">Live · {minute}'</Badge> : <Badge>{kickoffLabel(featured.kickoffIso)}</Badge>}
+              <span className="font-mono text-label uppercase tracking-wider text-ink-3">{featured.competition} · {featured.venue}</span>
+              {featured.headline && <span className="ml-auto hidden font-mono text-label text-ink-3 md:block">{featured.headline}</span>}
             </div>
-            <TeamSide team={away} align="left" />
-          </div>
 
-          <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-            <div>
-              <p className="eyebrow mb-2">Momentum</p>
-              <MomentumRiver data={featured.momentum} homeLabel={home.short} awayLabel={away.short} height={120} />
+            <div className="mt-6 grid items-center gap-6 lg:grid-cols-[1fr_auto_1fr]">
+              <TeamSide team={home} align="right" />
+              <div className="order-first text-center lg:order-none">
+                {featuredLive ? (
+                  <p className="display select-none text-6xl font-black leading-none text-ink md:text-7xl">
+                    {featured.homeScore}
+                    <span className="mx-3 text-ink-3">–</span>
+                    {featured.awayScore}
+                  </p>
+                ) : (
+                  // No score exists before kickoff. Show the time it starts.
+                  <p className="display select-none text-4xl font-black leading-none text-ink md:text-5xl">
+                    {kickoffTime(featured.kickoffIso)}
+                  </p>
+                )}
+                <button
+                  onClick={() => navigate(`/match/${featured.id}`)}
+                  className="group mt-4 inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-ui font-semibold text-[#04110c] transition-transform hover:scale-[1.03] active:scale-95"
+                >
+                  <Radio className="size-4" aria-hidden />
+                  Open Match Center
+                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                </button>
+              </div>
+              <TeamSide team={away} align="left" />
             </div>
-            <IQInsight compact title="Live IQ read">
-              {featured.aiCommentary[featured.aiCommentary.length - 1].text}
-            </IQInsight>
-          </div>
-        </motion.div>
-      </section>
+
+            <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+              {/* Momentum is a read of play that has happened. An unplayed
+                  fixture has none, so the chart is omitted rather than
+                  generated from nothing. */}
+              {featuredLive && (
+                <div>
+                  <p className="eyebrow mb-2">Momentum</p>
+                  <MomentumRiver data={featured.momentum} homeLabel={home.short} awayLabel={away.short} height={120} />
+                </div>
+              )}
+              {featured.aiCommentary.length > 0 && (
+                <IQInsight compact title={featuredLive ? "Live IQ read" : "Fixture preview"}>
+                  {featured.aiCommentary[featured.aiCommentary.length - 1].text}
+                </IQInsight>
+              )}
+            </div>
+          </motion.div>
+        </section>
+      )}
 
       {/* live now */}
       <section aria-label="Live matches">
         <SectionHeader title="Live Matches" action={<SeeAll to="/matches" />} />
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {liveMatches.map((m) => (
-            <MatchCard key={m.id} match={m} />
-          ))}
-        </div>
+        {matchData.live.length > 0 && (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {matchData.live.map((m) => (
+              <MatchCard key={m.id} match={m} />
+            ))}
+          </div>
+        )}
+        <DataState
+          status={matchStatus}
+          empty={matchData.live.length === 0}
+          emptyTitle="No live matches"
+          emptyBody={
+            matchStatus === "ready" && matchData.upcoming.length > 0
+              ? "Nothing is being played right now. The next scheduled fixtures are below."
+              : "Nothing is being played right now."
+          }
+        />
       </section>
 
       <div className="grid gap-10 xl:grid-cols-[1.9fr_1fr] xl:gap-8">
@@ -292,12 +335,20 @@ export default function Home() {
           </section>
 
           <section aria-label="Upcoming fixtures">
-            <SectionHeader title="Fixtures" action={<SeeAll to="/predictions" />} />
-            <div className="space-y-2.5">
-              {upcomingMatches.slice(0, 4).map((m) => (
-                <MatchCard key={m.id} match={m} dense />
-              ))}
-            </div>
+            <SectionHeader title="Fixtures" action={<SeeAll to="/schedule" />} />
+            {matchData.upcoming.length > 0 && (
+              <div className="space-y-2.5">
+                {matchData.upcoming.slice(0, 4).map((m) => (
+                  <MatchCard key={m.id} match={m} dense />
+                ))}
+              </div>
+            )}
+            <DataState
+              status={matchStatus}
+              empty={matchData.upcoming.length === 0}
+              emptyTitle="No upcoming fixtures"
+              emptyBody="Nothing scheduled in the window we sync for the competitions we follow."
+            />
           </section>
 
           <section aria-label="Fan sentiment">

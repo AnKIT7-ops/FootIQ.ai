@@ -82,6 +82,13 @@ export interface TacticalStyle {
 
 export interface Team {
   id: string;
+  /**
+   * Provider's id for this club when it came from (or was matched to) a sync.
+   * Fixtures resolve to teams through this, not through names — a club's name
+   * differs between our dataset and the provider's ("Bayern Munich" vs "FC
+   * Bayern München"), and matching on names silently dropped those fixtures.
+   */
+  extId?: string;
   name: string;
   short: string;
   tla: string;
@@ -89,6 +96,13 @@ export interface Team {
   stadium: string;
   manager: string;
   league: string;
+  /**
+   * Real club badge from the provider. Absent for demo-only clubs, where the
+   * Crest component falls back to its generated mark.
+   */
+  crestUrl?: string;
+  /** Year founded, when the provider supplies it. */
+  founded?: number;
   position: number;
   played: number;
   won: number;
@@ -105,7 +119,7 @@ export interface Team {
   trophies: { name: string; count: number }[];
 }
 
-export type MatchStatus = "live" | "upcoming" | "finished";
+export type MatchStatus = "live" | "upcoming" | "finished" | "postponed" | "cancelled";
 
 export interface MatchEvent {
   minute: number;
@@ -148,7 +162,12 @@ export interface Match {
   minute?: number;
   homeScore?: number;
   awayScore?: number;
-  kickoff: string;
+  /**
+   * ISO 8601 UTC kickoff — the only time representation that crosses the wire.
+   * Render it with the helpers in lib/kickoff.ts so it lands in the reader's
+   * timezone; never store or ship a pre-formatted string.
+   */
+  kickoffIso: string;
   venue: string;
   headline?: string;
 }

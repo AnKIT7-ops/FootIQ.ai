@@ -46,11 +46,34 @@ export const envSchema = z.object({
   // --- Football data provider (all optional: absent => demo catalog)
   DATA_PROVIDER: z.enum(["football-data", "api-football", "demo"]).default("demo"),
   FOOTBALL_DATA_API_KEY: z.string().optional(),
-  /** football-data.org competition code. */
-  FOOTBALL_DATA_COMPETITION: z.string().default("PL"),
+  /**
+   * Comma-separated football-data.org competition codes, synced in order.
+   * Free tier grants: PL, PD, BL1, SA, FL1, CL, ELC, DED, PPL, BSA, EC, WC.
+   * Europa League and Conference League are NOT on the free tier — adding
+   * their codes here yields 403s per competition (the sync skips and logs).
+   */
+  FOOTBALL_DATA_COMPETITIONS: z.string().default("PL,PD,BL1,SA,FL1,CL"),
+  /** Deprecated single-competition knob; folded into FOOTBALL_DATA_COMPETITIONS when set. */
+  FOOTBALL_DATA_COMPETITION: z.string().optional(),
+  /** Days of past results to ingest. */
+  FOOTBALL_DATA_WINDOW_PAST_DAYS: z.coerce.number().int().min(1).max(90).default(14),
+  /**
+   * Days of future fixtures to ingest. Wide by default on purpose: in the
+   * European off-season the next fixtures can be 5+ weeks out, and a narrow
+   * window makes a correctly-working sync look identical to a broken one.
+   */
+  FOOTBALL_DATA_WINDOW_FUTURE_DAYS: z.coerce.number().int().min(1).max(120).default(60),
   API_FOOTBALL_KEY: z.string().optional(),
   /** API-Football league id (39 = Premier League). */
   API_FOOTBALL_LEAGUE: z.coerce.number().int().default(39),
+  /**
+   * Keep raw provider payloads for diagnosis (see providers/trace.ts).
+   *   failures — every failed fetch/parse. The drift case. Zero steady cost.
+   *   all      — every fetch too, for diffing good against broken. Debug only:
+   *              ~900 writes/day vs Cloudflare KV's free 1,000/day cap.
+   *   off      — none.
+   */
+  PROVIDER_TRACE: z.enum(["off", "failures", "all"]).default("failures"),
   /** Node runtime: run sync jobs on an interval. Workers use the cron trigger instead. */
   SYNC_ENABLED: boolFromString,
   SYNC_INTERVAL_MINUTES: z.coerce.number().int().min(1).max(24 * 60).default(30),
@@ -92,4 +115,15 @@ export function loadEnv(source: Record<string, string | undefined>): Env {
 /** True when Supabase is fully configured (DB-backed mode). */
 export function hasDatabase(env: Env): boolean {
   return Boolean(env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY);
+}
+
+/**
+ * Competition codes to sync, de-duplicated, order preserved. The deprecated
+ * singular knob wins when set alone so an existing deployment keeps its exact
+ * behaviour across this upgrade instead of silently widening to six leagues
+ * (six competitions is six times the upstream quota — never an implicit opt-in).
+ */
+export function footballDataCompetitions(env: Env): string[] {
+  const raw = env.FOOTBALL_DATA_COMPETITION ?? env.FOOTBALL_DATA_COMPETITIONS;
+  return [...new Set(raw.split(",").map((c) => c.trim().toUpperCase()).filter(Boolean))];
 }

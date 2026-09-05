@@ -11,6 +11,7 @@ import { getPlayer } from "@/lib/repositories/players";
 import { getTeam } from "@/lib/repositories/teams";
 import { cn } from "@/lib/utils";
 import { usePageMeta } from "@/lib/seo";
+import { DemoDataNotice } from "@/components/ui/DemoDataNotice";
 
 const fdrColor = (v: number) =>
   v <= 2 ? "bg-accent-soft text-accent-ink" : v === 3 ? "bg-surface-3 text-ink-2" : "bg-bad/12 text-bad";
@@ -34,6 +35,10 @@ export default function Fantasy() {
             <AlarmClock className="size-3.5" aria-hidden /> Deadline {gameweek.deadline}
           </Badge>
         }
+      />
+      <DemoDataNotice
+        domain="fantasy"
+        detail="Gameweek, scores, picks and deadlines here are illustrative sample data. FootIQ is not connected to an FPL account or a fantasy data provider."
       />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

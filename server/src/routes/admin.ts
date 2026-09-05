@@ -144,6 +144,23 @@ export function adminRoutes() {
     return ok(c, { registered: jobs.names(), lastRuns: await jobs.lastRuns() });
   });
 
+  /**
+   * Raw provider payloads, for diagnosing schema drift without re-requesting
+   * an API that has already changed. Success and failure are kept per endpoint
+   * so the two can be diffed. `?raw=1` includes the bodies, which are large —
+   * the default lists metadata only.
+   */
+  r.get("/traces", validate("query", z.object({ raw: z.string().optional() })), async (c) => {
+    const { traces, env } = c.get("services");
+    const all = await traces.list();
+    const withRaw = c.req.valid("query").raw === "1";
+    return ok(c, {
+      mode: env.PROVIDER_TRACE,
+      count: all.length,
+      traces: all.map((t) => (withRaw ? t : { ...t, raw: undefined })),
+    });
+  });
+
   r.post(
     "/jobs/:name/run",
     validate("param", z.object({ name: z.string().min(1).max(60).regex(/^[a-z_]+$/) })),

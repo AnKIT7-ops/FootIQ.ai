@@ -1,5 +1,11 @@
 import * as demo from "../data/demo";
-import type { FootballDataProvider, NormalizedMatch, NormalizedTeamStanding } from "./types";
+import type {
+  FootballDataProvider,
+  NormalizedCompetition,
+  NormalizedMatch,
+  NormalizedTeam,
+  NormalizedTeamStanding,
+} from "./types";
 
 /**
  * Demo provider — the bundled dataset expressed through the provider
@@ -35,14 +41,38 @@ export class DemoProvider implements FootballDataProvider {
     }));
   }
 
+  async fetchTeams(): Promise<NormalizedTeam[]> {
+    return demo.teams.map((t) => ({
+      extId: `demo-${t.id}`,
+      name: t.name,
+      shortName: t.short,
+      tla: t.tla,
+      venue: t.stadium,
+      coach: t.manager,
+      competition: t.league,
+    }));
+  }
+
+  async fetchCompetitions(): Promise<NormalizedCompetition[]> {
+    return [...new Set(demo.teams.map((t) => t.league))].map((name) => ({
+      code: name.slice(0, 3).toUpperCase(),
+      extId: `demo-${name.toLowerCase().replace(/\W+/g, "-")}`,
+      name,
+      type: "LEAGUE",
+      currentSeason: undefined,
+    }));
+  }
+
   async fetchMatches(): Promise<NormalizedMatch[]> {
     return demo.matches.map((m) => ({
       extId: `demo-${m.id}`,
+      homeExtId: `demo-${m.homeId}`,
+      awayExtId: `demo-${m.awayId}`,
       homeName: demo.teamById.get(m.homeId)?.name ?? m.homeId,
       awayName: demo.teamById.get(m.awayId)?.name ?? m.awayId,
       competition: m.competition,
       status: m.status,
-      kickoffIso: m.kickoff,
+      kickoffIso: m.kickoffIso,
       minute: m.minute,
       homeScore: m.homeScore,
       awayScore: m.awayScore,

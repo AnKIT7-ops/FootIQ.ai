@@ -8,6 +8,7 @@ import { contentLibrary } from "@/lib/repositories/content";
 import { favoritesOf, useUserData } from "@/lib/user";
 import { matchPathFor, newsPathFor } from "@/lib/slug-builders";
 import { teams } from "@/lib/repositories/teams";
+import { kickoffLabel } from "@/lib/kickoff";
 
 /**
  * Notification feed — derived deterministically from what the user follows:
@@ -66,7 +67,7 @@ export function buildNotifications(prefs: { matchReminders: boolean; favoriteTea
         out.push({
           id: `match-${m.id}`,
           kind: "match",
-          title: `${home.short} vs ${away.short} — ${m.kickoff}`,
+          title: `${home.short} vs ${away.short} — ${kickoffLabel(m.kickoffIso)}`,
           body: `${m.competition} at ${m.venue}. Model preview is ready.`,
           path: matchPathFor(m, teams),
         });

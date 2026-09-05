@@ -1,28 +1,46 @@
-import type { Match, MatchDetail, MatchEvent, SideStats } from "./types";
+import type { Match, MatchDetail, MatchEvent, SideStats, Team } from "./types";
 import { getTeam } from "./teams";
 // relative on purpose: the data layer is imported by the API server too
 import { hashCode, seeded, clamp } from "../lib/utils";
 import { lineupFor, momentumFor } from "./generators";
 
+/**
+ * Demo fixture set — reachable ONLY through the server's DemoProvider
+ * (DATA_PROVIDER=demo), which serves it through the normal provider contract
+ * so it arrives tagged `source: "demo"`. The frontend no longer seeds itself
+ * from this list; `lib/repositories/matches.ts` starts empty on purpose.
+ *
+ * Kickoffs are ISO 8601, computed relative to load time so the demo dataset
+ * stays coherent (an "upcoming" match is genuinely in the future) instead of
+ * carrying frozen strings like "Sat 15:00" that no code could sort or compare.
+ */
+const at = (dayOffset: number, hhmm: string): string => {
+  const [h, m] = hhmm.split(":").map(Number);
+  const d = new Date();
+  d.setDate(d.getDate() + dayOffset);
+  d.setHours(h, m, 0, 0);
+  return d.toISOString();
+};
+
 export const matches: Match[] = [
   // live
-  { id: "ars-liv", homeId: "ars", awayId: "liv", competition: "Premier League", status: "live", minute: 67, homeScore: 2, awayScore: 1, kickoff: "Today 17:30", venue: "Emirates Stadium", headline: "Title six-pointer" },
-  { id: "bar-rma", homeId: "bar", awayId: "rma", competition: "La Liga", status: "live", minute: 54, homeScore: 1, awayScore: 1, kickoff: "Today 17:00", venue: "Spotify Camp Nou", headline: "El Clásico" },
-  { id: "bay-psg", homeId: "bay", awayId: "psg", competition: "Champions League QF", status: "live", minute: 31, homeScore: 0, awayScore: 1, kickoff: "Today 18:00", venue: "Allianz Arena", headline: "European heavyweight clash" },
+  { id: "ars-liv", homeId: "ars", awayId: "liv", competition: "Premier League", status: "live", minute: 67, homeScore: 2, awayScore: 1, kickoffIso: at(0, "17:30"), venue: "Emirates Stadium", headline: "Title six-pointer" },
+  { id: "bar-rma", homeId: "bar", awayId: "rma", competition: "La Liga", status: "live", minute: 54, homeScore: 1, awayScore: 1, kickoffIso: at(0, "17:00"), venue: "Spotify Camp Nou", headline: "El Clásico" },
+  { id: "bay-psg", homeId: "bay", awayId: "psg", competition: "Champions League QF", status: "live", minute: 31, homeScore: 0, awayScore: 1, kickoffIso: at(0, "18:00"), venue: "Allianz Arena", headline: "European heavyweight clash" },
   // upcoming
-  { id: "mci-che", homeId: "mci", awayId: "che", competition: "Premier League", status: "upcoming", kickoff: "Tomorrow 16:30", venue: "Etihad Stadium" },
-  { id: "tot-mun", homeId: "tot", awayId: "mun", competition: "Premier League", status: "upcoming", kickoff: "Tomorrow 14:00", venue: "Tottenham Hotspur Stadium" },
-  { id: "new-avl", homeId: "new", awayId: "avl", competition: "Premier League", status: "upcoming", kickoff: "Sat 15:00", venue: "St James' Park" },
-  { id: "liv-mci", homeId: "liv", awayId: "mci", competition: "Premier League", status: "upcoming", kickoff: "Sun 16:30", venue: "Anfield" },
-  { id: "rma-psg", homeId: "rma", awayId: "psg", competition: "Champions League QF", status: "upcoming", kickoff: "Wed 20:00", venue: "Santiago Bernabéu" },
-  { id: "che-ars", homeId: "che", awayId: "ars", competition: "Premier League", status: "upcoming", kickoff: "Sun 14:00", venue: "Stamford Bridge" },
+  { id: "mci-che", homeId: "mci", awayId: "che", competition: "Premier League", status: "upcoming", kickoffIso: at(1, "16:30"), venue: "Etihad Stadium" },
+  { id: "tot-mun", homeId: "tot", awayId: "mun", competition: "Premier League", status: "upcoming", kickoffIso: at(1, "14:00"), venue: "Tottenham Hotspur Stadium" },
+  { id: "new-avl", homeId: "new", awayId: "avl", competition: "Premier League", status: "upcoming", kickoffIso: at(3, "15:00"), venue: "St James' Park" },
+  { id: "liv-mci", homeId: "liv", awayId: "mci", competition: "Premier League", status: "upcoming", kickoffIso: at(4, "16:30"), venue: "Anfield" },
+  { id: "rma-psg", homeId: "rma", awayId: "psg", competition: "Champions League QF", status: "upcoming", kickoffIso: at(7, "20:00"), venue: "Santiago Bernabéu" },
+  { id: "che-ars", homeId: "che", awayId: "ars", competition: "Premier League", status: "upcoming", kickoffIso: at(11, "14:00"), venue: "Stamford Bridge" },
   // finished
-  { id: "ars-mun", homeId: "ars", awayId: "mun", competition: "Premier League", status: "finished", homeScore: 3, awayScore: 1, kickoff: "Last Sat", venue: "Emirates Stadium" },
-  { id: "mci-tot", homeId: "mci", awayId: "tot", competition: "Premier League", status: "finished", homeScore: 2, awayScore: 2, kickoff: "Last Sun", venue: "Etihad Stadium" },
-  { id: "liv-che", homeId: "liv", awayId: "che", competition: "Premier League", status: "finished", homeScore: 2, awayScore: 0, kickoff: "Last Sat", venue: "Anfield" },
-  { id: "psg-bar", homeId: "psg", awayId: "bar", competition: "Champions League QF (1st leg)", status: "finished", homeScore: 2, awayScore: 3, kickoff: "Last Wed", venue: "Parc des Princes" },
-  { id: "avl-tot", homeId: "avl", awayId: "tot", competition: "Premier League", status: "finished", homeScore: 1, awayScore: 0, kickoff: "Last Wed", venue: "Villa Park" },
-  { id: "new-mun", homeId: "new", awayId: "mun", competition: "Premier League", status: "finished", homeScore: 2, awayScore: 1, kickoff: "2 weeks ago", venue: "St James' Park" },
+  { id: "ars-mun", homeId: "ars", awayId: "mun", competition: "Premier League", status: "finished", homeScore: 3, awayScore: 1, kickoffIso: at(-6, "15:00"), venue: "Emirates Stadium" },
+  { id: "mci-tot", homeId: "mci", awayId: "tot", competition: "Premier League", status: "finished", homeScore: 2, awayScore: 2, kickoffIso: at(-5, "16:30"), venue: "Etihad Stadium" },
+  { id: "liv-che", homeId: "liv", awayId: "che", competition: "Premier League", status: "finished", homeScore: 2, awayScore: 0, kickoffIso: at(-6, "17:30"), venue: "Anfield" },
+  { id: "psg-bar", homeId: "psg", awayId: "bar", competition: "Champions League QF (1st leg)", status: "finished", homeScore: 2, awayScore: 3, kickoffIso: at(-9, "20:00"), venue: "Parc des Princes" },
+  { id: "avl-tot", homeId: "avl", awayId: "tot", competition: "Premier League", status: "finished", homeScore: 1, awayScore: 0, kickoffIso: at(-9, "19:45"), venue: "Villa Park" },
+  { id: "new-mun", homeId: "new", awayId: "mun", competition: "Premier League", status: "finished", homeScore: 2, awayScore: 1, kickoffIso: at(-14, "15:00"), venue: "St James' Park" },
 ];
 
 export const matchById = new Map(matches.map((m) => [m.id, m]));
@@ -66,6 +84,21 @@ const CHANCE_LINES = [
   "wins the duel and tests the keeper low",
 ];
 
+/** Zeroed stats for a fixture that has not kicked off — nothing has happened yet. */
+const EMPTY_SIDE_STATS: SideStats = {
+  possession: 0,
+  shots: 0,
+  shotsOnTarget: 0,
+  xG: 0,
+  bigChances: 0,
+  passes: 0,
+  passAccuracy: 0,
+  corners: 0,
+  fouls: 0,
+  tackles: 0,
+  saves: 0,
+};
+
 function buildStats(matchId: string, homeAtk: number, awayAtk: number, live: boolean, minute: number): { home: SideStats; away: SideStats } {
   const rnd = seeded(hashCode(matchId + "stats"));
   const scale = live ? minute / 90 : 1;
@@ -89,14 +122,14 @@ function buildStats(matchId: string, homeAtk: number, awayAtk: number, live: boo
   return { home: mk(homeAtk, posHome), away: mk(awayAtk, 100 - posHome) };
 }
 
-function proceduralEvents(m: Match): MatchEvent[] {
+function proceduralEvents(m: Match, resolveTeam: (id: string) => Team): MatchEvent[] {
   const rnd = seeded(hashCode(m.id + "events"));
   const minute = m.status === "live" ? (m.minute ?? 45) : 90;
   const events: MatchEvent[] = [{ minute: 1, type: "kickoff", detail: "Kick-off." }];
-  const homeName = getTeam(m.homeId).short;
-  const awayName = getTeam(m.awayId).short;
-  const homeLineup = lineupFor(m.homeId, m.id);
-  const awayLineup = lineupFor(m.awayId, m.id);
+  const homeName = resolveTeam(m.homeId).short;
+  const awayName = resolveTeam(m.awayId).short;
+  const homeLineup = lineupFor(m.homeId, m.id, resolveTeam(m.homeId));
+  const awayLineup = lineupFor(m.awayId, m.id, resolveTeam(m.awayId));
   const scorers = (lineup: typeof homeLineup) => lineup.players.filter((p) => p.pos !== "GK").slice(5);
 
   const addGoals = (n: number, teamId: string, lineup: typeof homeLineup) => {
@@ -145,31 +178,63 @@ export function matchDetail(id: string): MatchDetail {
  * Detail from a Match object directly — the path for synced (non-demo)
  * matches, whose ids aren't in the bundled dataset. Events/lineups/momentum
  * are deterministic derivations of the id, same as demo matches.
+ *
+ * `resolveTeam` MUST be supplied for provider-synced matches. It defaults to
+ * the bundled demo lookup, which throws on any club outside the 12-team demo
+ * set — so a real fixture (Atlético, id "fd-78") crashed the caller: a blank
+ * homepage in the browser and a 500 from /api/matches/:id. Callers that hold
+ * the real catalog pass their own resolver.
  */
-export function matchDetailFor(m: Match): MatchDetail {
-  const home = getTeam(m.homeId);
-  const away = getTeam(m.awayId);
+export function matchDetailFor(m: Match, resolveTeam: (id: string) => Team = getTeam): MatchDetail {
+  const home = resolveTeam(m.homeId);
+  const away = resolveTeam(m.awayId);
   const homeAtk = (home.gf / Math.max(1, home.played)) / 2.6;
   const awayAtk = (away.gf / Math.max(1, away.played)) / 2.6;
   const minute = m.status === "live" ? (m.minute ?? 45) : 90;
-  const { home: hs, away: as } = buildStats(m.id, homeAtk, awayAtk, m.status === "live", minute);
   const scoreEdge = (m.homeScore ?? 0) - (m.awayScore ?? 0);
+
+  /**
+   * Has a ball actually been kicked?
+   *
+   * Everything below this line — events, possession, xG, momentum, the XI that
+   * took the field — is a claim about play that HAPPENED. For a fixture that
+   * hasn't kicked off, all of it is fiction about a specific real match, which
+   * is worse than demo data: it is a demo-engine invention wearing a real
+   * fixture's name. A fixture five weeks out was returning six match events.
+   *
+   * So unplayed matches get nothing. The UI shows a fixture, not a match
+   * report. Previews (aiCommentary/tacticalNote) survive because they are
+   * explicitly framed as inference and render inside amber IQInsight blocks.
+   */
+  const played = m.status === "live" || m.status === "finished";
+
+  const { home: hs, away: as } = played
+    ? buildStats(m.id, homeAtk, awayAtk, m.status === "live", minute)
+    : { home: EMPTY_SIDE_STATS, away: EMPTY_SIDE_STATS };
 
   const detail: MatchDetail = {
     ...m,
-    events: m.id === "ars-liv" ? featuredEvents : proceduralEvents(m),
+    events: !played ? [] : m.id === "ars-liv" ? featuredEvents : proceduralEvents(m, resolveTeam),
     home: hs,
     away: as,
-    momentum: momentumFor(m.id, clamp(scoreEdge * 0.3 + (homeAtk - awayAtk), -0.8, 0.8)).slice(0, Math.max(4, Math.ceil(minute / 5))),
-    homeLineup: lineupFor(m.homeId, m.id),
-    awayLineup: lineupFor(m.awayId, m.id),
+    momentum: played
+      ? momentumFor(m.id, clamp(scoreEdge * 0.3 + (homeAtk - awayAtk), -0.8, 0.8)).slice(0, Math.max(4, Math.ceil(minute / 5)))
+      : [],
+    // A lineup is who started. Before kickoff nobody has.
+    homeLineup: played ? lineupFor(m.homeId, m.id, home) : { formation: home.style.formation, players: [] },
+    awayLineup: played ? lineupFor(m.awayId, m.id, away) : { formation: away.style.formation, players: [] },
     aiCommentary:
       m.id === "ars-liv"
         ? featuredCommentary
-        : [
-            { minute: Math.min(18, minute), kind: "tactical", text: `${home.short} are building in a ${home.style.formation} against the ${away.short} ${away.style.press.toLowerCase()}. Expect the game to live in the wide channels.` },
-            { minute: Math.min(34, minute), kind: "insight", text: `${away.short}'s ${away.styleTags[0].toLowerCase()} identity is producing the higher-quality entries so far — xG per shot ${(as.xG / Math.max(1, as.shots)).toFixed(2)} vs ${(hs.xG / Math.max(1, hs.shots)).toFixed(2)}.` },
-          ],
+        : played
+          ? [
+              { minute: Math.min(18, minute), kind: "tactical", text: `${home.short} are building in a ${home.style.formation} against the ${away.short} ${away.style.press.toLowerCase()}. Expect the game to live in the wide channels.` },
+              { minute: Math.min(34, minute), kind: "insight", text: `${away.short}'s ${away.styleTags[0].toLowerCase()} identity is producing the higher-quality entries so far — xG per shot ${(as.xG / Math.max(1, as.shots)).toFixed(2)} vs ${(hs.xG / Math.max(1, hs.shots)).toFixed(2)}.` },
+            ]
+          : [
+              // Framed as expectation, not observation — no scoreline, no xG.
+              { minute: 0, kind: "tactical", text: `${home.short} line up in a ${home.style.formation} against ${away.short}'s ${away.style.press.toLowerCase()}. The wide channels are where this one should be decided.` },
+            ],
     tacticalNote:
       m.id === "ars-liv"
         ? "Arsenal's left-side overloads against Liverpool's aggressive right-back are deciding this match. Both goals for the hosts originated as switches away from a 4v3 overload."

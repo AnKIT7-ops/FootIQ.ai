@@ -34,3 +34,8 @@ Thumbs.db
 # impeccable local cache (design config + sidecar are tracked)
 .impeccable/hook.cache.json
 .impeccable/live/sessions/
+
+# Ruflo — agent tooling, not product code
+.agents/
+.claude-flow/
+.swarm/

@@ -10,6 +10,7 @@ import { useVoiceInput } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 import { usePageMeta } from "@/lib/seo";
 import { momentPath } from "@/lib/slugs";
+import { DemoDataNotice } from "@/components/ui/DemoDataNotice";
 
 const kindMeta = {
   match: { icon: Swords, label: "Iconic match", color: "text-chart-2" },
@@ -33,6 +34,7 @@ export default function History() {
   return (
     <div className="space-y-6">
       <SectionHeader level={1} eyebrow="A century of football, searchable" title="Historical Explorer" />
+      <DemoDataNotice domain="historical" detail="These moments are illustrative sample data, not a sourced historical record." />
 
       <Card className="floodlight p-5 md:p-6">
         <div className="flex items-center gap-2.5">

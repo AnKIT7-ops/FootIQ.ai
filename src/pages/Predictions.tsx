@@ -7,12 +7,14 @@ import { Avatar } from "@/components/ui/Avatar";
 import { IQInsight } from "@/components/ui/IQInsight";
 import { Meter } from "@/components/ui/StatTile";
 import { predictions } from "@/lib/repositories/predictions";
-import { matchById } from "@/lib/repositories/matches";
+import { findMatch } from "@/lib/repositories/matches";
 import { getTeam } from "@/lib/repositories/teams";
 import { getPlayer } from "@/lib/repositories/players";
 import { cn } from "@/lib/utils";
 import { usePageMeta } from "@/lib/seo";
 import { predictionPath } from "@/lib/slugs";
+import { kickoffLabel, kickoffTime } from "@/lib/kickoff";
+import { DemoDataNotice } from "@/components/ui/DemoDataNotice";
 
 export default function Predictions() {
   usePageMeta({
@@ -20,21 +22,37 @@ export default function Predictions() {
     description: "Outcome probabilities, expected scorelines, most-likely scores and MVP candidates for every fixture — with the model's reasoning shown.",
     path: "/predictions",
   });
-  const [activeId, setActiveId] = useState(predictions[0].matchId);
-  const active = predictions.find((p) => p.matchId === activeId) ?? predictions[0];
-  const match = matchById.get(active.matchId)!;
+  // Only predictions whose fixture we can actually resolve are selectable —
+  // otherwise the page picks one it cannot render and throws on `match.homeId`.
+  const resolvable = predictions.filter((p) => findMatch(p.matchId));
+  const [activeId, setActiveId] = useState(resolvable[0]?.matchId ?? "");
+  const active = resolvable.find((p) => p.matchId === activeId) ?? resolvable[0];
+  const match = active ? findMatch(active.matchId) : undefined;
+  const navigate = useNavigate();
+  if (!active || !match) {
+    return (
+      <div>
+        <SectionHeader level={1} eyebrow="Probabilities, not promises" title="AI Predictions" />
+        <DemoDataNotice domain="prediction" detail="These probabilities are illustrative sample data produced by the demo engine, not a trained model’s output on real fixtures." />
+        <p className="mt-8 text-center text-sm text-ink-3">No predictions available for the current fixtures.</p>
+      </div>
+    );
+  }
   const home = getTeam(match.homeId);
   const away = getTeam(match.awayId);
-  const navigate = useNavigate();
 
   return (
     <div className="space-y-6">
       <SectionHeader level={1} eyebrow="Probabilities, not promises" title="AI Predictions" />
+      <DemoDataNotice domain="prediction" detail="These probabilities are illustrative sample data produced by the demo engine, not a trained model’s output on real fixtures." />
 
       {/* fixture picker strip */}
       <div className="no-scrollbar -mx-4 flex gap-2.5 overflow-x-auto px-4 pb-1 md:-mx-6 md:px-6">
-        {predictions.map((p) => {
-          const m = matchById.get(p.matchId)!;
+        {resolvable.map((p) => {
+          // `matchById.get(p.matchId)!` — the assertion was false once the
+          // matches repo stopped seeding demo fixtures, and threw on load.
+          const m = findMatch(p.matchId);
+          if (!m) return null;
           const h = getTeam(m.homeId);
           const a = getTeam(m.awayId);
           const selected = p.matchId === activeId;
@@ -51,7 +69,7 @@ export default function Predictions() {
               <Crest teamId={h.id} size={22} />
               <span className="font-mono text-label font-semibold text-ink">{h.tla} v {a.tla}</span>
               <Crest teamId={a.id} size={22} />
-              <span className="font-mono text-micro text-ink-3">{m.kickoff}</span>
+              <span className="font-mono text-micro text-ink-3">{kickoffLabel(m.kickoffIso)}</span>
             </button>
           );
         })}
@@ -103,7 +121,7 @@ export default function Predictions() {
               </div>
               <div>
                 <p className="eyebrow">Kickoff</p>
-                <p className="mt-1 font-display text-2xl font-bold text-ink">{match.kickoff.split(" ").slice(-1)[0]}</p>
+                <p className="mt-1 font-display text-2xl font-bold text-ink">{kickoffTime(match.kickoffIso)}</p>
                 <div className="flex flex-col items-start">
                   <button onClick={() => navigate(`/match/${match.id}`)} className="mt-0.5 font-mono text-micro uppercase tracking-wider text-accent-ink hover:underline">
                     Match page →

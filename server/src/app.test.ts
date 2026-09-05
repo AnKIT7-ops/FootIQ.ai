@@ -24,6 +24,31 @@ function makeApp(extraEnv: Record<string, string> = {}) {
   );
 }
 
+describe("catalog availability contract", () => {
+  /**
+   * With no snapshot written, the football domains must fail loudly.
+   *
+   * 200-with-empty is forbidden here: a caller cannot distinguish "the sync has
+   * never run" from "there genuinely are no matches today", and the second is a
+   * claim we can't back. Returning demo fixtures instead — the original
+   * behaviour — is worse still: it's indistinguishable from real data.
+   */
+  it("returns 503 'Data temporarily unavailable.' for matches before any sync", async () => {
+    const res = await makeApp().request("/api/matches");
+    expect(res.status).toBe(503);
+    const body = (await res.json()) as ApiFailure;
+    expect(body.ok).toBe(false);
+    expect(body.error.code).toBe("service_unavailable");
+    expect(body.error.message).toBe("Data temporarily unavailable.");
+  });
+
+  it("returns 503 for competitions before any sync", async () => {
+    const res = await makeApp().request("/api/competitions");
+    expect(res.status).toBe(503);
+    expect(((await res.json()) as ApiFailure).error.message).toBe("Data temporarily unavailable.");
+  });
+});
+
 async function tokenFor(sub: string, extras: Record<string, unknown> = {}): Promise<string> {
   return new SignJWT({ sub, email: "t@example.com", ...extras })
     .setProtectedHeader({ alg: "HS256" })

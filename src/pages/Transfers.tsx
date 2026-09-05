@@ -13,6 +13,7 @@ import { getPlayer } from "@/lib/repositories/players";
 import { getTeam } from "@/lib/repositories/teams";
 import { cn, money } from "@/lib/utils";
 import { usePageMeta } from "@/lib/seo";
+import { DemoDataNotice } from "@/components/ui/DemoDataNotice";
 
 export default function Transfers() {
   usePageMeta({
@@ -25,6 +26,10 @@ export default function Transfers() {
   return (
     <div className="space-y-6">
       <SectionHeader level={1} eyebrow="Every rumor, priced" title="Transfer Center" />
+      <DemoDataNotice
+        domain="transfer"
+        detail="Every rumour, fee, probability and timeline on this page is invented sample data. No transfer data provider is connected — football-data.org does not supply transfers — so nothing here reflects real interest, talks or fees."
+      />
 
       <div className="space-y-3">
         {trendingTransfers.map((r) => {
