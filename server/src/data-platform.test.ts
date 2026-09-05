@@ -6,6 +6,7 @@ import { MockProvider } from "./providers/demo";
 import { mergeMatches, mergeStandings } from "./jobs/normalize";
 import { JobRegistry } from "./jobs/registry";
 import { MemoryCache } from "./cache/memory";
+import { ProviderTraceStore } from "./providers/trace";
 import { TieredCache } from "./cache/tiered";
 import { createLogger } from "./lib/logger";
 import * as demo from "./data/demo";
@@ -64,6 +65,97 @@ describe("FootballDataOrgProvider", () => {
 
   it("is unavailable without a key", () => {
     expect(new FootballDataOrgProvider(undefined, ["PL"], WINDOW).available()).toBe(false);
+  });
+
+  describe("provider traces", () => {
+    const traceStore = (mode: "off" | "failures" | "all") =>
+      new ProviderTraceStore(new MemoryCache(), mode, silent);
+
+    it("keeps the raw payload of a DRIFTED response — the case raw-on-success can't cover", async () => {
+      // The whole point: validation runs before normalization, so a drifted
+      // payload produces no entity to hang `raw` off. The trace is filed
+      // against the FETCH, so the evidence survives.
+      const drifted = { standings: [{ nope: true }] };
+      const traces = traceStore("failures");
+      const p = new FootballDataOrgProvider(
+        "key", ["PL"], WINDOW,
+        vi.fn(async () => new Response(JSON.stringify(drifted), { status: 200 })) as unknown as typeof fetch,
+        async () => {},
+        traces,
+      );
+
+      await expect(p.fetchStandings()).rejects.toThrow(/schema drift/);
+
+      const recorded = await traces.list();
+      const failure = recorded.find((t) => !t.ok && t.error?.includes("schema drift"));
+      expect(failure).toBeDefined();
+      // The exact bytes that broke it, inspectable without re-requesting.
+      expect(failure!.raw).toEqual(drifted);
+      expect(failure!.endpoint).toBe("/competitions/PL/standings");
+    });
+
+    it("keeps a non-JSON error body verbatim", async () => {
+      // An HTML 502 or a rate-limit page is exactly what you want to see;
+      // res.json() would have thrown it away.
+      const traces = traceStore("failures");
+      const p = new FootballDataOrgProvider(
+        "key", ["PL"], WINDOW,
+        vi.fn(async () => new Response("<html>502 Bad Gateway</html>", { status: 502 })) as unknown as typeof fetch,
+        async () => {},
+        traces,
+      );
+      await expect(p.fetchStandings()).rejects.toThrow(/HTTP 502/);
+
+      const failure = (await traces.list()).find((t) => !t.ok);
+      expect(failure?.raw).toContain("502 Bad Gateway");
+      expect(failure?.httpStatus).toBe(502);
+    });
+
+    it("records nothing on success in `failures` mode, but does in `all`", async () => {
+      const okResponse = () =>
+        vi.fn(async () => new Response(JSON.stringify(rawStandings), { status: 200 })) as unknown as typeof fetch;
+
+      const quiet = traceStore("failures");
+      await new FootballDataOrgProvider("key", ["PL"], WINDOW, okResponse(), async () => {}, quiet).fetchStandings();
+      expect(await quiet.list()).toHaveLength(0); // zero steady-state cost
+
+      const loud = traceStore("all");
+      await new FootballDataOrgProvider("key", ["PL"], WINDOW, okResponse(), async () => {}, loud).fetchStandings();
+      const [trace] = await loud.list();
+      expect(trace.ok).toBe(true);
+      expect(trace.raw).toEqual(rawStandings);
+      expect(trace.bytes).toBeGreaterThan(0);
+    });
+
+    it("a drifted payload does NOT overwrite the last known-good trace", async () => {
+      // The bug this pins: schema drift arrives with HTTP 200. Recording
+      // success at the HTTP layer meant the drifted body was filed as "ok"
+      // (evicting the real baseline) AND as "fail" — both slots holding the
+      // same broken payload, so there was nothing left to diff against.
+      // "ok" means the payload validated, not that the socket behaved.
+      const traces = traceStore("all");
+      const provider = (fetchImpl: typeof fetch) =>
+        new FootballDataOrgProvider("key", ["PL"], WINDOW, fetchImpl, async () => {}, traces);
+
+      await provider(
+        vi.fn(async () => new Response(JSON.stringify(rawStandings), { status: 200 })) as unknown as typeof fetch,
+      ).fetchStandings();
+
+      const drifted = { standings: [{ nope: true }] };
+      await expect(
+        provider(
+          vi.fn(async () => new Response(JSON.stringify(drifted), { status: 200 })) as unknown as typeof fetch,
+        ).fetchStandings(),
+      ).rejects.toThrow();
+
+      const all = await traces.list();
+      const success = all.find((t) => t.ok);
+      const failure = all.find((t) => !t.ok);
+
+      // The good payload survived the drift — this is the whole feature.
+      expect(success?.raw).toEqual(rawStandings);
+      expect(failure?.raw).toEqual(drifted);
+    });
   });
 });
 

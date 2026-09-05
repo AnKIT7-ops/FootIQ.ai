@@ -32,8 +32,11 @@ export class OpenAiProvider implements AiProvider {
         }),
         signal: AbortSignal.timeout(60_000),
       });
-    } catch {
-      throw new AiProviderError(this.name, "Connection failed.", true);
+    } catch (err) {
+      // See gemini.ts — same class of bug: don't discard the fetch failure's
+      // real cause, it's the only thing that tells key/model/network apart.
+      const cause = err instanceof Error ? err.message : String(err);
+      throw new AiProviderError(this.name, `Connection failed: ${cause}`, true);
     }
     if (!res.ok) {
       throw new AiProviderError(this.name, `API error ${res.status}.`, res.status === 429 || res.status >= 500);

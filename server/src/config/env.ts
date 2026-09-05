@@ -66,6 +66,14 @@ export const envSchema = z.object({
   API_FOOTBALL_KEY: z.string().optional(),
   /** API-Football league id (39 = Premier League). */
   API_FOOTBALL_LEAGUE: z.coerce.number().int().default(39),
+  /**
+   * Keep raw provider payloads for diagnosis (see providers/trace.ts).
+   *   failures — every failed fetch/parse. The drift case. Zero steady cost.
+   *   all      — every fetch too, for diffing good against broken. Debug only:
+   *              ~900 writes/day vs Cloudflare KV's free 1,000/day cap.
+   *   off      — none.
+   */
+  PROVIDER_TRACE: z.enum(["off", "failures", "all"]).default("failures"),
   /** Node runtime: run sync jobs on an interval. Workers use the cron trigger instead. */
   SYNC_ENABLED: boolFromString,
   SYNC_INTERVAL_MINUTES: z.coerce.number().int().min(1).max(24 * 60).default(30),

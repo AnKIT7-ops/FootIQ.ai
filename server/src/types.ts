@@ -12,6 +12,7 @@ import type { StorageProvider } from "./platform/storage/types";
 import type { ErrorReporter } from "./platform/observability";
 import type { FootballDataProvider } from "./providers";
 import type { SnapshotStore } from "./services/snapshots";
+import type { ProviderTraceStore } from "./providers/trace";
 import type { JobRegistry } from "./jobs/registry";
 
 /**
@@ -33,6 +34,8 @@ export interface Services {
   storage: StorageProvider;
   errors: ErrorReporter;
   dataProvider: FootballDataProvider;
+  /** Raw provider payloads for drift diagnosis — read by admin, never by the sync. */
+  traces: ProviderTraceStore;
   snapshots: SnapshotStore;
   jobs: JobRegistry;
 }

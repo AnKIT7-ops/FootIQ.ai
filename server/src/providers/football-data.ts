@@ -7,6 +7,7 @@ import type {
   NormalizedTeamStanding,
 } from "./types";
 import { ProviderError } from "./types";
+import { noopTraceStore, type ProviderTraceStore } from "./trace";
 
 /**
  * football-data.org v4 (free tier: 10 req/min, top competitions, standings +
@@ -161,6 +162,8 @@ export class FootballDataOrgProvider implements FootballDataProvider {
     // to the provider — Workers rejects that with "Illegal invocation"
     private fetchImpl: typeof fetch = (input, init) => fetch(input, init),
     private sleep: (ms: number) => Promise<void> = (ms) => new Promise((r) => setTimeout(r, ms)),
+    /** Diagnostics sink. Defaults to a no-op so tests and callers can ignore it. */
+    private trace: ProviderTraceStore = noopTraceStore,
   ) {}
 
   available(): boolean {
@@ -174,8 +177,13 @@ export class FootballDataOrgProvider implements FootballDataProvider {
     this.lastRequestAt = Date.now();
   }
 
-  private async get(path: string): Promise<unknown> {
+  /**
+   * Raw fetch. Records network and HTTP failures; does NOT record success —
+   * see getValidated for why.
+   */
+  private async get(path: string): Promise<{ body: unknown; bytes: number; status: number }> {
     await this.throttle();
+    const fetchedAt = new Date().toISOString();
     let res: Response;
     try {
       res = await this.fetchImpl(`https://api.football-data.org/v4${path}`, {
@@ -183,10 +191,70 @@ export class FootballDataOrgProvider implements FootballDataProvider {
         signal: AbortSignal.timeout(10_000),
       });
     } catch (err) {
-      throw new ProviderError(this.name, `network failure: ${err instanceof Error ? err.message : "unknown"}`);
+      const error = err instanceof Error ? err.message : "unknown";
+      await this.trace.record({ provider: this.name, endpoint: path, fetchedAt, ok: false, error: `network failure: ${error}` });
+      throw new ProviderError(this.name, `network failure: ${error}`);
     }
-    if (!res.ok) throw new ProviderError(this.name, `HTTP ${res.status} on ${path}`, res.status);
-    return res.json();
+
+    // Read as text first: a non-JSON error body (an HTML 502, a rate-limit
+    // page) is exactly what you want to see, and res.json() would discard it.
+    const text = await res.text();
+    let body: unknown;
+    try {
+      body = JSON.parse(text);
+    } catch {
+      body = text;
+    }
+
+    if (!res.ok) {
+      await this.trace.record({
+        provider: this.name, endpoint: path, fetchedAt, ok: false,
+        httpStatus: res.status, bytes: text.length, raw: body,
+        error: `HTTP ${res.status}`,
+      });
+      throw new ProviderError(this.name, `HTTP ${res.status} on ${path}`, res.status);
+    }
+
+    return { body, bytes: text.length, status: res.status };
+  }
+
+  /**
+   * Fetch → validate → trace. The single door for every endpoint.
+   *
+   * A trace is only "ok" once the payload VALIDATED — not merely because the
+   * socket behaved. Schema drift arrives with HTTP 200, so recording success at
+   * the HTTP layer meant a drifted body overwrote the last known-good trace and
+   * then also filed itself as the failure. Both slots ended up holding the same
+   * broken payload, which defeats the entire point: the good one is what you
+   * diff the broken one against.
+   */
+  private async getValidated<T>(path: string, schema: z.ZodType<T>, kind: string): Promise<T> {
+    const { body, bytes, status } = await this.get(path);
+    const parsed = schema.safeParse(body);
+    if (!parsed.success) {
+      const issue = parsed.error.issues[0]?.message ?? "unknown";
+      await this.trace.record({
+        provider: this.name,
+        endpoint: path,
+        fetchedAt: new Date().toISOString(),
+        ok: false,
+        httpStatus: status,
+        bytes,
+        raw: body,
+        error: `schema drift: ${issue}`,
+      });
+      throw new ProviderError(this.name, `${kind} schema drift: ${issue}`);
+    }
+    await this.trace.record({
+      provider: this.name,
+      endpoint: path,
+      fetchedAt: new Date().toISOString(),
+      ok: true,
+      httpStatus: status,
+      bytes,
+      raw: body,
+    });
+    return parsed.data;
   }
 
   /**
@@ -219,13 +287,12 @@ export class FootballDataOrgProvider implements FootballDataProvider {
 
   async fetchStandings(): Promise<NormalizedTeamStanding[]> {
     return this.perCompetition("standings", async (code) => {
-      const raw = RAW_STANDINGS.safeParse(await this.get(`/competitions/${code}/standings`));
-      if (!raw.success) throw new ProviderError(this.name, `standings schema drift: ${raw.error.issues[0]?.message}`);
-      const table = raw.data.standings.find((s) => s.type === "TOTAL")?.table ?? [];
+      const data = await this.getValidated(`/competitions/${code}/standings`, RAW_STANDINGS, "standings");
+      const table = data.standings.find((s) => s.type === "TOTAL")?.table ?? [];
       return table.map((row) => ({
         extId: `fd-${row.team.id}`,
         name: row.team.name,
-        competition: raw.data.competition?.name ?? code,
+        competition: data.competition?.name ?? code,
         tla: row.team.tla ?? undefined,
         shortName: row.team.shortName ?? undefined,
         crestUrl: row.team.crest ?? undefined,
@@ -245,9 +312,8 @@ export class FootballDataOrgProvider implements FootballDataProvider {
   /** Club identity per competition — one request each, so this is a 24h-TTL sync, not a 30-minute one. */
   async fetchTeams(): Promise<NormalizedTeam[]> {
     return this.perCompetition("teams", async (code) => {
-      const raw = RAW_TEAMS.safeParse(await this.get(`/competitions/${code}/teams`));
-      if (!raw.success) throw new ProviderError(this.name, `teams schema drift: ${raw.error.issues[0]?.message}`);
-      return raw.data.teams.map((t) => ({
+      const data = await this.getValidated(`/competitions/${code}/teams`, RAW_TEAMS, "teams");
+      return data.teams.map((t) => ({
         extId: `fd-${t.id}`,
         name: t.name,
         shortName: t.shortName ?? undefined,
@@ -261,7 +327,7 @@ export class FootballDataOrgProvider implements FootballDataProvider {
         clubColors: t.clubColors ?? undefined,
         website: t.website ?? undefined,
         // The NAME, matching what standings report — never the code.
-        competition: raw.data.competition?.name ?? code,
+        competition: data.competition?.name ?? code,
       }));
     });
   }
@@ -274,10 +340,9 @@ export class FootballDataOrgProvider implements FootballDataProvider {
    * code would be six requests for the same data.
    */
   async fetchCompetitions(): Promise<NormalizedCompetition[]> {
-    const raw = RAW_COMPETITIONS.safeParse(await this.get(`/competitions`));
-    if (!raw.success) throw new ProviderError(this.name, `competitions schema drift: ${raw.error.issues[0]?.message}`);
+    const data = await this.getValidated(`/competitions`, RAW_COMPETITIONS, "competitions");
     const wanted = new Set(this.competitions);
-    return raw.data.competitions
+    return data.competitions
       .filter((c) => wanted.has(c.code.toUpperCase()))
       .map((c) => {
         const s = c.currentSeason;
@@ -305,9 +370,12 @@ export class FootballDataOrgProvider implements FootballDataProvider {
     const from = new Date(Date.now() - this.window.pastDays * 864e5).toISOString().slice(0, 10);
     const to = new Date(Date.now() + this.window.futureDays * 864e5).toISOString().slice(0, 10);
     return this.perCompetition("matches", async (code) => {
-      const raw = RAW_MATCHES.safeParse(await this.get(`/competitions/${code}/matches?dateFrom=${from}&dateTo=${to}`));
-      if (!raw.success) throw new ProviderError(this.name, `matches schema drift: ${raw.error.issues[0]?.message}`);
-      return raw.data.matches
+      const data = await this.getValidated(
+        `/competitions/${code}/matches?dateFrom=${from}&dateTo=${to}`,
+        RAW_MATCHES,
+        "matches",
+      );
+      return data.matches
         .filter((m) => m.homeTeam.name && m.awayTeam.name && m.homeTeam.id && m.awayTeam.id)
         .map((m) => ({
           extId: `fd-${m.id}`,
