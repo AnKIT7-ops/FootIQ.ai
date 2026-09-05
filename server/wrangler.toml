@@ -33,8 +33,13 @@ crons = ["*/30 * * * *"]
 NODE_ENV = "production"
 CORS_ORIGINS = "https://footiq-omega.vercel.app,http://localhost:5173"
 SUPABASE_URL = "https://zcemnioniooyyhpjpwbn.supabase.co"
-AI_PROVIDER = "claude"
-AI_MODEL = "claude-opus-4-8"
+# Gemini's free tier, not Anthropic: no card, and the AI surface is cached per
+# task+seed+provider and warmed by cron, so the free RPM/RPD caps are not the
+# binding constraint. Swapping providers is env-only — see ai/service.ts.
+# "gemini" is on the frontend's REAL_PROVIDERS allowlist (lib/ai-provenance.ts),
+# so the demo-engine chip goes quiet by itself once GEMINI_API_KEY is set.
+AI_PROVIDER = "gemini"
+AI_MODEL = "gemini-3.8-flash"
 DATA_PROVIDER = "football-data"
 # The six competitions this key's free tier grants. Europa League and
 # Conference League are NOT on it — their codes would 403 per competition
