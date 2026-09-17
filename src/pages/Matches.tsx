@@ -18,7 +18,7 @@ export default function Matches() {
   // empty, so a non-reactive read renders a blank page forever.
   const { data, status } = useMatchesState();
 
-  const list = tab === "live" ? data.live : tab === "upcoming" ? data.upcoming : data.finished;
+  const list = tab === "live" ? data.live : tab === "upcoming" ? data.upcoming : [...data.unconfirmed, ...data.finished];
   const ready = status === "ready";
 
   const emptyCopy = {

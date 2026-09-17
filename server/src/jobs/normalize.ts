@@ -265,14 +265,18 @@ function teamFromFixture(extId: string, name: string, competition: string, tla?:
  * timezone. The old display string ("Sat 15 Mar 14:30", baked to UTC here)
  * could not be sorted, compared, or localized downstream.
  */
+/** 90' + half-time + extra time + penalties + generous stoppage/delay. Past this, "live" is a stale feed. */
+const MAX_LIVE_MS = 3 * 60 * 60 * 1000;
+
 export function mergeMatches(
   rows: NormalizedMatch[],
   teams: Team[],
+  now = Date.now(),
 ): { grouped: MatchesGrouped; discoveredTeams: Team[] } {
   const byExtId = new Map(teams.filter((t) => t.extId).map((t) => [t.extId!, t]));
   const byCanon = new Map(teams.map((t) => [canon(t.name), t]));
   const discovered = new Map<string, Team>();
-  const grouped: MatchesGrouped = { live: [], upcoming: [], finished: [], postponed: [], cancelled: [] };
+  const grouped: MatchesGrouped = { live: [], upcoming: [], finished: [], postponed: [], cancelled: [], unconfirmed: [] };
 
   const resolve = (extId: string, name: string, competition: string, tla?: string, crest?: string): Team => {
     const known = byExtId.get(extId) ?? byCanon.get(canon(name));
@@ -288,15 +292,19 @@ export function mergeMatches(
   for (const row of rows) {
     const home = resolve(row.homeExtId, row.homeName, row.competition, row.homeTla, row.homeCrestUrl);
     const away = resolve(row.awayExtId, row.awayName, row.competition, row.awayTla, row.awayCrestUrl);
-    grouped[row.status].push({
+    // Providers can leave a match IN_PLAY for hours after it ends (football-data.org
+    // did, 2026-09-17). Its score is as stale as its status, so both go.
+    const stuck = row.status === "live" && now - Date.parse(row.kickoffIso) > MAX_LIVE_MS;
+    const status = stuck ? "unconfirmed" : row.status;
+    grouped[status].push({
       id: row.extId,
       homeId: home.id,
       awayId: away.id,
       competition: row.competition,
-      status: row.status,
-      minute: row.minute,
-      homeScore: row.homeScore,
-      awayScore: row.awayScore,
+      status,
+      minute: stuck ? undefined : row.minute,
+      homeScore: stuck ? undefined : row.homeScore,
+      awayScore: stuck ? undefined : row.awayScore,
       kickoffIso: row.kickoffIso,
       venue: row.venue ?? home.stadium,
     });
@@ -307,5 +315,6 @@ export function mergeMatches(
   grouped.postponed.sort(byKickoff);
   grouped.cancelled.sort(byKickoff);
   grouped.finished.sort((a, b) => byKickoff(b, a)); // most recent result first
+  grouped.unconfirmed.sort((a, b) => byKickoff(b, a));
   return { grouped, discoveredTeams: [...discovered.values()] };
 }

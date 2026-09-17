@@ -13,7 +13,7 @@ interface Sourced<T> {
   source: DataSource;
 }
 
-const EMPTY_MATCHES: MatchesGrouped = { live: [], upcoming: [], finished: [], postponed: [], cancelled: [] };
+const EMPTY_MATCHES: MatchesGrouped = { live: [], upcoming: [], finished: [], postponed: [], cancelled: [], unconfirmed: [] };
 
 /**
  * Football catalog reads behind the repository pattern:
@@ -200,7 +200,7 @@ export class CatalogService {
       return t;
     };
     const { data, source } = await this.matchesSourced();
-    const m = [...data.live, ...data.upcoming, ...data.finished, ...data.postponed, ...data.cancelled].find(
+    const m = [...data.live, ...data.upcoming, ...data.finished, ...data.postponed, ...data.cancelled, ...(data.unconfirmed ?? [])].find(
       (x) => x.id === id,
     );
     if (!m) throw ApiError.notFound("Match");

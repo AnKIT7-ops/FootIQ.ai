@@ -22,13 +22,13 @@ import { createRepoStore } from "./store";
 
 export type MatchesGrouped = Record<MatchStatus, Match[]>;
 
-const EMPTY: MatchesGrouped = { live: [], upcoming: [], finished: [], postponed: [], cancelled: [] };
+const EMPTY: MatchesGrouped = { live: [], upcoming: [], finished: [], postponed: [], cancelled: [], unconfirmed: [] };
 
 const store = createRepoStore<MatchesGrouped>({
   name: "matches",
   seed: EMPTY,
   endpoint: "/api/matches",
-  // Tolerate a backend that predates the postponed/cancelled buckets.
+  // Tolerate a backend that predates the postponed/cancelled/unconfirmed buckets.
   map: (payload) => ({ ...EMPTY, ...(payload as Partial<MatchesGrouped>) }),
 });
 
@@ -38,6 +38,7 @@ const flatten = (g: MatchesGrouped): Match[] => [
   ...g.finished,
   ...g.postponed,
   ...g.cancelled,
+  ...g.unconfirmed,
 ];
 
 export let liveMatches: Match[] = store.get().live;
@@ -96,13 +97,16 @@ export function resolutionPool(): Match[] {
   return [...matches, ...demoMatches.filter((d) => !matchById.has(d.id))];
 }
 
+/** Kicked off and over — including a match whose result the provider never confirmed. */
+const played = (m: Match) => m.status === "finished" || m.status === "unconfirmed";
+
 export function teamMatches(teamId: string): { fixtures: Match[]; results: Match[] } {
   return {
     fixtures: matches.filter(
-      (m) => (m.homeId === teamId || m.awayId === teamId) && m.status !== "finished",
+      (m) => (m.homeId === teamId || m.awayId === teamId) && !played(m),
     ),
     results: matches.filter(
-      (m) => (m.homeId === teamId || m.awayId === teamId) && m.status === "finished",
+      (m) => (m.homeId === teamId || m.awayId === teamId) && played(m),
     ),
   };
 }

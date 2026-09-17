@@ -13,8 +13,9 @@ export function MatchCard({ match, className, dense = false }: { match: Match; c
   const home = getTeam(match.homeId);
   const away = getTeam(match.awayId);
   const live = match.status === "live";
-  const off = match.status === "postponed" || match.status === "cancelled";
+  const off = match.status === "postponed" || match.status === "cancelled" || match.status === "unconfirmed";
   // A postponed fixture has no score to show, and a cancelled one never will.
+  // An unconfirmed one had a score, but the provider stopped updating it.
   const played = match.status === "live" || match.status === "finished";
 
   return (
@@ -22,9 +23,9 @@ export function MatchCard({ match, className, dense = false }: { match: Match; c
       <div className="mb-2.5 flex items-center justify-between gap-2">
         <span className="truncate font-mono text-micro uppercase tracking-wider text-ink-3">{match.competition}</span>
         {live ? (
-          <Badge variant="live">{match.minute}'</Badge>
+          <Badge variant="live">{match.minute == null ? "Live" : `${match.minute}'`}</Badge>
         ) : off ? (
-          <span className="shrink-0 font-mono text-micro uppercase tracking-wider text-ink-3">{match.status}</span>
+          <span className="shrink-0 font-mono text-micro uppercase tracking-wider text-ink-3">{match.status === "unconfirmed" ? "Result pending" : match.status}</span>
         ) : (
           <span className="shrink-0 font-mono text-micro text-ink-3">{kickoffLabel(match.kickoffIso)}</span>
         )}

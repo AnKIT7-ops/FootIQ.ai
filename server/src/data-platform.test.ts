@@ -247,6 +247,27 @@ describe("normalize merge", () => {
     expect(g.cancelled).toHaveLength(1);
     expect(g.upcoming).toHaveLength(0);
   });
+
+  it("stops calling a match live once it is past any possible final whistle", () => {
+    // Production, 2026-09-17: football-data.org still reported Levante v
+    // Athletic (fd-564685) IN_PLAY at 0-0 eight hours after kickoff, and the
+    // app showed it live. We don't know the result, so it is not "finished"
+    // either — it is unconfirmed, with no score.
+    const now = Date.parse("2026-09-17T03:00:00Z");
+    const live = (extId: string, kickoffIso: string) => ({
+      extId, homeExtId: "fd-57", awayExtId: "fd-64", homeName: "Arsenal FC", awayName: "Liverpool FC",
+      competition: "PL", status: "live" as const, kickoffIso, homeScore: 0, awayScore: 0,
+    });
+    const { grouped: g } = mergeMatches(
+      [live("fd-stuck", "2026-09-16T19:30:00Z"), live("fd-real", "2026-09-17T01:15:00Z")],
+      demo.teams,
+      now,
+    );
+    expect(g.live.map((m) => m.id)).toEqual(["fd-real"]); // 1h45 in: extra time is still plausible
+    expect(g.unconfirmed).toHaveLength(1);
+    expect(g.unconfirmed[0]).toMatchObject({ id: "fd-stuck", status: "unconfirmed", homeScore: undefined, awayScore: undefined });
+    expect(g.finished).toHaveLength(0);
+  });
 });
 
 // ---- job registry --------------------------------------------------------------
