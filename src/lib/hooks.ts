@@ -133,16 +133,6 @@ export function useInView<T extends HTMLElement>(threshold = 0.15): [React.RefOb
   return [ref, inView];
 }
 
-/** Live ticking clock for simulated live matches (minute advances slowly). */
-export function useLiveMinute(baseMinute: number): number {
-  const [minute, setMinute] = useState(baseMinute);
-  useEffect(() => {
-    const id = setInterval(() => setMinute((m) => (m < 90 ? m + 1 : m)), 45000);
-    return () => clearInterval(id);
-  }, []);
-  return minute;
-}
-
 /** Web Speech API voice input with graceful fallback when unsupported. */
 export function useVoiceInput(onResult: (text: string) => void): { listening: boolean; supported: boolean; start: () => void; stop: () => void } {
   const [listening, setListening] = useState(false);

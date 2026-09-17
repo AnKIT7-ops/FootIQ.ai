@@ -71,7 +71,7 @@ export class DemoProvider implements FootballDataProvider {
       homeName: demo.teamById.get(m.homeId)?.name ?? m.homeId,
       awayName: demo.teamById.get(m.awayId)?.name ?? m.awayId,
       competition: m.competition,
-      status: m.status,
+      status: m.status as NormalizedMatch["status"], // bundled data never holds "unconfirmed" — that is a merge-time verdict
       kickoffIso: m.kickoffIso,
       minute: m.minute,
       homeScore: m.homeScore,

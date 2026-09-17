@@ -19,7 +19,6 @@ import { clips } from "@/lib/repositories/clips";
 import { getTeam, leagueTable } from "@/lib/repositories/teams";
 import { getPlayer } from "@/lib/repositories/players";
 import { agoFromMinutes, cn, money } from "@/lib/utils";
-import { useLiveMinute } from "@/lib/hooks";
 import { kickoffLabel, kickoffTime } from "@/lib/kickoff";
 import { usePageMeta } from "@/lib/seo";
 import { legalEntries } from "@/lib/nav";
@@ -46,8 +45,6 @@ export default function Home() {
   const featuredLive = featured?.status === "live";
   const home = featured ? getTeam(featured.homeId) : null;
   const away = featured ? getTeam(featured.awayId) : null;
-  // Unconditional: hooks cannot sit behind the `featured` null check.
-  const minute = useLiveMinute(featured?.minute ?? 0);
   const navigate = useNavigate();
 
   return (
@@ -123,7 +120,7 @@ export default function Home() {
             className="floodlight card relative overflow-hidden p-5 md:p-8"
           >
             <div className="flex flex-wrap items-center gap-2">
-              {featuredLive ? <Badge variant="live">Live · {minute}'</Badge> : <Badge>{kickoffLabel(featured.kickoffIso)}</Badge>}
+              {featuredLive ? <Badge variant="live">{featured.minute == null ? "Live" : `Live · ${featured.minute}'`}</Badge> : <Badge>{kickoffLabel(featured.kickoffIso)}</Badge>}
               <span className="font-mono text-label uppercase tracking-wider text-ink-3">{featured.competition} · {featured.venue}</span>
               {featured.headline && <span className="ml-auto hidden font-mono text-label text-ink-3 md:block">{featured.headline}</span>}
             </div>

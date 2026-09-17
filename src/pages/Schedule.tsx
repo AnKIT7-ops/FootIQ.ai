@@ -80,16 +80,16 @@ export default function Schedule() {
   );
 
   const competitions = useMemo(() => {
-    const all = [...scheduled, ...data.live, ...data.finished].map((m) => m.competition);
+    const all = [...scheduled, ...data.live, ...data.finished, ...data.unconfirmed].map((m) => m.competition);
     return [...new Set(all)].sort();
-  }, [scheduled, data.live, data.finished]);
+  }, [scheduled, data.live, data.finished, data.unconfirmed]);
 
   const list = useMemo(() => {
     const byRange: Match[] =
       range === "live"
         ? data.live
         : range === "completed"
-          ? data.finished
+          ? [...data.unconfirmed, ...data.finished]
           : range === "today"
             ? scheduled.filter((m) => isToday(m.kickoffIso))
             : range === "tomorrow"
@@ -98,7 +98,7 @@ export default function Schedule() {
                 ? scheduled.filter((m) => isThisWeek(m.kickoffIso))
                 : scheduled;
     return competition === "all" ? byRange : byRange.filter((m) => m.competition === competition);
-  }, [range, competition, scheduled, data.live, data.finished]);
+  }, [range, competition, scheduled, data.live, data.finished, data.unconfirmed]);
 
   /** Day-bucketed for every range except Live, which is one flat "now" list. */
   const days = useMemo(() => {

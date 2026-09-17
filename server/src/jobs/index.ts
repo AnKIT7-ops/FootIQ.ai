@@ -129,7 +129,7 @@ export function registerJobs(
 
       await snapshots.set<MatchesGrouped>("matches", grouped, provider.name);
       const kept = Object.values(grouped).reduce((n, list) => n + list.length, 0);
-      return `${rows.length} rows → ${kept} fixtures (${grouped.live.length}L/${grouped.upcoming.length}U/${grouped.finished.length}F/${grouped.postponed.length}P), ${discoveredTeams.length} clubs discovered (${provider.name})`;
+      return `${rows.length} rows → ${kept} fixtures (${grouped.live.length}L/${grouped.upcoming.length}U/${grouped.finished.length}F/${grouped.postponed.length}P/${grouped.unconfirmed.length}?), ${discoveredTeams.length} clubs discovered (${provider.name})`;
     },
   });
 

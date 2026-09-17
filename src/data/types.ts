@@ -119,7 +119,11 @@ export interface Team {
   trophies: { name: string; count: number }[];
 }
 
-export type MatchStatus = "live" | "upcoming" | "finished" | "postponed" | "cancelled";
+/**
+ * "unconfirmed": the provider still says in play, but kickoff was too long ago
+ * for that to be true. The result is unknown, so it is neither live nor finished.
+ */
+export type MatchStatus = "live" | "upcoming" | "finished" | "postponed" | "cancelled" | "unconfirmed";
 
 export interface MatchEvent {
   minute: number;

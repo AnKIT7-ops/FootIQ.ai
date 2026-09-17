@@ -133,7 +133,7 @@ function MatchBody({ detail }: { detail: MatchDetail }) {
           {detail.competition}
         </h1>
         <div className="flex flex-wrap items-center gap-2">
-          {live ? <Badge variant="live">Live · {detail.minute}'</Badge> : <Badge>{detail.status === "finished" ? "Full-time" : kickoffLabel(detail.kickoffIso)}</Badge>}
+          {live ? <Badge variant="live">{detail.minute == null ? "Live" : `Live · ${detail.minute}'`}</Badge> : <Badge>{detail.status === "finished" ? "Full-time" : detail.status === "unconfirmed" ? "Result pending" : kickoffLabel(detail.kickoffIso)}</Badge>}
           <span className="font-mono text-label uppercase tracking-wider text-ink-3">
             {detail.competition} · {detail.venue}
           </span>
@@ -180,7 +180,7 @@ function MatchBody({ detail }: { detail: MatchDetail }) {
         <div className="rounded-xl border border-line bg-surface-2 px-4 py-3.5">
           <p className="text-caption leading-relaxed text-ink-3">
             <span className="font-semibold text-ink-2">
-              {detail.status === "postponed" ? "This match was postponed." : detail.status === "cancelled" ? "This match was cancelled." : "This match hasn't kicked off yet."}
+              {detail.status === "postponed" ? "This match was postponed." : detail.status === "cancelled" ? "This match was cancelled." : detail.status === "unconfirmed" ? "Our data provider hasn't confirmed the result." : "This match hasn't kicked off yet."}
             </span>{" "}
             {detail.status === "upcoming"
               ? "Momentum, stats, lineups and the event feed appear once it's under way."
