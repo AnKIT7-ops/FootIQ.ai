@@ -6,6 +6,8 @@ import type { AiService } from "../ai/service";
 import { prompts } from "../ai/prompts";
 import { JobRegistry } from "../jobs/registry";
 import { mergeMatches, mergeStandings, mergeTeams, type MatchesGrouped } from "./normalize";
+import { fetchHeadlines } from "../providers/news-rss";
+import type { NewsHeadline } from "../../../shared/contracts";
 
 export type { Job, JobRun } from "./registry";
 export { JobRegistry } from "./registry";
@@ -42,9 +44,16 @@ async function isFresh(snapshots: SnapshotStore, kind: SnapshotKind): Promise<bo
 
 export function registerJobs(
   registry: JobRegistry,
-  deps: { provider: FootballDataProvider; snapshots: SnapshotStore; ai: AiService },
+  deps: {
+    provider: FootballDataProvider;
+    snapshots: SnapshotStore;
+    ai: AiService;
+    /** Headline source; injectable so tests never hit the real feeds. */
+    fetchNews?: () => Promise<NewsHeadline[]>;
+  },
 ): void {
   const { provider, snapshots, ai } = deps;
+  const fetchNews = deps.fetchNews ?? (() => fetchHeadlines());
 
   registry.register({
     name: "sync_competitions",
@@ -108,6 +117,17 @@ export function registerJobs(
       const leagues = new Set(enriched.map((t) => t.league));
       const crests = enriched.filter((t) => t.crestUrl).length;
       return `${rows.length} rows → ${enriched.length} teams across ${leagues.size} competitions, ${crests} with crests (${provider.name})`;
+    },
+  });
+
+  registry.register({
+    name: "sync_news",
+    description: "Real football headlines from BBC Sport, the Guardian and Sky Sports RSS → headlines snapshot",
+    async run() {
+      const rows = await fetchNews();
+      await snapshots.set<NewsHeadline[]>("headlines", rows, "rss");
+      const sources = [...new Set(rows.map((r) => r.source))].join(", ");
+      return `${rows.length} headlines (${sources})`;
     },
   });
 

@@ -1,9 +1,8 @@
 import { players } from "@/lib/repositories/players";
 import { teams } from "@/lib/repositories/teams";
-import { news } from "@/lib/repositories/news";
 import { contentLibrary, contentKindLabels } from "@/lib/repositories/content";
 import { legalEntries, pageEntries } from "@/lib/nav";
-import { managerPathFor, newsPathFor, playerPathFor, teamPathFor } from "@/lib/slug-builders";
+import { managerPathFor, playerPathFor, teamPathFor } from "@/lib/slug-builders";
 import { bump, top } from "@/lib/metrics";
 import { track } from "@/lib/analytics";
 
@@ -49,14 +48,8 @@ export const searchIndex: SearchItem[] = [
     to: p.to,
     keywords: `${p.label} ${p.keywords}`.toLowerCase(),
   })),
-  ...news.map((n) => ({
-    id: `news-${n.id}`,
-    kind: "news" as const,
-    label: n.title.length > 64 ? n.title.slice(0, 61) + "…" : n.title,
-    sub: `${n.category} · ${n.source}`,
-    to: newsPathFor(n),
-    keywords: `${n.title} ${n.tags.join(" ")}`.toLowerCase(),
-  })),
+  // Demo news articles are retired (invented quotes about real people); real
+  // headlines live on /news and link out, so they aren't indexed here.
   ...contentLibrary().map((a) => ({
     id: `intel-${a.slug}`,
     kind: "intel" as const,

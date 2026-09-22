@@ -348,7 +348,7 @@ describe("sync pipeline → API", () => {
         { extId: "m-1", name: "Arsenal FC", competition: "Premier League", tla: "ARS", position: 9, played: 30, won: 10, drawn: 9, lost: 11, gf: 40, ga: 41, points: 39 },
       ],
     });
-    const { app, services } = createServer(testEnv(), { services: { dataProvider: provider } });
+    const { app, services } = createServer(testEnv(), { services: { dataProvider: provider }, fetchNews: async () => [] });
 
     const before = await json(await app.request("/api/teams"));
     expect(before.meta.source).toBe("demo");

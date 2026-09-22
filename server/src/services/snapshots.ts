@@ -24,7 +24,7 @@ import type { Logger } from "../lib/logger";
  * fetch — clubs would lose their crests for 23 hours out of 24. Keeping the raw
  * identity lets every standings pass re-apply it from cache, no network.
  */
-export type SnapshotKind = "teams" | "matches" | "competitions" | "team_identity";
+export type SnapshotKind = "teams" | "matches" | "competitions" | "team_identity" | "headlines";
 
 export interface Snapshot<T = unknown> {
   kind: SnapshotKind;

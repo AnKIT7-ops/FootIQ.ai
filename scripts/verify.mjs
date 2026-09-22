@@ -13,7 +13,6 @@ const routes = [
   ["matches", "/matches"],
   ["match", "/match/ars-liv"],
   ["news", "/news"],
-  ["article", "/news/n1"],
   ["player", "/player/saka"],
   ["player-slug", "/players/bukayo-saka"],
   ["similar", "/similar/saka"],

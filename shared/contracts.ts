@@ -260,6 +260,24 @@ export type AiTask =
  * filters are shown to the user verbatim, so what the model understood is
  * never hidden.
  */
+/**
+ * A real headline from a publisher's RSS feed. We show the headline, the
+ * publisher's own short summary and link out — never the article body.
+ */
+export interface NewsHeadline {
+  /** Stable hash of the URL. */
+  id: string;
+  title: string;
+  /** Publisher's summary, plain text, trimmed. */
+  summary: string;
+  url: string;
+  source: "BBC Sport" | "The Guardian" | "Sky Sports";
+  publishedIso: string;
+  imageUrl?: string;
+  /** Keyword-derived, not editorial. */
+  category: "Transfers" | "Injuries" | "Results" | "News";
+}
+
 export interface ScoutFilters {
   positions: Array<"GK" | "DF" | "MF" | "FW">;
   /** Strictly younger than. */

@@ -1,12 +1,12 @@
 import { useSyncExternalStore } from "react";
 import { upcomingMatches } from "@/lib/repositories/matches";
-import { news } from "@/lib/repositories/news";
+import { headlines } from "@/lib/repositories/headlines";
 import { transferRumors } from "@/lib/repositories/transfers";
 import { getTeam } from "@/lib/repositories/teams";
 import { getPlayer } from "@/lib/repositories/players";
 import { contentLibrary } from "@/lib/repositories/content";
 import { favoritesOf, useUserData } from "@/lib/user";
-import { matchPathFor, newsPathFor } from "@/lib/slug-builders";
+import { matchPathFor } from "@/lib/slug-builders";
 import { teams } from "@/lib/repositories/teams";
 import { kickoffLabel } from "@/lib/kickoff";
 
@@ -76,15 +76,13 @@ export function buildNotifications(prefs: { matchReminders: boolean; favoriteTea
   }
 
   if (prefs.favoriteTeamNews) {
-    for (const n of news) {
-      if (n.teamIds.some((t) => favTeams.has(t)) || n.playerIds.some((p) => favPlayers.has(p))) {
-        out.push({
-          id: `news-${n.id}`,
-          kind: "news",
-          title: n.title,
-          body: n.aiSummary[0] ?? n.category,
-          path: newsPathFor(n),
-        });
+    // Real headlines that name a followed club — a keyword match on the club's
+    // short name ("Arsenal", "Man City"), not editorial tagging.
+    const names = [...favTeams].map((id) => getTeam(id)).filter((t) => favTeams.has(t.id)).map((t) => t.short.toLowerCase());
+    for (const h of names.length ? headlines : []) {
+      const title = h.title.toLowerCase();
+      if (names.some((n) => title.includes(n))) {
+        out.push({ id: `news-${h.id}`, kind: "news", title: h.title, body: `${h.source} · ${h.category}`, path: "/news" });
       }
     }
   }

@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { ArrowRight, Play, Radio, Sparkles, TrendingUp } from "lucide-react";
 import { Card, SectionHeader } from "@/components/ui/Card";
-import { Badge, FormPills, Reliability } from "@/components/ui/Badge";
+import { Badge, FormPills } from "@/components/ui/Badge";
 import { Crest } from "@/components/ui/Crest";
 import { Avatar } from "@/components/ui/Avatar";
 import { MatchCard } from "@/components/ui/MatchCard";
@@ -13,12 +13,12 @@ import { PersonalRows } from "@/components/ui/PersonalRows";
 import { MomentumRiver } from "@/components/charts/MomentumRiver";
 import { Sparkline } from "@/components/charts/Sparkline";
 import { matchDetail, useMatchesState } from "@/lib/repositories/matches";
-import { news, breakingNews } from "@/lib/repositories/news";
-import { trendingTransfers } from "@/lib/repositories/transfers";
+import { useHeadlinesState } from "@/lib/repositories/headlines";
+import { HeadlineCard } from "@/components/ui/HeadlineCard";
 import { clips } from "@/lib/repositories/clips";
 import { getTeam, leagueTable } from "@/lib/repositories/teams";
 import { getPlayer } from "@/lib/repositories/players";
-import { agoFromMinutes, cn, money } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { kickoffLabel, kickoffTime } from "@/lib/kickoff";
 import { usePageMeta } from "@/lib/seo";
 import { legalEntries } from "@/lib/nav";
@@ -46,6 +46,9 @@ export default function Home() {
   const home = featured ? getTeam(featured.homeId) : null;
   const away = featured ? getTeam(featured.awayId) : null;
   const navigate = useNavigate();
+  const headlineState = useHeadlinesState();
+  const tickerItems = headlineState.data.slice(0, 10);
+  const transferHeadlines = headlineState.data.filter((h) => h.category === "Transfers");
 
   return (
     <div className="space-y-10">
@@ -87,19 +90,25 @@ export default function Home() {
       {/* ticker */}
       <div className="no-scrollbar -mx-4 overflow-hidden border-b border-line pb-3 md:-mx-6" aria-label="Breaking headlines">
         <div className="animate-ticker flex w-max gap-8 px-4">
-          {news.map((n) => (
-            <Link key={n.id} to={`/news/${n.id}`} className="group flex shrink-0 items-center gap-2 text-caption text-ink-3 hover:text-ink">
+          {tickerItems.map((n) => (
+            <a
+              key={n.id}
+              href={n.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex shrink-0 items-center gap-2 text-caption text-ink-3 hover:text-ink"
+            >
               <span className="size-1 rounded-full bg-accent" aria-hidden />
-              <span className="font-mono text-micro uppercase tracking-wider text-ink-3">{n.category}</span>
+              <span className="font-mono text-micro uppercase tracking-wider text-ink-3">{n.source}</span>
               <span className="max-w-[26rem] truncate group-hover:underline">{n.title}</span>
-            </Link>
+            </a>
           ))}
           {/* second copy purely for the seamless marquee loop */}
           <div className="flex shrink-0 gap-8" aria-hidden>
-            {news.map((n) => (
+            {tickerItems.map((n) => (
               <span key={`dup-${n.id}`} className="flex shrink-0 items-center gap-2 text-caption text-ink-3">
                 <span className="size-1 rounded-full bg-accent" />
-                <span className="font-mono text-micro uppercase tracking-wider text-ink-3">{n.category}</span>
+                <span className="font-mono text-micro uppercase tracking-wider text-ink-3">{n.source}</span>
                 <span className="max-w-[26rem] truncate">{n.title}</span>
               </span>
             ))}
@@ -198,28 +207,22 @@ export default function Home() {
         <div className="min-w-0 space-y-10">
           {/* breaking news */}
           <section aria-label="Breaking news">
-            <SectionHeader eyebrow="Algorithmically summarized" title="Breaking News" action={<SeeAll to="/news" />} />
-            <div className="space-y-3">
-              {breakingNews.concat(news.slice(3, 6)).slice(0, 4).map((n) => (
-                <Card hover key={n.id} onClick={() => navigate(`/news/${n.id}`)} className="p-4 md:p-5">
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                    <Badge variant={n.category === "Rumour" ? "warn" : "neutral"}>{n.category}</Badge>
-                    <Reliability score={n.reliability} />
-                    <span className="ml-auto font-mono text-micro text-ink-3">{agoFromMinutes(n.minutesAgo)}</span>
-                  </div>
-                  <h3 className="mt-2.5 text-prose font-bold leading-snug text-ink">{n.title}</h3>
-                  <ul className="mt-2.5 space-y-1">
-                    {n.aiSummary.slice(0, 2).map((s, i) => (
-                      <li key={i} className="flex gap-2 text-ui leading-relaxed text-ink-2">
-                        <span className="mt-[0.55em] size-1 shrink-0 rounded-full bg-iq" aria-hidden />
-                        {s}
-                      </li>
-                    ))}
-                  </ul>
-                  <p className="mt-2.5 font-mono text-micro uppercase tracking-wider text-accent-ink">Read in {n.readSeconds}s →</p>
-                </Card>
-              ))}
-            </div>
+            <SectionHeader eyebrow="BBC Sport · The Guardian · Sky Sports" title="Latest News" action={<SeeAll to="/news" />} />
+            {headlineState.status !== "ready" || headlineState.data.length === 0 ? (
+              <DataState
+                status={headlineState.status}
+                empty={headlineState.data.length === 0}
+                loadingLabel="Loading headlines…"
+                emptyTitle="No headlines right now"
+                emptyBody="The news feeds will refresh shortly."
+              />
+            ) : (
+              <div className="space-y-3">
+                {headlineState.data.slice(0, 4).map((h) => (
+                  <HeadlineCard key={h.id} h={h} />
+                ))}
+              </div>
+            )}
           </section>
 
           {/* viral clips */}
@@ -255,34 +258,18 @@ export default function Home() {
 
           {/* trending transfers */}
           <section aria-label="Trending transfers">
-            <SectionHeader title="Trending Transfers" action={<SeeAll to="/transfers" />} />
-            <div className="grid gap-3 md:grid-cols-2">
-              {trendingTransfers.slice(0, 4).map((t) => {
-                const p = getPlayer(t.playerId);
-                return (
-                  <Card hover key={t.id} onClick={() => navigate("/transfers")} className="p-4">
-                    <div className="flex items-center gap-3">
-                      <Avatar name={p.name} playerId={p.id} size={40} ringColor={getTeam(t.toId).colors[0]} />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-body font-bold text-ink">{p.name}</p>
-                        <p className="mt-0.5 flex items-center gap-1.5 text-label text-ink-3">
-                          {getTeam(t.fromId).tla}
-                          <ArrowRight className="size-3" aria-hidden />
-                          {getTeam(t.toId).tla}
-                          <span className="ml-1 font-mono">{money(t.fee)}</span>
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className={cn("tabular font-display text-xl font-bold", t.probability >= 40 ? "text-accent-ink" : "text-ink")}>{t.probability}%</p>
-                        <p className={cn("font-mono text-micro uppercase tracking-wider", t.trend === "rising" ? "text-accent-ink" : t.trend === "cooling" ? "text-bad" : "text-ink-3")}>
-                          {t.trend}
-                        </p>
-                      </div>
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
+            <SectionHeader title="Transfer News" action={<SeeAll to="/transfers" />} />
+            {transferHeadlines.length > 0 ? (
+              <div className="grid gap-3 md:grid-cols-2">
+                {transferHeadlines.slice(0, 4).map((h) => (
+                  <HeadlineCard key={h.id} h={h} compact />
+                ))}
+              </div>
+            ) : (
+              <p className="text-caption text-ink-3">
+                {headlineState.status === "loading" ? "Loading transfer news…" : "No transfer stories in the latest headlines."}
+              </p>
+            )}
           </section>
         </div>
 

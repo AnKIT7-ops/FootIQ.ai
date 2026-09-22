@@ -22,6 +22,7 @@ export function DataState({
   empty,
   emptyTitle,
   emptyBody,
+  loadingLabel = "Loading fixtures…",
   children,
 }: {
   status: RepoStatus;
@@ -29,13 +30,14 @@ export function DataState({
   empty: boolean;
   emptyTitle: string;
   emptyBody: string;
+  loadingLabel?: string;
   children?: ReactNode;
 }) {
   if (status === "loading") {
     return (
       <div className="flex items-center justify-center gap-2 py-10 text-caption text-ink-3" role="status">
         <Loader2 className="size-4 animate-spin motion-reduce:animate-none" aria-hidden />
-        Loading fixtures…
+        {loadingLabel}
       </div>
     );
   }

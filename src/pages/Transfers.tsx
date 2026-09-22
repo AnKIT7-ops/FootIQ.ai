@@ -14,21 +14,47 @@ import { getTeam } from "@/lib/repositories/teams";
 import { cn, money } from "@/lib/utils";
 import { usePageMeta } from "@/lib/seo";
 import { DemoDataNotice } from "@/components/ui/DemoDataNotice";
+import { DataState } from "@/components/ui/DataState";
+import { HeadlineCard } from "@/components/ui/HeadlineCard";
+import { useHeadlinesState } from "@/lib/repositories/headlines";
 
 export default function Transfers() {
   usePageMeta({
     title: "Transfer Center",
-    description: "Every transfer rumor priced with a completion probability — deal timelines, financials, fan sentiment and AI replacement suggestions.",
+    description: "The latest real transfer news from BBC Sport, the Guardian and Sky Sports, refreshed every 30 minutes.",
     path: "/transfers",
   });
-  const [openId, setOpenId] = useState<string | null>(trendingTransfers[0]?.id ?? null);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const { data: headlineData, status } = useHeadlinesState();
+  const transferNews = headlineData.filter((h) => h.category === "Transfers");
 
   return (
     <div className="space-y-6">
-      <SectionHeader level={1} eyebrow="Every rumor, priced" title="Transfer Center" />
+      <SectionHeader level={1} eyebrow="BBC Sport · The Guardian · Sky Sports" title="Transfer Center" />
+
+      <section aria-label="Latest transfer news" className="space-y-3">
+        <SectionHeader title="Latest transfer news" className="mb-0" />
+        {status !== "ready" || transferNews.length === 0 ? (
+          <DataState
+            status={status}
+            empty={transferNews.length === 0}
+            loadingLabel="Loading transfer news…"
+            emptyTitle="No transfer stories right now"
+            emptyBody="None of the latest headlines are about transfers. The feeds refresh every 30 minutes."
+          />
+        ) : (
+          <div className="grid gap-3 lg:grid-cols-2">
+            {transferNews.slice(0, 10).map((h) => (
+              <HeadlineCard key={h.id} h={h} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <SectionHeader eyebrow="Preview · not real" title="Rumour tracker (demo)" className="mb-0 pt-4" />
       <DemoDataNotice
         domain="transfer"
-        detail="Every rumour, fee, probability and timeline on this page is invented sample data. No transfer data provider is connected — football-data.org does not supply transfers — so nothing here reflects real interest, talks or fees."
+        detail="The tracker below shows how priced rumours will look. Every rumour, fee, probability and timeline in it is invented sample data — nothing here reflects real interest, talks or fees about these players or clubs."
       />
 
       <div className="space-y-3">

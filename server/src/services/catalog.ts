@@ -5,7 +5,7 @@ import type { MatchesGrouped } from "../jobs/normalize";
 import type { NormalizedCompetition } from "../providers/types";
 import type { CacheStore } from "../cache/types";
 import type { SnapshotStore } from "./snapshots";
-import type { CompetitionDto, DataSource, SearchResultDto } from "../../../shared/contracts";
+import type { CompetitionDto, DataSource, NewsHeadline, SearchResultDto } from "../../../shared/contracts";
 import { ApiError } from "../lib/errors";
 
 interface Sourced<T> {
@@ -210,6 +210,13 @@ export class CatalogService {
     );
     if (!m) throw ApiError.notFound("Match");
     return { data: matchDetailFor(m, resolveTeam), source };
+  }
+
+  /** Real headlines from the RSS sync. No demo fallback — no snapshot is an outage, not "no news". */
+  async headlines(): Promise<{ data: NewsHeadline[]; syncedAt: string }> {
+    const snap = await this.snapshots.get<NewsHeadline[]>("headlines");
+    if (!snap || snap.payload.length === 0) throw ApiError.unavailable("Data temporarily unavailable.");
+    return { data: snap.payload, syncedAt: snap.syncedAt };
   }
 
   // ---- demo-tier domains ---------------------------------------------------------

@@ -1,98 +1,52 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Card, SectionHeader } from "@/components/ui/Card";
-import { Badge, Reliability } from "@/components/ui/Badge";
-import { Crest } from "@/components/ui/Crest";
+import { SectionHeader } from "@/components/ui/Card";
 import { Tabs } from "@/components/ui/Tabs";
-import { IQInsight } from "@/components/ui/IQInsight";
-import { news } from "@/lib/repositories/news";
-import { agoFromMinutes } from "@/lib/utils";
+import { DataState } from "@/components/ui/DataState";
+import { HeadlineCard } from "@/components/ui/HeadlineCard";
+import { useHeadlinesState } from "@/lib/repositories/headlines";
 import { usePageMeta } from "@/lib/seo";
-import { DemoDataNotice } from "@/components/ui/DemoDataNotice";
+import type { NewsHeadline } from "@shared/contracts";
 
-const cats = ["All", "Transfers", "Match Report", "Tactics", "Injury", "Rumour", "Interview"];
+const cats: Array<"All" | NewsHeadline["category"]> = ["All", "Transfers", "Injuries", "Results", "News"];
 
 export default function News() {
   usePageMeta({
-    title: "News Intelligence",
-    description: "Football news algorithmically summarized to 30-second reads, with source-reliability scoring on every story.",
+    title: "Football News",
+    description: "The latest football headlines from BBC Sport, the Guardian and Sky Sports, refreshed every 30 minutes.",
     path: "/news",
   });
-  const [cat, setCat] = useState("All");
-  const navigate = useNavigate();
-  const list = useMemo(() => (cat === "All" ? news : news.filter((n) => n.category === cat)), [cat]);
+  const { data, status } = useHeadlinesState();
+  const [cat, setCat] = useState<(typeof cats)[number]>("All");
+  const list = useMemo(() => (cat === "All" ? data : data.filter((h) => h.category === cat)), [cat, data]);
   const [lead, ...rest] = list;
 
   return (
     <div className="space-y-6">
-      <SectionHeader level={1} eyebrow="Every story, 30 seconds" title="News Intelligence" />
-      <DemoDataNotice domain="news" detail="These stories are illustrative sample data, not real reporting. No news provider is connected yet." />
-      <Tabs id="news" tabs={cats.map((c) => ({ value: c, label: c }))} active={cat} onChange={setCat} className="max-w-full" />
+      <SectionHeader level={1} eyebrow="BBC Sport · The Guardian · Sky Sports" title="Football News" />
+      <p className="max-w-3xl text-ui text-ink-2">
+        Real headlines from the publishers&apos; own feeds, refreshed every 30 minutes. Each story opens on the source&apos;s site.
+        Categories are sorted automatically by keywords, not by an editor.
+      </p>
+      <Tabs id="news" tabs={cats.map((c) => ({ value: c, label: c }))} active={cat} onChange={(v) => setCat(v as typeof cat)} className="max-w-full" />
 
-      {lead && (
-        <Card hover onClick={() => navigate(`/news/${lead.id}`)} className="floodlight relative overflow-hidden p-5 md:p-7">
-          <div className="flex flex-wrap items-center gap-3">
-            <Badge variant={lead.category === "Rumour" ? "warn" : "accent"}>{lead.category}</Badge>
-            <Reliability score={lead.reliability} />
-            <span className="ml-auto font-mono text-label text-ink-3">{agoFromMinutes(lead.minutesAgo)} · {lead.source}</span>
+      {status !== "ready" || list.length === 0 ? (
+        <DataState
+          status={status}
+          empty={list.length === 0}
+          loadingLabel="Loading headlines…"
+          emptyTitle="Nothing in this category right now"
+          emptyBody="No recent headlines matched. Try another category — the feeds refresh every 30 minutes."
+        />
+      ) : (
+        <>
+          {lead && <HeadlineCard h={lead} lead />}
+          <div className="grid gap-3 lg:grid-cols-2">
+            {rest.map((h) => (
+              <HeadlineCard key={h.id} h={h} />
+            ))}
           </div>
-          <h2 className="mt-3 max-w-3xl text-xl font-bold leading-snug text-ink md:text-2xl">{lead.title}</h2>
-          <div className="mt-4 grid gap-4 md:grid-cols-[1fr_auto]">
-            <ul className="max-w-2xl space-y-1.5">
-              {lead.aiSummary.map((s, i) => (
-                <li key={i} className="flex gap-2 text-ui leading-relaxed text-ink-2">
-                  <span className="mt-[0.55em] size-1 shrink-0 rounded-full bg-iq" aria-hidden />
-                  {s}
-                </li>
-              ))}
-            </ul>
-            <div className="flex items-end gap-1.5 md:flex-col md:items-end">
-              {lead.teamIds.slice(0, 2).map((t) => (
-                <Crest key={t} teamId={t} size={34} />
-              ))}
-            </div>
-          </div>
-          <p className="mt-4 font-mono text-label uppercase tracking-wider text-accent-ink">Read in {lead.readSeconds}s →</p>
-        </Card>
+        </>
       )}
-
-      <div className="grid gap-6 lg:grid-cols-[1.8fr_1fr]">
-        <div className="space-y-3">
-          {rest.map((n) => (
-            <Card hover key={n.id} onClick={() => navigate(`/news/${n.id}`)} className="p-4 md:p-5">
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                <Badge variant={n.category === "Rumour" ? "warn" : "neutral"}>{n.category}</Badge>
-                <Reliability score={n.reliability} />
-                <span className="ml-auto font-mono text-micro text-ink-3">{agoFromMinutes(n.minutesAgo)}</span>
-              </div>
-              <h3 className="mt-2.5 text-prose font-bold leading-snug text-ink">{n.title}</h3>
-              <p className="mt-2 line-clamp-2 text-ui leading-relaxed text-ink-2">{n.aiSummary[0]}</p>
-              <div className="mt-3 flex items-center gap-2">
-                {n.teamIds.slice(0, 3).map((t) => (
-                  <Crest key={t} teamId={t} size={20} />
-                ))}
-                <span className="ml-auto font-mono text-micro uppercase tracking-wider text-accent-ink">{n.readSeconds}s read →</span>
-              </div>
-            </Card>
-          ))}
-          {rest.length === 0 && !lead && <p className="py-10 text-center text-sm text-ink-3">No stories in this category yet.</p>}
-        </div>
-
-        <div className="space-y-4">
-          <IQInsight title="Personalized for you">
-            You follow <strong>Arsenal</strong> and <strong>Bukayo Saka</strong> — today's must-read is the live title six-pointer report,
-            and the Rodri injury desk affects your fantasy captaincy chain.
-          </IQInsight>
-          <Card className="p-4">
-            <p className="eyebrow mb-3">How reliability works</p>
-            <ul className="space-y-2.5 text-caption leading-relaxed text-ink-2">
-              <li className="flex gap-2.5"><Reliability score={5} className="mt-0.5 shrink-0" /> Verified: multi-source or first-party data.</li>
-              <li className="flex gap-2.5"><Reliability score={3} className="mt-0.5 shrink-0" /> Reliable: strong outlet, single source.</li>
-              <li className="flex gap-2.5"><Reliability score={1} className="mt-0.5 shrink-0" /> Speculative: uncorroborated — labeled, never hidden.</li>
-            </ul>
-          </Card>
-        </div>
-      </div>
     </div>
   );
 }
