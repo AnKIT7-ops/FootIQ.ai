@@ -58,7 +58,7 @@ export function createServer(env: Env, opts?: { kv?: KVNamespaceLike; services?:
   const traces = new ProviderTraceStore(cache, env.PROVIDER_TRACE, logger);
   const dataProvider = opts?.services?.dataProvider ?? createDataProvider(env, logger, traces);
   const snapshots = opts?.services?.snapshots ?? new SnapshotStore(cache, db, logger);
-  const ai = opts?.services?.ai ?? new AiService(createAiProvider(env, logger), cache, logger);
+  const ai = opts?.services?.ai ?? new AiService(createAiProvider(env, logger), cache, logger, db);
   const jobs = opts?.services?.jobs ?? new JobRegistry(cache, db, logger);
   if (!opts?.services?.jobs) registerJobs(jobs, { provider: dataProvider, snapshots, ai });
 

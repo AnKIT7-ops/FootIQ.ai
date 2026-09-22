@@ -39,7 +39,10 @@ export class GeminiProvider implements AiProvider {
       throw new AiProviderError(this.name, `Connection failed: ${cause}`, true);
     }
     if (!res.ok) {
-      throw new AiProviderError(this.name, `API error ${res.status}.`, res.status === 429 || res.status >= 500);
+      // Server-log only (never forwarded). A bare "429" can't tell a per-minute
+      // burst from an exhausted daily quota or a model with no free tier.
+      const detail = (await res.text().catch(() => "")).replace(/\s+/g, " ").slice(0, 300);
+      throw new AiProviderError(this.name, `API error ${res.status}: ${detail}`, res.status === 429 || res.status >= 500);
     }
     const body = (await res.json()) as {
       candidates?: { content?: { parts?: { text?: string }[] } }[];

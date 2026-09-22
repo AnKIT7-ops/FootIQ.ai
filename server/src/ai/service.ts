@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Env } from "../config/env";
 import type { CacheStore } from "../cache/types";
 import { cacheKeys, TTL } from "../cache/types";
@@ -24,6 +25,12 @@ export class AiService {
     private provider: AiProvider,
     private cache: CacheStore,
     private logger: Logger,
+    /**
+     * Persistent tier (ai_cache table). On Workers `cache` is per-isolate memory,
+     * so without this every isolate regenerated every answer and the free
+     * Gemini quota ran out (429s for all users). Null in tests / no-DB dev.
+     */
+    private db: SupabaseClient | null = null,
   ) {}
 
   get providerName(): string {
@@ -37,7 +44,7 @@ export class AiService {
     );
 
     if (!opts?.bypassCache) {
-      const cached = await this.cache.get<AiResult>(key);
+      const cached = (await this.cache.get<AiResult>(key)) ?? (await this.readDb(key));
       if (cached) return { ...cached, cached: true };
     }
 
@@ -64,6 +71,7 @@ export class AiService {
         outputTokens: completion.usage?.outputTokens,
       });
       await this.cache.set(key, result, ttlFor(rendered.task));
+      await this.writeDb(key, result, ttlFor(rendered.task));
       return result;
     } catch (err) {
       if (err instanceof AiProviderError) {
@@ -79,6 +87,32 @@ export class AiService {
       }
       throw err;
     }
+  }
+  /** Best-effort persistent tier: a DB blip degrades to "generate again", never to an error. */
+  private async readDb(key: string): Promise<AiResult | null> {
+    if (!this.db) return null;
+    const { data, error } = await this.db
+      .from("ai_cache")
+      .select("result, expires_at")
+      .eq("key", key)
+      .gt("expires_at", new Date().toISOString())
+      .maybeSingle();
+    if (error) {
+      this.logger.warn("ai.cache_read_failed", { message: error.message });
+      return null;
+    }
+    if (!data) return null;
+    const ttl = Math.floor((new Date(data.expires_at).getTime() - Date.now()) / 1000);
+    if (ttl > 0) await this.cache.set(key, data.result, ttl); // warm this isolate
+    return data.result as AiResult;
+  }
+
+  private async writeDb(key: string, result: AiResult, ttlSeconds: number): Promise<void> {
+    if (!this.db) return;
+    const { error } = await this.db
+      .from("ai_cache")
+      .upsert({ key, result, expires_at: new Date(Date.now() + ttlSeconds * 1000).toISOString() });
+    if (error) this.logger.warn("ai.cache_write_failed", { message: error.message });
   }
 }
 
