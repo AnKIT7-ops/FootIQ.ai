@@ -71,13 +71,17 @@ export function registerJobs(
     description: "Club crest/venue/founded/colours per competition → team_identity snapshot (24h TTL)",
     async run() {
       if (!provider.fetchTeams) return "provider has no teams capability";
-      if (await isFresh(snapshots, "team_identity")) return "skipped — snapshot still fresh (24h TTL)";
+      // A fresh snapshot written before squads were parsed still needs one re-sync.
+      const prior = await snapshots.get<NormalizedTeam[]>("team_identity");
+      const hasSquads = prior?.payload.some((r) => r.squad?.length) ?? false;
+      if (hasSquads && (await isFresh(snapshots, "team_identity"))) return "skipped — snapshot still fresh (24h TTL)";
       const rows = await provider.fetchTeams();
       if (rows.length === 0) throw new Error("teams sync produced 0 rows — keeping last snapshot");
       await snapshots.set<NormalizedTeam[]>("team_identity", rows, provider.name);
       const withCrest = rows.filter((r) => r.crestUrl).length;
       const withCoach = rows.filter((r) => r.coach).length;
-      return `${rows.length} clubs (${withCrest} crests, ${withCoach} coaches) (${provider.name})`;
+      const withSquad = rows.filter((r) => r.squad?.length).length;
+      return `${rows.length} clubs (${withCrest} crests, ${withCoach} coaches, ${withSquad} squads) (${provider.name})`;
     },
   });
 

@@ -16,7 +16,9 @@ import { Sparkline } from "@/components/charts/Sparkline";
 import { Heatmap } from "@/components/charts/Heatmap";
 import { ShotMap } from "@/components/charts/ShotMap";
 import { PassMap } from "@/components/charts/PassMap";
-import { players, getPlayer, attributeLabels } from "@/lib/repositories/players";
+import { getPlayer, attributeLabels } from "@/lib/repositories/players";
+import type { Player } from "@/data/types";
+import NotFound from "./NotFound";
 import { getTeam } from "@/lib/repositories/teams";
 import { heatmapFor, passMapFor, shotMapFor } from "@/data/generators";
 import { money } from "@/lib/utils";
@@ -29,14 +31,14 @@ import { recordView } from "@/lib/recent";
 
 export default function PlayerPage() {
   const { id } = useParams();
+  // Player data is bundled (seeded synchronously), so a miss is a real 404 — never
+  // fall back to another player's page.
+  const player = useMemo(() => resolvePlayer(id), [id]);
+  return player ? <PlayerView player={player} /> : <NotFound />;
+}
+
+function PlayerView({ player }: { player: Player }) {
   const navigate = useNavigate();
-  const player = useMemo(() => {
-    try {
-      return resolvePlayer(id) ?? getPlayer(id ?? "saka");
-    } catch {
-      return players[0];
-    }
-  }, [id]);
   const team = getTeam(player.teamId);
   const [tab, setTab] = useState("overview");
   useEffect(() => {

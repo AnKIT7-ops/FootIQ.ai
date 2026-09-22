@@ -90,6 +90,8 @@ export interface NormalizedTeam {
   website?: string;
   /** Competition this club was fetched under. */
   competition: string;
+  /** Registered squad, when the provider supplies one. */
+  squad?: { name: string; position?: string; dateOfBirth?: string; nationality?: string }[];
 }
 
 /** A competition and where it currently is in its season. */

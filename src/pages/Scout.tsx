@@ -57,7 +57,7 @@ function parse(q: string): ParsedQuery {
     [/winger|wide|wing\b/, "FW", "wide forward"],
     [/striker|forward|number 9|no9|goalscorer/, "FW", "forward"],
     [/midfielder|pivot|number 8|playmaker|regista|ten\b/, "MF", "midfielder"],
-    [/defender|centre-back|center-back|cb\b|full-back|fullback/, "DF", "defender"],
+    [/defender|cent(?:re|er)[ -]?backs?|\bcbs?\b|(?:full|left|right)[ -]?backs?/, "DF", "defender"],
     [/keeper|goalkeeper|gk\b/, "GK", "goalkeeper"],
   ];
   for (const [re, pos, label] of posMap) {
@@ -74,7 +74,7 @@ function parse(q: string): ParsedQuery {
     [/finish|scor|shooting|clinical/, "shooting", "finishing"],
     [/pace|fast|quick|rapid|speed/, "pace", "pace"],
     [/defend|tackl|duel/, "defending", "defending"],
-    [/physical|strong|aerial/, "physical", "physicality"],
+    [/physical|strong|aerial|in the air|header|heading|\btall\b/, "physical", "physicality"],
   ];
   for (const [re, key, label] of traitMap) {
     if (re.test(s) && !out.traits.some((t) => t.key === key)) {

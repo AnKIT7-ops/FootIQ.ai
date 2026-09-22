@@ -13,6 +13,9 @@ interface Sourced<T> {
   source: DataSource;
 }
 
+/** Squads are ~25 rows per club; list endpoints (loaded on every page) would 5× in size carrying them. */
+const withoutSquad = ({ squad: _squad, ...t }: Team): Team => t;
+
 const EMPTY_MATCHES: MatchesGrouped = { live: [], upcoming: [], finished: [], postponed: [], cancelled: [], unconfirmed: [] };
 
 /**
@@ -97,7 +100,8 @@ export class CatalogService {
   // ---- teams / standings (snapshot-backed) -----------------------------------
 
   async teams(): Promise<Sourced<Team[]>> {
-    return this.catalogTeams();
+    const { data, source } = await this.catalogTeams();
+    return { data: data.map(withoutSquad), source };
   }
 
   async team(id: string): Promise<Sourced<Team>> {
@@ -172,6 +176,7 @@ export class CatalogService {
     if (!target) return { data: [], source, competition: null };
     const table = data
       .filter((t) => t.league === target)
+      .map(withoutSquad)
       .sort((a, b) => a.position - b.position || a.name.localeCompare(b.name));
     return { data: table, source, competition: target };
   }

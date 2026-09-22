@@ -289,7 +289,7 @@ export default function Home() {
         {/* right rail */}
         <div className="min-w-0 space-y-10">
           <section aria-label="League table">
-            <SectionHeader eyebrow="Premier League" title="Table" />
+            <SectionHeader eyebrow={leagueTable[0]?.league ?? "League"} title="Table" />
             <Card className="overflow-hidden">
               <table className="w-full text-ui">
                 <thead>

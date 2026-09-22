@@ -117,6 +117,30 @@ describe("mergeStandings", () => {
     expect(arsenal.colors[0]).toBe("#e11d48"); // "Red / White" parsed
   });
 
+  it("carries the provider's real squad onto known and new clubs", () => {
+    // Team pages used to render generated filler names; the real squad must survive the merge.
+    const squad = [{ name: "Bukayo Saka", position: "Right Winger", dateOfBirth: "2001-09-05", nationality: "England" }];
+    const teams = mergeStandings([row({ name: "Arsenal", position: 1 })]);
+    const merged = mergeTeams(teams, [
+      { extId: teams[0].extId!, name: "Arsenal FC", competition: "Premier League", squad },
+      { extId: "fd-341", name: "Leeds United FC", competition: "Premier League", squad },
+    ]);
+    expect(merged.find((t) => t.id === "ars")?.squad).toEqual(squad);
+    expect(merged.find((t) => t.extId === "fd-341")?.squad).toEqual(squad);
+  });
+
+  it("keeps a club's squad when a second competition lists it with an empty one", () => {
+    // Arsenal is fetched under PL (full squad) and CL (squad: [] on the free tier).
+    const squad = [{ name: "Bukayo Saka", position: "Right Winger" }];
+    const teams = mergeStandings([row({ name: "Arsenal", position: 1 })]);
+    const [arsenal] = mergeTeams(teams, [
+      { extId: teams[0].extId!, name: "Arsenal FC", competition: "Premier League", squad, founded: 1886 },
+      { extId: teams[0].extId!, name: "Arsenal FC", competition: "UEFA Champions League", squad: [] },
+    ]);
+    expect(arsenal.squad).toEqual(squad);
+    expect(arsenal.founded).toBe(1886); // earlier rows' fields survive too
+  });
+
   it("files an identity-only club under the competition NAME, never its code", () => {
     // Standings file competitions by name ("Primera Division"); the teams
     // endpoint is called by code ("PD"). Using the code here put both in the

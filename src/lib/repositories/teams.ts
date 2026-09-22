@@ -5,10 +5,20 @@ import { createRepoStore } from "./store";
 
 const store = createRepoStore<Team[]>({ name: "teams", seed, endpoint: "/api/teams" });
 
-const derive = (list: Team[]) => ({
-  byId: new Map(list.map((t) => [t.id, t])),
-  table: [...list].sort((a, b) => a.position - b.position),
-});
+/** The Home table is labelled Premier League; the synced list spans six competitions. */
+export const TABLE_LEAGUE = "Premier League";
+
+// A table is ONE league — positions from different competitions aren't comparable
+// (mixing them put five clubs at #1). Falls back to the first league if PL is absent.
+const derive = (list: Team[]) => {
+  const league = list.some((t) => t.league === TABLE_LEAGUE) ? TABLE_LEAGUE : list[0]?.league;
+  return {
+    byId: new Map(list.map((t) => [t.id, t])),
+    table: list
+      .filter((t) => t.league === league)
+      .sort((a, b) => a.position - b.position || a.name.localeCompare(b.name)),
+  };
+};
 
 export let teams: Team[] = store.get();
 let d = derive(teams);
@@ -29,4 +39,5 @@ export function getTeam(id: string): Team {
 }
 
 export const useTeams = store.use;
+export const useTeamsState = store.useState;
 export const refreshTeams = store.refresh;

@@ -5,7 +5,9 @@ import { Badge, Reliability } from "@/components/ui/Badge";
 import { Crest } from "@/components/ui/Crest";
 import { Avatar } from "@/components/ui/Avatar";
 import { IQInsight } from "@/components/ui/IQInsight";
-import { news, newsById } from "@/lib/repositories/news";
+import { newsById } from "@/lib/repositories/news";
+import type { NewsArticle as NewsArticleType } from "@/data/types";
+import NotFound from "./NotFound";
 import { getPlayer } from "@/lib/repositories/players";
 import { getTeam } from "@/lib/repositories/teams";
 import { agoFromMinutes } from "@/lib/utils";
@@ -18,8 +20,12 @@ import { recordView } from "@/lib/recent";
 
 export default function NewsArticle() {
   const { id } = useParams();
+  const article = resolveNews(id);
+  return article ? <ArticleView article={article} /> : <NotFound />;
+}
+
+function ArticleView({ article }: { article: NewsArticleType }) {
   const navigate = useNavigate();
-  const article = resolveNews(id) ?? news[0];
   const related = article.related.map((r) => newsById.get(r)).filter(Boolean);
   useEffect(() => {
     recordView({ kind: "news", id: article.id, label: article.title.length > 48 ? article.title.slice(0, 45) + "…" : article.title, sub: article.category, path: newsPath(article) });

@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "motion/react";
-import { Activity, BriefcaseMedical } from "lucide-react";
+import { Activity, BriefcaseMedical, Loader2 } from "lucide-react";
+import type { SquadMember, Team } from "@/data/types";
+import type { RepoStatus } from "@/lib/repositories/store";
+import { api } from "@/lib/api/client";
+import { backendConfigured } from "@/lib/config";
+import NotFound from "./NotFound";
 import { Card, SectionHeader } from "@/components/ui/Card";
 import { Badge, FormPills } from "@/components/ui/Badge";
 import { Crest } from "@/components/ui/Crest";
@@ -11,9 +16,8 @@ import { StatTile, Meter } from "@/components/ui/StatTile";
 import { IQInsight } from "@/components/ui/IQInsight";
 import { MatchCard } from "@/components/ui/MatchCard";
 import { DonutGauge } from "@/components/charts/DonutGauge";
-import { teams, getTeam } from "@/lib/repositories/teams";
+import { getTeam, useTeamsState } from "@/lib/repositories/teams";
 import { playersOf } from "@/lib/repositories/players";
-import { depthSquad } from "@/data/generators";
 import { teamMatches } from "@/lib/repositories/matches";
 import { transferRumors } from "@/lib/repositories/transfers";
 import { getPlayer } from "@/lib/repositories/players";
@@ -26,14 +30,57 @@ import { recordView } from "@/lib/recent";
 
 export default function TeamPage() {
   const { id } = useParams();
+  // Synced clubs (e.g. fd-341) only exist after hydration, so re-resolve on every
+  // data swap — resolving once on [id] could lock onto the wrong club or a 404.
+  const { data: allTeams, status } = useTeamsState();
+  const team = useMemo(() => resolveTeam(id), [id, allTeams]);
+  if (team) return <TeamView team={team} />;
+  if (status === "loading") {
+    return (
+      <div className="flex h-[60vh] items-center justify-center gap-2 text-caption text-ink-3" role="status">
+        <Loader2 className="size-4 animate-spin motion-reduce:animate-none" aria-hidden />
+        Loading club…
+      </div>
+    );
+  }
+  return <NotFound />;
+}
+
+/** Real squad from /api/teams/:id — list endpoints strip it to stay small. */
+function useSquad(teamId: string): { status: RepoStatus; data: SquadMember[] } {
+  const [state, setState] = useState<{ status: RepoStatus; data: SquadMember[] }>({
+    status: backendConfigured ? "loading" : "unavailable",
+    data: [],
+  });
+  useEffect(() => {
+    if (!backendConfigured) return;
+    let live = true;
+    setState({ status: "loading", data: [] });
+    api
+      .get<Team>(`/api/teams/${encodeURIComponent(teamId)}`)
+      .then((t) => live && setState({ status: "ready", data: t.squad ?? [] }))
+      .catch(() => live && setState({ status: "error", data: [] }));
+    return () => {
+      live = false;
+    };
+  }, [teamId]);
+  return state;
+}
+
+/** football-data's coarse buckets → fan vocabulary; finer roles ("Right Winger") pass through. */
+const POSITION_LABEL: Record<string, string> = { Offence: "Forward", Defence: "Defender", Midfield: "Midfielder" };
+
+function ageFrom(dob?: string): number | null {
+  if (!dob) return null;
+  const b = new Date(dob);
+  if (Number.isNaN(b.getTime())) return null;
+  const now = new Date();
+  const hadBirthday = now.getMonth() > b.getMonth() || (now.getMonth() === b.getMonth() && now.getDate() >= b.getDate());
+  return now.getFullYear() - b.getFullYear() - (hadBirthday ? 0 : 1);
+}
+
+function TeamView({ team }: { team: Team }) {
   const navigate = useNavigate();
-  const team = useMemo(() => {
-    try {
-      return resolveTeam(id) ?? getTeam(id ?? "ars");
-    } catch {
-      return teams[0];
-    }
-  }, [id]);
   const [tab, setTab] = useState("squad");
   useEffect(() => {
     recordView({ kind: "team", id: team.id, label: team.name, sub: team.league, path: teamPath(team) });
@@ -46,7 +93,7 @@ export default function TeamPage() {
     breadcrumbs: [{ name: team.name, path: teamPath(team) }],
   });
   const stars = playersOf(team.id);
-  const depth = useMemo(() => depthSquad(team.id), [team.id]);
+  const squad = useSquad(team.id);
   const { fixtures, results } = teamMatches(team.id);
   const rumors = transferRumors.filter((r) => r.fromId === team.id || r.toId === team.id);
   const injuries = stars.flatMap((p) =>
@@ -137,58 +184,69 @@ export default function TeamPage() {
           </section>
 
           <section aria-label="Full squad">
-            <SectionHeader title="Squad List" className="mb-3" />
-            <Card className="overflow-x-auto">
-              <table className="w-full min-w-[34rem] text-ui">
-                <thead>
-                  <tr className="border-b border-line text-left font-mono text-micro uppercase tracking-wider text-ink-3">
-                    <th scope="col" className="py-2.5 pl-4 font-medium">#</th>
-                    <th scope="col" className="font-medium">Player</th>
-                    <th scope="col" className="font-medium">Role</th>
-                    <th scope="col" className="text-right font-medium">Age</th>
-                    <th scope="col" className="text-right font-medium">Apps</th>
-                    <th scope="col" className="text-right font-medium">G+A</th>
-                    <th scope="col" className="py-2.5 pr-4 text-right font-medium">Value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...stars.map((p) => ({ kind: "star" as const, p })), ...depth.map((p) => ({ kind: "depth" as const, p }))].map((row) => (
-                    <tr
-                      key={row.p.id}
-                      onClick={row.kind === "star" ? () => navigate(`/player/${row.p.id}`) : undefined}
-                      tabIndex={row.kind === "star" ? 0 : undefined}
-                      onKeyDown={
-                        row.kind === "star"
-                          ? (e) => {
-                              if (e.key === "Enter" || e.key === " ") {
-                                e.preventDefault();
-                                navigate(`/player/${row.p.id}`);
-                              }
-                            }
-                          : undefined
-                      }
-                      aria-label={row.kind === "star" ? `${row.p.name} player page` : undefined}
-                      className={cn("border-b border-line last:border-0", row.kind === "star" && "cursor-pointer hover:bg-surface-2 focus-visible:bg-surface-2")}
-                    >
-                      <td className="py-2.5 pl-4 font-mono text-xs text-ink-3">{row.p.shirt}</td>
-                      <td>
-                        <span className="flex items-center gap-2 font-medium text-ink">
-                          {row.p.name}
-                          {row.kind === "star" && <Badge variant="accent" className="hidden sm:inline-flex">Key</Badge>}
-                        </span>
-                      </td>
-                      <td className="text-ink-2">{row.p.role}</td>
-                      <td className="tabular text-right font-mono text-xs text-ink-2">{row.p.age}</td>
-                      <td className="tabular text-right font-mono text-xs text-ink-2">{"stats" in row.p ? row.p.stats.apps : row.p.apps}</td>
-                      <td className="tabular text-right font-mono text-xs text-ink-2">
-                        {"stats" in row.p ? row.p.stats.goals + row.p.stats.assists : row.p.goals + row.p.assists}
-                      </td>
-                      <td className="tabular py-2.5 pr-4 text-right font-mono text-xs text-ink-2">{money(row.p.marketValue)}</td>
+            <SectionHeader eyebrow="Registered squad · football-data.org" title="Squad List" className="mb-3" />
+            {squad.status !== "ready" || squad.data.length === 0 ? (
+              <Card className="p-5">
+                <p className="flex items-center gap-2 text-caption text-ink-3" role="status">
+                  {squad.status === "loading" ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin motion-reduce:animate-none" aria-hidden /> Loading squad…
+                    </>
+                  ) : (
+                    "Squad list unavailable right now. It appears once club data syncs — we show nothing rather than invent names."
+                  )}
+                </p>
+              </Card>
+            ) : (
+              <Card className="overflow-x-auto">
+                <table className="w-full min-w-[30rem] text-ui">
+                  <thead>
+                    <tr className="border-b border-line text-left font-mono text-micro uppercase tracking-wider text-ink-3">
+                      <th scope="col" className="py-2.5 pl-4 font-medium">Player</th>
+                      <th scope="col" className="font-medium">Position</th>
+                      <th scope="col" className="text-right font-medium">Age</th>
+                      <th scope="col" className="py-2.5 pr-4 text-right font-medium">Nationality</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </Card>
+                  </thead>
+                  <tbody>
+                    {squad.data.map((m) => {
+                      // Link through only when we hold a profile for this exact player.
+                      const star = stars.find((p) => p.name === m.name);
+                      const open = star ? () => navigate(`/player/${star.id}`) : undefined;
+                      return (
+                        <tr
+                          key={`${m.name}-${m.dateOfBirth ?? ""}`}
+                          onClick={open}
+                          tabIndex={star ? 0 : undefined}
+                          onKeyDown={
+                            open
+                              ? (e) => {
+                                  if (e.key === "Enter" || e.key === " ") {
+                                    e.preventDefault();
+                                    open();
+                                  }
+                                }
+                              : undefined
+                          }
+                          aria-label={star ? `${m.name} player page` : undefined}
+                          className={cn("border-b border-line last:border-0", star && "cursor-pointer hover:bg-surface-2 focus-visible:bg-surface-2")}
+                        >
+                          <td className="py-2.5 pl-4">
+                            <span className="flex items-center gap-2 font-medium text-ink">
+                              {m.name}
+                              {star && <Badge variant="accent" className="hidden sm:inline-flex">Key</Badge>}
+                            </span>
+                          </td>
+                          <td className="text-ink-2">{m.position ? (POSITION_LABEL[m.position] ?? m.position) : "—"}</td>
+                          <td className="tabular text-right font-mono text-xs text-ink-2">{ageFrom(m.dateOfBirth) ?? "—"}</td>
+                          <td className="py-2.5 pr-4 text-right text-ink-2">{m.nationality ?? "—"}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </Card>
+            )}
           </section>
         </div>
       )}
