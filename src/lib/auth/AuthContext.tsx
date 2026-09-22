@@ -140,6 +140,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+/** What to call someone in the UI: their name, else their email's local part, else "Guest". */
+export function displayNameOf(user: SessionUser | null): string {
+  if (!user) return "Guest";
+  return user.displayName?.trim() || user.email?.split("@")[0] || "Guest";
+}
+
 export function useAuth(): AuthState {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>");

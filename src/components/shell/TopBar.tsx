@@ -5,6 +5,7 @@ import { useTheme } from "@/lib/hooks";
 import { Logo } from "./Logo";
 import { Avatar } from "@/components/ui/Avatar";
 import { DataFreshness } from "@/components/ui/DataFreshness";
+import { displayNameOf, useAuth } from "@/lib/auth/AuthContext";
 
 // the notification feed derives from the dataset — keep it out of the shell
 // chunk and hydrate the bell after first paint (same idea as CommandPalette)
@@ -14,6 +15,7 @@ const NotificationCenter = lazy(() =>
 
 export function TopBar({ onOpenSearch }: { onOpenSearch: () => void }) {
   const [theme, toggleTheme] = useTheme();
+  const { user, ready, authEnabled } = useAuth();
   const [bellReady, setBellReady] = useState(false);
   useEffect(() => setBellReady(true), []); // mount lazy bell post-paint
 
@@ -71,9 +73,18 @@ export function TopBar({ onOpenSearch }: { onOpenSearch: () => void }) {
             {theme === "dark" ? <Sun className="size-4" aria-hidden /> : <Moon className="size-4" aria-hidden />}
           </button>
 
-          <Link to="/profile" aria-label="Your profile" className="ml-0.5 rounded-full transition-transform hover:scale-105">
-            <Avatar name="Ankit L" size={34} />
-          </Link>
+          {authEnabled && ready && !user ? (
+            <Link
+              to="/signin"
+              className="ml-0.5 inline-flex h-9 items-center rounded-full bg-accent px-4 text-ui font-semibold text-[#04110c] transition-transform hover:scale-[1.03] active:scale-95"
+            >
+              Sign in
+            </Link>
+          ) : (
+            <Link to="/profile" aria-label="Your profile" className="ml-0.5 rounded-full transition-transform hover:scale-105">
+              <Avatar name={displayNameOf(user)} size={34} />
+            </Link>
+          )}
         </div>
       </div>
     </header>

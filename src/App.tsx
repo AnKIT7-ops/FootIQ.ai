@@ -35,6 +35,7 @@ const Fantasy = lazy(() => import("@/pages/Fantasy"));
 const Highlights = lazy(() => import("@/pages/Highlights"));
 const History = lazy(() => import("@/pages/History"));
 const Profile = lazy(() => import("@/pages/Profile"));
+const SignIn = lazy(() => import("@/pages/SignIn"));
 const About = lazy(() => import("@/pages/About"));
 const Contact = lazy(() => import("@/pages/Contact"));
 const Privacy = lazy(() => import("@/pages/Privacy"));
@@ -139,11 +140,12 @@ function Shell() {
                 <Route
                   path="/profile"
                   element={
-                    <RequireAuth fallback={<Navigate to="/" replace />}>
+                    <RequireAuth fallback={<Navigate to="/signin?next=/profile" replace />}>
                       <Profile />
                     </RequireAuth>
                   }
                 />
+                <Route path="/signin" element={<SignIn />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/privacy" element={<Privacy />} />

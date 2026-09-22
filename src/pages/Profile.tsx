@@ -1,19 +1,18 @@
 import { Link, useNavigate } from "react-router-dom";
-import { BellRing, Bookmark, Crown, Eye, GitCompareArrows, Star, TrendingUp, UserRoundSearch } from "lucide-react";
+import { BellRing, Bookmark, Crown, Star, TrendingUp, UserRoundSearch } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Card, SectionHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import { Crest } from "@/components/ui/Crest";
 import { IQInsight } from "@/components/ui/IQInsight";
-import { useLocalStorage } from "@/lib/hooks";
 import { teams, getTeam } from "@/lib/repositories/teams";
 import { players } from "@/lib/repositories/players";
-import { getPlayer } from "@/lib/repositories/players";
 import { favoritesOf, setPref, toggleFavorite, toggleBookmark, useUserData, type NotificationPrefs } from "@/lib/user";
 import { playerPath } from "@/lib/slugs";
 import { cn, money } from "@/lib/utils";
 import { usePageMeta } from "@/lib/seo";
+import { displayNameOf, useAuth } from "@/lib/auth/AuthContext";
 
 const prefLabels: Record<keyof NotificationPrefs, string> = {
   matchReminders: "Match reminders for followed teams",
@@ -23,11 +22,6 @@ const prefLabels: Record<keyof NotificationPrefs, string> = {
   weeklyDigest: "Weekly AI digest by email",
 };
 
-const savedComparisons = [
-  { a: "saka", b: "yamal", note: "Wing debate" },
-  { a: "haaland", b: "isak", note: "No.9 market" },
-];
-
 export default function Profile() {
   usePageMeta({
     title: "Your Profile",
@@ -36,7 +30,9 @@ export default function Profile() {
     noIndex: true,
   });
   const user = useUserData();
-  const [premium, setPremium] = useLocalStorage("footiq-premium", true);
+  const { user: account, authEnabled, signOut } = useAuth();
+  const name = displayNameOf(account);
+  const paid = account?.plan === "pro" || account?.plan === "club";
   const navigate = useNavigate();
 
   const favTeams = favoritesOf("team");
@@ -46,13 +42,13 @@ export default function Profile() {
     <div className="space-y-8">
       {/* header */}
       <Card className="floodlight flex flex-wrap items-center gap-5 p-5 md:p-7">
-        <Avatar name="Ankit L" size={72} ringColor="var(--accent)" />
+        <Avatar name={name} size={72} ringColor="var(--accent)" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="display text-2xl font-black text-ink md:text-3xl">Ankit</h1>
-            {premium && (
+            <h1 className="display text-2xl font-black text-ink md:text-3xl">{name}</h1>
+            {paid && (
               <Badge variant="iq" className="px-2.5 py-1">
-                <Crown className="size-3" aria-hidden /> IQ Premium
+                <Crown className="size-3" aria-hidden /> {account?.plan === "club" ? "Club" : "Pro"}
               </Badge>
             )}
           </div>
@@ -251,46 +247,41 @@ export default function Profile() {
           </Card>
         </section>
 
-        {/* saved comparisons + premium */}
-        <section aria-label="Saved comparisons and premium">
-          <SectionHeader title="Saved Comparisons" />
-          <div className="space-y-2.5">
-            {savedComparisons.map((s, i) => {
-              const a = getPlayer(s.a);
-              const b = getPlayer(s.b);
-              return (
-                <Card hover key={i} onClick={() => navigate("/compare")} className="flex items-center gap-3 p-3.5">
-                  <GitCompareArrows className="size-4 shrink-0 text-chart-2" aria-hidden />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-ui font-semibold text-ink">
-                      {a.name} vs {b.name}
-                    </p>
-                    <p className="text-label text-ink-3">{s.note}</p>
-                  </div>
-                  <Bookmark className="size-4 shrink-0 fill-iq-ink text-iq-ink" aria-hidden />
-                </Card>
-              );
-            })}
-            <Card className="p-4">
-              <p className="flex items-center gap-2 text-ui font-bold text-ink">
-                <Crown className="size-4 text-iq-ink" aria-hidden /> IQ Premium
-              </p>
-              <ul className="mt-2.5 space-y-1.5 text-caption text-ink-2">
-                <li className="flex gap-2"><Eye className="mt-0.5 size-3.5 shrink-0 text-accent-ink" aria-hidden /> Unlimited AI Scout queries & live win-probability feeds</li>
-                <li className="flex gap-2"><Eye className="mt-0.5 size-3.5 shrink-0 text-accent-ink" aria-hidden /> Full historical model archive back to 1950</li>
-                <li className="flex gap-2"><Eye className="mt-0.5 size-3.5 shrink-0 text-accent-ink" aria-hidden /> Fantasy chip optimizer with private projections</li>
-              </ul>
-              <button
-                onClick={() => setPremium((p) => !p)}
-                className={cn(
-                  "mt-3.5 w-full rounded-xl py-2.5 text-ui font-semibold transition-transform hover:scale-[1.01] active:scale-[0.99]",
-                  premium ? "border border-line text-ink-2" : "bg-iq text-[#241a02]",
-                )}
-              >
-                {premium ? "Manage subscription" : "Upgrade to Premium"}
-              </button>
-            </Card>
-          </div>
+        <section aria-label="Account">
+          <SectionHeader title="Account" />
+          <Card className="space-y-3 p-4">
+            {!authEnabled ? (
+              <p className="text-caption text-ink-2">Accounts aren't enabled on this deployment — everything here is saved on this device.</p>
+            ) : account ? (
+              <>
+                <p className="text-ui text-ink">
+                  {account.isAnonymous ? "Guest session" : <>Signed in as <span className="font-semibold">{account.email ?? name}</span></>}
+                </p>
+                <p className="text-caption text-ink-3">
+                  {account.isAnonymous
+                    ? "Guest data stays on this device. Sign in with email to use FootIQ across devices."
+                    : "FootIQ is free during the beta."}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {account.isAnonymous && (
+                    <Link to="/signin" className="rounded-full bg-accent px-4 py-2 text-ui font-semibold text-[#04110c] transition-transform hover:scale-[1.03] active:scale-95">
+                      Sign in with email
+                    </Link>
+                  )}
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await signOut();
+                      navigate("/");
+                    }}
+                    className="rounded-full border border-line px-4 py-2 text-ui font-semibold text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
+                  >
+                    Sign out
+                  </button>
+                </div>
+              </>
+            ) : null}
+          </Card>
         </section>
       </div>
 
