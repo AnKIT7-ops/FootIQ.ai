@@ -188,24 +188,31 @@ export function mergeTeams(existing: Team[], rows: NormalizedTeam[]): Team[] {
         founded: row.founded,
         stadium: row.venue ?? made.stadium,
         manager: row.coach ?? made.manager,
+        squad: row.squad,
         ...(colors ? { colors } : {}),
       });
       continue;
     }
     const i = indexOf.get(base.id);
     if (i === undefined) continue;
+    // Build on the CURRENT row, not `base`: a club listed in two competitions
+    // (Arsenal: PL + CL) gets two rows, and starting over from `base` let the
+    // second erase what the first added.
+    const cur = out[i];
     out[i] = {
-      ...base,
+      ...cur,
       extId: row.extId,
-      // Identity from the provider; `id`, squad and tactical dials stay put.
-      short: row.shortName ?? base.short,
-      tla: row.tla ?? base.tla,
-      crestUrl: row.crestUrl ?? base.crestUrl,
-      founded: row.founded ?? base.founded,
-      stadium: row.venue ?? base.stadium,
+      // Identity from the provider; `id` and tactical dials stay put.
+      short: row.shortName ?? cur.short,
+      tla: row.tla ?? cur.tla,
+      crestUrl: row.crestUrl ?? cur.crestUrl,
+      founded: row.founded ?? cur.founded,
+      stadium: row.venue ?? cur.stadium,
       // Free tier leaves coach null for every club — don't overwrite a real
       // demo manager name with nothing.
-      manager: row.coach ?? base.manager,
+      manager: row.coach ?? cur.manager,
+      // The CL endpoint returns empty squads for most clubs — never let [] replace a real one.
+      squad: row.squad?.length ? row.squad : cur.squad,
       ...(colors ? { colors } : {}),
     };
   }

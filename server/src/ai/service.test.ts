@@ -42,6 +42,35 @@ describe("AiService", () => {
     expect(provider.calls.length).toBe(2);
   });
 
+  it("a second isolate (empty memory cache) is served from the persistent tier", async () => {
+    // Workers isolates don't share memory; this is what burned the Gemini quota.
+    const rows = new Map<string, { result: unknown; expires_at: string }>();
+    const db = {
+      from: () => ({
+        upsert: async (row: { key: string; result: unknown; expires_at: string }) => {
+          rows.set(row.key, row);
+          return { error: null };
+        },
+        select: () => {
+          let key = "";
+          const q = {
+            eq: (_c: string, v: string) => ((key = v), q),
+            gt: () => q,
+            maybeSingle: async () => ({ data: rows.get(key) ?? null, error: null }),
+          };
+          return q;
+        },
+      }),
+    } as unknown as ConstructorParameters<typeof AiService>[3];
+
+    const provider = new MockAiProvider();
+    await new AiService(provider, new MemoryCache(), logger, db).run(prompts.scout_report(players[0], null));
+    const second = await new AiService(provider, new MemoryCache(), logger, db).run(prompts.scout_report(players[0], null));
+
+    expect(second.cached).toBe(true);
+    expect(provider.calls.length).toBe(1);
+  });
+
   it("bypassCache forces regeneration", async () => {
     const provider = new MockAiProvider();
     const service = new AiService(provider, new MemoryCache(), logger);

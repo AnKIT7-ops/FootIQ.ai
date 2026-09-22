@@ -22,7 +22,6 @@ const Matches = lazy(() => import("@/pages/Matches"));
 const Schedule = lazy(() => import("@/pages/Schedule"));
 const MatchCenter = lazy(() => import("@/pages/MatchCenter"));
 const News = lazy(() => import("@/pages/News"));
-const NewsArticle = lazy(() => import("@/pages/NewsArticle"));
 const PlayerPage = lazy(() => import("@/pages/Player"));
 const SimilarPlayers = lazy(() => import("@/pages/SimilarPlayers"));
 const Compare = lazy(() => import("@/pages/Compare"));
@@ -35,6 +34,7 @@ const Fantasy = lazy(() => import("@/pages/Fantasy"));
 const Highlights = lazy(() => import("@/pages/Highlights"));
 const History = lazy(() => import("@/pages/History"));
 const Profile = lazy(() => import("@/pages/Profile"));
+const SignIn = lazy(() => import("@/pages/SignIn"));
 const About = lazy(() => import("@/pages/About"));
 const Contact = lazy(() => import("@/pages/Contact"));
 const Privacy = lazy(() => import("@/pages/Privacy"));
@@ -114,7 +114,8 @@ function Shell() {
                 <Route path="/match/:id" element={<MatchCenter />} />
                 <Route path="/matches/:id" element={<MatchCenter />} />
                 <Route path="/news" element={<News />} />
-                <Route path="/news/:id" element={<NewsArticle />} />
+                {/* Demo articles (invented quotes about real people) are retired; old links land on real news. */}
+                <Route path="/news/:id" element={<Navigate to="/news" replace />} />
                 <Route path="/player/:id" element={<PlayerPage />} />
                 <Route path="/players/:id" element={<PlayerPage />} />
                 <Route path="/similar" element={<SimilarPlayers />} />
@@ -139,11 +140,12 @@ function Shell() {
                 <Route
                   path="/profile"
                   element={
-                    <RequireAuth fallback={<Navigate to="/" replace />}>
+                    <RequireAuth fallback={<Navigate to="/signin?next=/profile" replace />}>
                       <Profile />
                     </RequireAuth>
                   }
                 />
+                <Route path="/signin" element={<SignIn />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/privacy" element={<Privacy />} />

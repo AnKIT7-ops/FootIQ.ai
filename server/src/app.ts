@@ -6,6 +6,7 @@ import type { Env } from "./config/env";
 import type { AppEnv, Services } from "./types";
 import { createLogger } from "./lib/logger";
 import { cacheBackendName, createCache } from "./cache";
+import type { NewsHeadline } from "../../shared/contracts";
 import type { KVNamespaceLike } from "./cache/kv";
 import { createServiceClient } from "./db/supabase";
 import { AiService, createAiProvider } from "./ai/service";
@@ -45,12 +46,12 @@ import { adminRoutes } from "./routes/admin";
  * the order that matters, mounts routes. Same factory serves Node, Workers,
  * and tests (tests pass a doctored env + mock services overrides).
  */
-export function createApp(env: Env, opts?: { kv?: KVNamespaceLike; services?: Partial<Services> }) {
+export function createApp(env: Env, opts?: { kv?: KVNamespaceLike; services?: Partial<Services>; fetchNews?: () => Promise<NewsHeadline[]> }) {
   return createServer(env, opts).app;
 }
 
 /** Full factory — app + the service container (worker cron and the Node sync loop need the job registry). */
-export function createServer(env: Env, opts?: { kv?: KVNamespaceLike; services?: Partial<Services> }) {
+export function createServer(env: Env, opts?: { kv?: KVNamespaceLike; services?: Partial<Services>; fetchNews?: () => Promise<NewsHeadline[]> }) {
   const logger = createLogger(env.LOG_LEVEL);
   const cache = opts?.services?.cache ?? createCache(env, opts?.kv);
   const db = opts?.services?.db !== undefined ? opts.services.db : createServiceClient(env);
@@ -58,9 +59,9 @@ export function createServer(env: Env, opts?: { kv?: KVNamespaceLike; services?:
   const traces = new ProviderTraceStore(cache, env.PROVIDER_TRACE, logger);
   const dataProvider = opts?.services?.dataProvider ?? createDataProvider(env, logger, traces);
   const snapshots = opts?.services?.snapshots ?? new SnapshotStore(cache, db, logger);
-  const ai = opts?.services?.ai ?? new AiService(createAiProvider(env, logger), cache, logger);
+  const ai = opts?.services?.ai ?? new AiService(createAiProvider(env, logger), cache, logger, db);
   const jobs = opts?.services?.jobs ?? new JobRegistry(cache, db, logger);
-  if (!opts?.services?.jobs) registerJobs(jobs, { provider: dataProvider, snapshots, ai });
+  if (!opts?.services?.jobs) registerJobs(jobs, { provider: dataProvider, snapshots, ai, fetchNews: opts?.fetchNews });
 
   const services: Services = {
     env,

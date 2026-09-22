@@ -250,7 +250,43 @@ export type AiTask =
   | "prediction_explanation"
   | "fantasy_advice"
   | "tactical_feedback"
-  | "player_comparison";
+  | "player_comparison"
+  | "fixture_preview"
+  | "scout_query";
+
+/**
+ * Structured scouting filters parsed from a plain-English request by the AI.
+ * The API validates them; the web app runs the catalog scan with them. The
+ * filters are shown to the user verbatim, so what the model understood is
+ * never hidden.
+ */
+/**
+ * A real headline from a publisher's RSS feed. We show the headline, the
+ * publisher's own short summary and link out — never the article body.
+ */
+export interface NewsHeadline {
+  /** Stable hash of the URL. */
+  id: string;
+  title: string;
+  /** Publisher's summary, plain text, trimmed. */
+  summary: string;
+  url: string;
+  source: "BBC Sport" | "The Guardian" | "Sky Sports";
+  publishedIso: string;
+  imageUrl?: string;
+  /** Keyword-derived, not editorial. */
+  category: "Transfers" | "Injuries" | "Results" | "News";
+}
+
+export interface ScoutFilters {
+  positions: Array<"GK" | "DF" | "MF" | "FW">;
+  /** Strictly younger than. */
+  maxAge?: number;
+  /** Euros, whole millions. */
+  maxPriceM?: number;
+  foot?: "Left" | "Right";
+  traits: Array<"pace" | "shooting" | "passing" | "dribbling" | "defending" | "physical" | "pressing" | "vision">;
+}
 
 export interface AiResult {
   task: AiTask;

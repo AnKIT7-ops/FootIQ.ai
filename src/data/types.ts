@@ -117,6 +117,20 @@ export interface Team {
   styleTags: string[];
   aiReport: string[];
   trophies: { name: string; count: number }[];
+  /**
+   * Real registered squad from the provider (football-data.org free tier: name,
+   * position, birth date, nationality — no numbers or stats). Only served by
+   * /api/teams/:id; list endpoints strip it to keep every page's payload small.
+   */
+  squad?: SquadMember[];
+}
+
+export interface SquadMember {
+  name: string;
+  /** Provider vocabulary: "Goalkeeper" | "Defence" | "Midfield" | "Offence", or finer roles. */
+  position?: string;
+  dateOfBirth?: string;
+  nationality?: string;
 }
 
 /**

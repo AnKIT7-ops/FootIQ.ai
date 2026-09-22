@@ -5,7 +5,7 @@ import { Crest } from "@/components/ui/Crest";
 import { Avatar } from "@/components/ui/Avatar";
 import { useUserData } from "@/lib/user";
 import { useRecentViews } from "@/lib/recent";
-import { getTeam, leagueTable } from "@/lib/repositories/teams";
+import { getTeam } from "@/lib/repositories/teams";
 import { getPlayer } from "@/lib/repositories/players";
 import { playerPathFor, teamPathFor } from "@/lib/slug-builders";
 import { agoFromMinutes } from "@/lib/utils";
@@ -30,7 +30,6 @@ export function PersonalRows() {
   const reading = bookmarks.slice(0, 3);
   const viewed = recents.slice(0, 8);
   const lastPlayer = recents.find((r) => r.kind === "player");
-  const table = leagueTable;
 
   if (!reading.length && !viewed.length && !favTeams.length && !favPlayers.length) return null;
 
@@ -50,7 +49,7 @@ export function PersonalRows() {
               </p>
               <ul className="space-y-2">
                 {favTeams.slice(0, 4).map((t) => {
-                  const pos = table.findIndex((r) => r.id === t.id) + 1;
+                  const pos = t.position; // its own league's position — the Home table holds one league only
                   return (
                     <li key={t.id}>
                       <Link to={teamPathFor(t)} className="group flex items-center gap-2.5 rounded-xl p-1.5 transition-colors hover:bg-surface-2">

@@ -14,14 +14,11 @@ function sitemapPlugin(): Plugin {
     name: "footiq-sitemap",
     apply: "build",
     async generateBundle() {
-      const [{ players }, { teams }, { matches }, { news }, { historicalMoments }, { predictionByMatch }, content, slugs, nav] =
+      const [{ players }, { teams }, { historicalMoments }, content, slugs, nav] =
         await Promise.all([
           import("./src/data/players"),
           import("./src/data/teams"),
-          import("./src/data/matches"),
-          import("./src/data/news"),
           import("./src/data/history"),
-          import("./src/data/predictions"),
           import("./src/data/content"),
           import("./src/lib/slug-builders"),
           import("./src/lib/nav"),
@@ -35,9 +32,10 @@ function sitemapPlugin(): Plugin {
         ...players.map(slugs.playerPathFor),
         ...teams.map(slugs.teamPathFor),
         ...teams.map(slugs.managerPathFor),
-        ...matches.map((m) => slugs.matchPathFor(m, teams)),
-        ...matches.filter((m) => predictionByMatch.has(m.id)).map((m) => slugs.predictionPathFor(m, teams)),
-        ...news.map(slugs.newsPathFor),
+        // Not listed: demo fixtures, demo predictions and demo news. They describe
+        // real clubs and people (invented scores, quotes, "exclusives"); search
+        // engines must not index them as fact. Real fixtures change daily and are
+        // reached through /matches and /predictions.
         ...historicalMoments.map(slugs.momentPathFor),
         ...content.contentLibrary().map((a) => `/intelligence/${a.slug}`),
       ].filter((p) => !noIndex.has(p));

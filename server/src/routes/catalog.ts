@@ -85,6 +85,12 @@ export function catalogRoutes(catalog: CatalogService) {
     return ok(c, data, { source });
   });
 
+  /** Real headlines (RSS, synced every 30 minutes). */
+  r.get("/headlines", async (c) => {
+    const { data, syncedAt } = await catalog.headlines();
+    c.header("Cache-Control", "public, max-age=300");
+    return ok(c, data, { source: "provider", syncedAt });
+  });
   r.get("/news", (c) => ok(c, catalog.news(), demoMeta));
   r.get("/news/:id", validate("param", idParam), (c) =>
     ok(c, catalog.article(c.req.valid("param").id), demoMeta),

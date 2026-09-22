@@ -171,7 +171,7 @@ function proceduralEvents(m: Match, resolveTeam: (id: string) => Team): MatchEve
 export function matchDetail(id: string): MatchDetail {
   const m = matchById.get(id);
   if (!m) throw new Error(`Unknown match: ${id}`);
-  return matchDetailFor(m);
+  return matchDetailFor(m, getTeam, { synthesizePlay: true });
 }
 
 /**
@@ -185,7 +185,17 @@ export function matchDetail(id: string): MatchDetail {
  * homepage in the browser and a 500 from /api/matches/:id. Callers that hold
  * the real catalog pass their own resolver.
  */
-export function matchDetailFor(m: Match, resolveTeam: (id: string) => Team = getTeam): MatchDetail {
+export function matchDetailFor(
+  m: Match,
+  resolveTeam: (id: string) => Team = getTeam,
+  /**
+   * Generate play (events, stats, momentum, lineups, commentary)? Only for the
+   * bundled demo fixtures. A real result has real scorers; inventing "Sergi
+   * Weber 13'" for Milan 3-0 Lecce is a checkable falsehood, banner or not.
+   * Real fixtures get the synced facts only until an events provider exists.
+   */
+  opts: { synthesizePlay?: boolean } = {},
+): MatchDetail {
   const home = resolveTeam(m.homeId);
   const away = resolveTeam(m.awayId);
   const homeAtk = (home.gf / Math.max(1, home.played)) / 2.6;
@@ -206,7 +216,8 @@ export function matchDetailFor(m: Match, resolveTeam: (id: string) => Team = get
    * report. Previews (aiCommentary/tacticalNote) survive because they are
    * explicitly framed as inference and render inside amber IQInsight blocks.
    */
-  const played = m.status === "live" || m.status === "finished";
+  const played = (m.status === "live" || m.status === "finished") && opts.synthesizePlay === true;
+  const synthetic = opts.synthesizePlay === true;
 
   const { home: hs, away: as } = played
     ? buildStats(m.id, homeAtk, awayAtk, m.status === "live", minute)
@@ -223,8 +234,9 @@ export function matchDetailFor(m: Match, resolveTeam: (id: string) => Team = get
     // A lineup is who started. Before kickoff nobody has.
     homeLineup: played ? lineupFor(m.homeId, m.id, home) : { formation: home.style.formation, players: [] },
     awayLineup: played ? lineupFor(m.awayId, m.id, away) : { formation: away.style.formation, players: [] },
-    aiCommentary:
-      m.id === "ars-liv"
+    aiCommentary: !synthetic
+      ? []
+      : m.id === "ars-liv"
         ? featuredCommentary
         : played
           ? [
@@ -235,8 +247,9 @@ export function matchDetailFor(m: Match, resolveTeam: (id: string) => Team = get
               // Framed as expectation, not observation — no scoreline, no xG.
               { minute: 0, kind: "tactical", text: `${home.short} line up in a ${home.style.formation} against ${away.short}'s ${away.style.press.toLowerCase()}. The wide channels are where this one should be decided.` },
             ],
-    tacticalNote:
-      m.id === "ars-liv"
+    tacticalNote: !synthetic
+      ? ""
+      : m.id === "ars-liv"
         ? "Arsenal's left-side overloads against Liverpool's aggressive right-back are deciding this match. Both goals for the hosts originated as switches away from a 4v3 overload."
         : `${home.short}'s ${home.styleTags[0].toLowerCase()} approach meets ${away.short}'s ${away.styleTags[0].toLowerCase()} — the midfield second-ball battle will decide territory.`,
   };

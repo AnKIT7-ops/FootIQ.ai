@@ -18,6 +18,11 @@ import { bump } from "@/lib/metrics";
 import { track } from "@/lib/analytics";
 import type { Player } from "@/data/types";
 import { DemoDataNotice } from "@/components/ui/DemoDataNotice";
+import type { ScoutFilters } from "@shared/contracts";
+import { api } from "@/lib/api/client";
+import { backendConfigured } from "@/lib/config";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { isDemoEngine } from "@/lib/ai-provenance";
 
 interface ParsedQuery {
   maxPrice?: number;
@@ -57,7 +62,7 @@ function parse(q: string): ParsedQuery {
     [/winger|wide|wing\b/, "FW", "wide forward"],
     [/striker|forward|number 9|no9|goalscorer/, "FW", "forward"],
     [/midfielder|pivot|number 8|playmaker|regista|ten\b/, "MF", "midfielder"],
-    [/defender|centre-back|center-back|cb\b|full-back|fullback/, "DF", "defender"],
+    [/defender|cent(?:re|er)[ -]?backs?|\bcbs?\b|(?:full|left|right)[ -]?backs?/, "DF", "defender"],
     [/keeper|goalkeeper|gk\b/, "GK", "goalkeeper"],
   ];
   for (const [re, pos, label] of posMap) {
@@ -74,13 +79,48 @@ function parse(q: string): ParsedQuery {
     [/finish|scor|shooting|clinical/, "shooting", "finishing"],
     [/pace|fast|quick|rapid|speed/, "pace", "pace"],
     [/defend|tackl|duel/, "defending", "defending"],
-    [/physical|strong|aerial/, "physical", "physicality"],
+    [/physical|strong|aerial|in the air|header|heading|\btall\b/, "physical", "physicality"],
   ];
   for (const [re, key, label] of traitMap) {
     if (re.test(s) && !out.traits.some((t) => t.key === key)) {
       out.traits.push({ key, label });
       out.chips.push(`excels: ${label}`);
     }
+  }
+  return out;
+}
+
+const TRAIT_LABEL: Record<ScoutFilters["traits"][number], string> = {
+  pace: "pace",
+  shooting: "finishing",
+  passing: "passing",
+  dribbling: "dribbling",
+  defending: "defending",
+  physical: "physicality",
+  pressing: "pressing",
+  vision: "creation",
+};
+const POSITION_LABEL: Record<Player["position"], string> = { GK: "goalkeeper", DF: "defender", MF: "midfielder", FW: "forward" };
+
+/** The AI's validated filters in the same shape the keyword parser produces. */
+function fromAiFilters(f: ScoutFilters): ParsedQuery {
+  const out: ParsedQuery = { positions: [...f.positions], traits: [], chips: [] };
+  if (f.maxPriceM) {
+    out.maxPrice = f.maxPriceM * 1_000_000;
+    out.chips.push(`≤ €${f.maxPriceM}M`);
+  }
+  if (f.maxAge) {
+    out.maxAge = f.maxAge;
+    out.chips.push(`age < ${f.maxAge}`);
+  }
+  if (f.foot) {
+    out.foot = f.foot;
+    out.chips.push(`${f.foot.toLowerCase()}-footed`);
+  }
+  for (const pos of f.positions) out.chips.push(POSITION_LABEL[pos]);
+  for (const t of f.traits) {
+    out.traits.push({ key: t, label: TRAIT_LABEL[t] });
+    out.chips.push(`excels: ${TRAIT_LABEL[t]}`);
   }
   return out;
 }
@@ -134,7 +174,31 @@ export default function Scout() {
     }
   }, [submitted]);
 
-  const parsed = useMemo(() => parse(submitted), [submitted]);
+  // Signed in: the AI reads the request (it only produces filters — ranking stays
+  // a deterministic scan of the catalog, so it can't invent a player). Otherwise,
+  // or if the AI fails or is the mock, the keyword parser is used.
+  const { user } = useAuth();
+  const [ai, setAi] = useState<{ query: string; parsed: ParsedQuery } | null>(null);
+  const [aiBusy, setAiBusy] = useState(false);
+  useEffect(() => {
+    const q = submitted.trim();
+    if (!q || q.length < 3 || !backendConfigured || !user) return;
+    let live = true;
+    setAiBusy(true);
+    api
+      .post<{ filters: ScoutFilters; provider: string }>("/api/ai/scout/parse", { query: q })
+      .then((r) => {
+        if (live && !isDemoEngine(r.provider)) setAi({ query: submitted, parsed: fromAiFilters(r.filters) });
+      })
+      .catch(() => {}) // keyword parser stays in charge
+      .finally(() => live && setAiBusy(false));
+    return () => {
+      live = false;
+      setAiBusy(false);
+    };
+  }, [submitted, user]);
+  const aiParsed = ai?.query === submitted ? ai.parsed : null;
+  const parsed = useMemo(() => aiParsed ?? parse(submitted), [aiParsed, submitted]);
   const results = useMemo(() => {
     if (!submitted.trim()) return [];
     return players
@@ -209,7 +273,7 @@ export default function Scout() {
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 font-mono text-micro uppercase tracking-wider text-ink-3">
               <SlidersHorizontal className="size-3.5" aria-hidden />
-              Understood as
+              {aiParsed ? "AI understood" : aiBusy ? "Reading with AI…" : "Keyword match"}
             </span>
             {parsed.chips.map((c) => (
               <Badge key={c} variant="iq">{c}</Badge>

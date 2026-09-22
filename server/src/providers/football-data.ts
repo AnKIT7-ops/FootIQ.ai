@@ -95,6 +95,17 @@ const RAW_TEAMS = z.object({
       venue: z.string().nullish(),
       // Present in the schema but unpopulated on the free tier (0/20 clubs).
       coach: z.object({ name: z.string().nullish() }).nullish(),
+      // Populated on the free tier (verified 2026-09-22: 24–29 per PL club).
+      squad: z
+        .array(
+          z.object({
+            name: z.string(),
+            position: z.string().nullish(),
+            dateOfBirth: z.string().nullish(),
+            nationality: z.string().nullish(),
+          }),
+        )
+        .nullish(),
     }),
   ),
 });
@@ -328,6 +339,12 @@ export class FootballDataOrgProvider implements FootballDataProvider {
         website: t.website ?? undefined,
         // The NAME, matching what standings report — never the code.
         competition: data.competition?.name ?? code,
+        squad: t.squad?.map((p) => ({
+          name: p.name,
+          position: p.position ?? undefined,
+          dateOfBirth: p.dateOfBirth ?? undefined,
+          nationality: p.nationality ?? undefined,
+        })),
       }));
     });
   }
