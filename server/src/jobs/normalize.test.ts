@@ -88,10 +88,14 @@ describe("mergeStandings", () => {
     expect(upcoming.home.possession).toBe(0);
     expect(upcoming.homeLineup.players).toEqual([]);
 
-    // A finished match still gets its derived detail.
+    // A REAL finished match invents nothing either: generated scorers for a
+    // real 3-0 ("Sergi Weber 13'") are checkable falsehoods. Demo only.
     const finished = matchDetailFor(grouped.finished[0], resolve);
-    expect(finished.home.possession).toBeGreaterThan(0);
-    expect(finished.events.length).toBeGreaterThan(0);
+    expect(finished.events).toEqual([]);
+    expect(finished.home.possession).toBe(0);
+    expect(finished.aiCommentary).toEqual([]);
+    const demo = matchDetailFor(grouped.finished[0], resolve, { synthesizePlay: true });
+    expect(demo.events.length).toBeGreaterThan(0);
   });
 
   it("enriches a club with provider identity without re-keying its id", () => {

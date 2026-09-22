@@ -115,3 +115,12 @@ export const useMatches = store.use;
 /** Data + load status — use this anywhere an empty list must not read as "no matches today". */
 export const useMatchesState = store.useState;
 export const refreshMatches = store.refresh;
+
+/**
+ * True for bundled demo fixtures (the synced feed doesn't contain them). Their
+ * pages keep labelled demo content; real fixtures must never get templated
+ * "reads" built from synthesized team styles.
+ */
+export function isDemoMatch(id: string): boolean {
+  return !matchById.has(id) && demoMatches.some((d) => d.id === id);
+}

@@ -250,7 +250,25 @@ export type AiTask =
   | "prediction_explanation"
   | "fantasy_advice"
   | "tactical_feedback"
-  | "player_comparison";
+  | "player_comparison"
+  | "fixture_preview"
+  | "scout_query";
+
+/**
+ * Structured scouting filters parsed from a plain-English request by the AI.
+ * The API validates them; the web app runs the catalog scan with them. The
+ * filters are shown to the user verbatim, so what the model understood is
+ * never hidden.
+ */
+export interface ScoutFilters {
+  positions: Array<"GK" | "DF" | "MF" | "FW">;
+  /** Strictly younger than. */
+  maxAge?: number;
+  /** Euros, whole millions. */
+  maxPriceM?: number;
+  foot?: "Left" | "Right";
+  traits: Array<"pace" | "shooting" | "passing" | "dribbling" | "defending" | "physical" | "pressing" | "vision">;
+}
 
 export interface AiResult {
   task: AiTask;

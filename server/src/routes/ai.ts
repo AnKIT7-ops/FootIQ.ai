@@ -10,6 +10,7 @@ import { consumeQuota } from "../middleware/entitlements";
 import { rateLimit, rateLimits } from "../middleware/rate-limit";
 import { ApiError } from "../lib/errors";
 import { cleanText } from "../lib/sanitize";
+import { forecastFixture } from "../../../shared/forecast";
 
 const id = z.string().min(1).max(64).regex(/^[\w.-]+$/);
 
@@ -87,6 +88,88 @@ export function aiRoutes(catalog: CatalogService) {
       const home = await teamOrNull(catalog, match.homeId);
       const away = await teamOrNull(catalog, match.awayId);
       return ok(c, await c.get("services").ai.run(prompts.prediction_explanation(prediction, home, away)));
+    },
+  );
+
+const SCOUT_FILTERS = z.object({
+    positions: z.array(z.enum(["GK", "DF", "MF", "FW"])).max(4).default([]),
+    maxAge: z.number().int().min(16).max(45).nullish(),
+    maxPriceM: z.number().int().min(1).max(500).nullish(),
+    foot: z.enum(["Left", "Right"]).nullish(),
+    traits: z
+      .array(z.enum(["pace", "shooting", "passing", "dribbling", "defending", "physical", "pressing", "vision"]))
+      .max(8)
+      .default([]),
+  });
+
+  /**
+   * Scout: the model turns plain English into filters; the CLIENT runs the
+   * catalog scan. The model never ranks or names players, so it can't invent one.
+   */
+  r.post(
+    "/scout/parse",
+    validate("json", z.object({ query: z.string().min(3).max(300) })),
+    consumeQuota("ai_requests"),
+    async (c) => {
+      await gate(c.get("services"), "ai_scout");
+      const result = await c.get("services").ai.run(prompts.scout_query(cleanText(c.req.valid("json").query, 300)));
+      // Models wrap JSON in fences or prose now and then; take the first object.
+      const raw = result.text.match(/\{[\s\S]*\}/)?.[0];
+      let parsed: unknown = null;
+      try {
+        parsed = raw ? JSON.parse(raw) : null;
+      } catch {
+        parsed = null;
+      }
+      const filters = SCOUT_FILTERS.safeParse(parsed);
+      if (!filters.success) {
+        throw new ApiError("upstream_error", "The AI couldn't turn that into filters. Try rephrasing.");
+      }
+      const f = filters.data;
+      return ok(c, {
+        filters: {
+          positions: f.positions,
+          traits: f.traits,
+          ...(f.maxAge != null ? { maxAge: f.maxAge } : {}),
+          ...(f.maxPriceM != null ? { maxPriceM: f.maxPriceM } : {}),
+          ...(f.foot ? { foot: f.foot } : {}),
+        },
+        provider: result.provider,
+        model: result.model,
+        cached: result.cached,
+      });
+    },
+  );
+
+  /** Preview of a real synced fixture: table facts + the shared Poisson forecast, explained. */
+  r.post(
+    "/fixtures/:id/preview",
+    validate("param", z.object({ id })),
+    consumeQuota("ai_requests"),
+    async (c) => {
+      await gate(c.get("services"), "ai_scout");
+      const match = (await catalog.match(c.req.valid("param").id)).data;
+      if (match.status !== "upcoming") throw new ApiError("bad_request", "Previews are for fixtures that haven't kicked off.");
+      const { data: teams } = await catalog.teams();
+      const home = teams.find((t) => t.id === match.homeId);
+      const away = teams.find((t) => t.id === match.awayId);
+      if (!home || !away) throw ApiError.notFound("Team");
+      const f = forecastFixture(match, teams);
+      return ok(
+        c,
+        await c.get("services").ai.run(
+          prompts.fixture_preview({
+            matchId: match.id,
+            competition: match.competition,
+            kickoffIso: match.kickoffIso,
+            venue: match.venue,
+            home,
+            away,
+            forecast: f.ok ? f.forecast : null,
+            noForecastReason: f.ok ? undefined : f.reason,
+          }),
+        ),
+      );
     },
   );
 

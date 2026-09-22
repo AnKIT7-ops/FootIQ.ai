@@ -25,6 +25,10 @@ import { recordView } from "@/lib/recent";
 import { kickoffLabel } from "@/lib/kickoff";
 import { DemoDataNotice } from "@/components/ui/DemoDataNotice";
 import { predictionByMatch } from "@/lib/repositories/predictions";
+import { useTeams } from "@/lib/repositories/teams";
+import { isDemoMatch } from "@/lib/repositories/matches";
+import { AiAnswer } from "@/components/ui/AiAnswer";
+import { forecastFixture } from "@/lib/forecast";
 import { DemoEngineChip } from "@/components/ui/DemoEngineChip";
 import { DataState } from "@/components/ui/DataState";
 
@@ -95,7 +99,14 @@ function MatchBody({ detail }: { detail: MatchDetail }) {
   const live = detail.status === "live";
   // Has a ball been kicked? Gates every section that describes actual play.
   const played = detail.status === "live" || detail.status === "finished";
+  // Play detail (events, stats, lineups) exists only for demo fixtures; a real
+  // result has the scoreline and nothing invented around it.
+  const hasPlay = played && detail.events.length > 0;
   const prediction = predictionByMatch.get(detail.id);
+  // Real fixtures get the table-driven forecast; demo fixtures keep their labelled demo numbers.
+  const teams = useTeams();
+  const forecast = detail.status === "upcoming" ? forecastFixture(detail, teams) : null;
+  const forecastLink = forecast?.ok ? `/predictions?match=${encodeURIComponent(detail.id)}` : prediction ? predictionPath(detail) : null;
   useEffect(() => {
     recordView({ kind: "match", id: detail.id, label: `${home.short} vs ${away.short}`, sub: "Match center", path: `/matches/${detail.id}` });
   }, [detail.id, home.short, away.short]);
@@ -163,12 +174,14 @@ function MatchBody({ detail }: { detail: MatchDetail }) {
             kind={detail.competition}
             stat={detail.homeScore != null && detail.awayScore != null ? `${detail.homeScore}–${detail.awayScore}` : kickoffLabel(detail.kickoffIso)}
           />
-          <Link
-            to={predictionPath(detail)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-iq/30 bg-iq-soft px-3 py-1.5 font-mono text-micro uppercase tracking-wider text-iq-ink transition-colors hover:border-iq/60"
-          >
-            AI prediction
-          </Link>
+          {forecastLink && (
+            <Link
+              to={forecastLink}
+              className="inline-flex items-center gap-1.5 rounded-full border border-iq/30 bg-iq-soft px-3 py-1.5 font-mono text-micro uppercase tracking-wider text-iq-ink transition-colors hover:border-iq/60"
+            >
+              Prediction
+            </Link>
+          )}
         </div>
       </motion.div>
 
@@ -176,15 +189,21 @@ function MatchBody({ detail }: { detail: MatchDetail }) {
           happened. Before kickoff there is none, so those tabs are withheld
           rather than filled with a plausible-looking invention about a real
           fixture. FootIQ (preview inference) stays — it is amber-marked. */}
-      {!played ? (
+      {!hasPlay ? (
         <div className="rounded-xl border border-line bg-surface-2 px-4 py-3.5">
           <p className="text-caption leading-relaxed text-ink-3">
             <span className="font-semibold text-ink-2">
-              {detail.status === "postponed" ? "This match was postponed." : detail.status === "cancelled" ? "This match was cancelled." : detail.status === "unconfirmed" ? "Our data provider hasn't confirmed the result." : "This match hasn't kicked off yet."}
+              {played
+                ? detail.status === "live" ? "Live score from our data provider." : "Final score from our data provider."
+                : detail.status === "postponed" ? "This match was postponed." : detail.status === "cancelled" ? "This match was cancelled." : detail.status === "unconfirmed" ? "Our data provider hasn't confirmed the result." : "This match hasn't kicked off yet."}
             </span>{" "}
-            {detail.status === "upcoming"
-              ? "Momentum, stats, lineups and the event feed appear once it's under way."
-              : "No stats or lineups exist for it."}
+            {played
+              ? "FootIQ has no event or statistics feed for real matches yet, so there's no timeline, xG or lineups here — rather than invented ones."
+              : detail.status === "upcoming"
+                ? isDemoMatch(detail.id)
+                  ? "Momentum, stats, lineups and the event feed appear once it's under way."
+                  : "Scorers, stats and lineups aren't shown for real fixtures — FootIQ has no event feed for them yet."
+                : "No stats or lineups exist for it."}
           </p>
         </div>
       ) : (
@@ -202,14 +221,14 @@ function MatchBody({ detail }: { detail: MatchDetail }) {
         />
       )}
 
-      {played && (
+      {hasPlay && (
         <DemoDataNotice
           domain="match analysis"
-          detail="The scoreline, kickoff, competition and venue are provider-synced facts. Momentum, xG, possession, player ratings, heatmaps and the event feed are derived sample data — no match-statistics provider is connected."
+          detail="This is a demo fixture, not a real match — the score, events, momentum, xG, possession and lineups are all sample data showing what a match page will look like once an events provider is connected."
         />
       )}
 
-      {played && tab === "overview" && (
+      {hasPlay && tab === "overview" && (
         <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
           <div className="space-y-6">
             <Card className="p-4 md:p-5">
@@ -263,7 +282,7 @@ function MatchBody({ detail }: { detail: MatchDetail }) {
         </div>
       )}
 
-      {played && tab === "stats" && (
+      {hasPlay && tab === "stats" && (
         <div className="grid gap-6 lg:grid-cols-2">
           <Card className="p-4 md:p-5">
             <SectionHeader title="All Stats" className="mb-4" />
@@ -294,7 +313,7 @@ function MatchBody({ detail }: { detail: MatchDetail }) {
         </div>
       )}
 
-      {played && tab === "lineups" && (
+      {hasPlay && tab === "lineups" && (
         <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
           <Card className="p-4 md:p-5">
             <div className="mb-3 flex items-center justify-between">
@@ -350,12 +369,34 @@ function MatchBody({ detail }: { detail: MatchDetail }) {
         </div>
       )}
 
-      {(!played || tab === "iq") && (
+      {(!hasPlay || tab === "iq") && (
         <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
           <div className="space-y-4">
+            {/*
+              Real fixtures: the tactical note and commentary were templates filled from
+              SYNTHESIZED team styles ("Leeds' mid-block press", "line up in a 4-3-3"),
+              asserting things nobody measured — and contradicting each other. Real
+              fixtures get the fact-grounded AI preview instead; demo fixtures keep theirs.
+            */}
+            {!isDemoMatch(detail.id) ? (
+              detail.status === "upcoming" ? (
+                <AiAnswer
+                  endpoint={`/api/ai/fixtures/${encodeURIComponent(detail.id)}/preview`}
+                  title="AI match preview"
+                  cta="Preview this match"
+                  feedback="Fixture preview"
+                />
+              ) : (
+                <Card className="p-4 md:p-5 text-caption text-ink-3">
+                  No tactical analysis for this match — FootIQ has no event or tracking data for real fixtures yet, and won't
+                  write a read it can't back up.
+                </Card>
+              )
+            ) : (
+            <>
             <IQInsight title="Tactical read" feedback="Match tactical read">{detail.tacticalNote}</IQInsight>
             <Card className="p-4 md:p-5">
-              <SectionHeader eyebrow={played ? "Live model feed" : "Pre-match read"} title="AI Commentary" className="mb-3" />
+              <SectionHeader eyebrow={hasPlay ? "Live model feed" : "Pre-match read"} title="AI Commentary" className="mb-3" />
               <ol className="space-y-4">
                 {[...detail.aiCommentary].reverse().map((c, i) => (
                   <li key={i} className="flex gap-3">
@@ -372,6 +413,8 @@ function MatchBody({ detail }: { detail: MatchDetail }) {
                 ))}
               </ol>
             </Card>
+            </>
+            )}
           </div>
           <div className="space-y-4">
             {/*
@@ -383,7 +426,18 @@ function MatchBody({ detail }: { detail: MatchDetail }) {
               fabrication as the confidence numbers deleted in chunk 1, so the
               same treatment: delete the literals rather than dress them up.
             */}
-            {prediction ? (
+            {forecast?.ok ? (
+              <Card className="p-4 md:p-5">
+                <SectionHeader eyebrow="Model estimate" title="Win Probability" className="mb-4" />
+                <WinProb home={home.short} away={away.short} detail={{ h: forecast.forecast.homeWin, d: forecast.forecast.draw, a: forecast.forecast.awayWin }} />
+                <p className="mt-3 border-t border-line pt-2.5 text-caption text-ink-3">
+                  Poisson model on this season&apos;s table.{" "}
+                  <Link to={forecastLink ?? "/predictions"} className="font-semibold text-iq-ink hover:underline">
+                    Full forecast →
+                  </Link>
+                </p>
+              </Card>
+            ) : prediction ? (
               <Card className="p-4 md:p-5">
                 <SectionHeader eyebrow="Model estimate" title="Win Probability" className="mb-4" />
                 <WinProb home={home.short} away={away.short} detail={{ h: prediction.homeWin, d: prediction.draw, a: prediction.awayWin }} />
@@ -395,8 +449,9 @@ function MatchBody({ detail }: { detail: MatchDetail }) {
               <Card className="p-4 md:p-5">
                 <SectionHeader eyebrow="Model estimate" title="Win Probability" className="mb-3" />
                 <p className="text-caption leading-relaxed text-ink-3">
-                  No win probability for this fixture. FootIQ has no prediction model connected, so rather than show a
-                  number nothing produced, it shows nothing.
+                  {forecast && !forecast.ok
+                    ? forecast.reason
+                    : "Forecasts are made before kickoff only, so there's no pre-match number to show here."}
                 </p>
               </Card>
             )}

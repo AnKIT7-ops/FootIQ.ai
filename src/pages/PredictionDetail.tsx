@@ -12,7 +12,7 @@ import { getTeam } from "@/lib/repositories/teams";
 import { getPlayer } from "@/lib/repositories/players";
 import { predictionByMatch } from "@/lib/repositories/predictions";
 import { matchPath, matchSlug, playerPath, predictionPath, resolveMatch, teamPath } from "@/lib/slugs";
-import { sportsEventJsonLd, usePageMeta } from "@/lib/seo";
+import { usePageMeta } from "@/lib/seo";
 import { weekStamp } from "@/lib/repositories/content";
 
 function Bar({ label, value, tone }: { label: string; value: number; tone: "home" | "draw" | "away" }) {
@@ -43,13 +43,8 @@ export default function PredictionDetail() {
           title: `${home.name} vs ${away.name} Prediction — AI Probabilities`,
           description: `AI match prediction for ${home.name} vs ${away.name}: ${pred.homeWin}% home, ${pred.draw}% draw, ${pred.awayWin}% away, expected ${pred.expectedHome.toFixed(1)}–${pred.expectedAway.toFixed(1)} — with the model's reasoning.`,
           path: predictionPath(match),
-          jsonLd: sportsEventJsonLd({
-            home: home.name,
-            away: away.name,
-            kickoffIso: match.kickoffIso,
-            venue: match.venue,
-            path: predictionPath(match),
-          }),
+          // Demo fixture + demo numbers: never indexed, no SportsEvent structured data.
+          noIndex: true,
           breadcrumbs: [
             { name: "Predictions", path: "/predictions" },
             { name: `${home.short} vs ${away.short}`, path: predictionPath(match) },
@@ -69,6 +64,8 @@ export default function PredictionDetail() {
     }
   }, [match, pred, home, away]);
 
+  // Real fixtures have no demo report — send them to the live forecast for that match.
+  if (match && !pred) return <Navigate to={`/predictions?match=${encodeURIComponent(match.id)}`} replace />;
   if (!match || !pred || !home || !away) return <Navigate to="/predictions" replace />;
 
   return (

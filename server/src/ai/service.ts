@@ -122,6 +122,7 @@ function ttlFor(task: AiTask): number {
     case "player_comparison":
       return TTL.aiScout;
     case "news_summary":
+    case "fixture_preview":
       return TTL.aiSummary;
     default:
       return TTL.aiGeneric;

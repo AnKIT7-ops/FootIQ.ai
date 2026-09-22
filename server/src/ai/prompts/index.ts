@@ -1,4 +1,5 @@
 import type { AiTask } from "../../../../shared/contracts";
+import type { Forecast } from "../../../../shared/forecast";
 import type { Player, Prediction, Team, TransferRumor, NewsArticle } from "../../data/demo";
 
 /**
@@ -129,6 +130,95 @@ Structure: headline call, three factors driving it, one counter-scenario that wo
     };
   },
 
+  /**
+   * Preview of a REAL fixture. Only synced facts go in (table, form, goals) plus
+   * the Poisson forecast computed from them — the model explains, it doesn't
+   * invent: no injuries, lineups or news, because we don't have them.
+   */
+  fixture_preview(ctx: {
+    matchId: string;
+    competition: string;
+    kickoffIso: string;
+    venue: string;
+    home: Team;
+    away: Team;
+    forecast: Forecast | null;
+    noForecastReason?: string;
+  }): RenderedPrompt {
+    const side = (t: Team) => ({
+      name: t.name,
+      position: t.position,
+      points: t.points,
+      played: t.played,
+      won: t.won,
+      drawn: t.drawn,
+      lost: t.lost,
+      goalsFor: t.gf,
+      goalsAgainst: t.ga,
+      recentForm: t.form || null,
+    });
+    const facts = {
+      competition: ctx.competition,
+      kickoffUtc: ctx.kickoffIso,
+      venue: ctx.venue,
+      home: side(ctx.home),
+      away: side(ctx.away),
+      forecast: ctx.forecast
+        ? {
+            method: "Poisson goals model from this season's goals scored/conceded per game, shrunk toward the league average, with a home edge",
+            homeWinPct: ctx.forecast.homeWin,
+            drawPct: ctx.forecast.draw,
+            awayWinPct: ctx.forecast.awayWin,
+            expectedGoals: [ctx.forecast.expectedHome, ctx.forecast.expectedAway],
+            over25Pct: ctx.forecast.over25,
+            bothTeamsScorePct: ctx.forecast.btts,
+            likeliestScores: ctx.forecast.topScores,
+            leagueGoalsPerTeamGame: ctx.forecast.basis.leagueGoalsPerTeamGame,
+          }
+        : { unavailable: ctx.noForecastReason ?? "no forecast" },
+    };
+    return {
+      task: "fixture_preview",
+      version: 1,
+      system: BASE_SYSTEM,
+      maxTokens: 500,
+      // Re-generate when the table moves, not on every view.
+      cacheSeed: JSON.stringify([ctx.matchId, facts]),
+      prompt: `Write a short preview of this upcoming fixture for serious fans.
+
+FACTS (JSON, the ONLY information you have):
+${JSON.stringify(facts)}
+
+Rules:
+- Use only these facts. Do not mention injuries, suspensions, lineups, managers, transfers or news — you have no data on them.
+- Quote probabilities exactly as given; never invent new numbers.
+- It is early season if games played is small — say so when it limits what the numbers mean.
+
+Structure: a one-line headline call; then 2–3 "-" bullets on what the numbers say (attack vs defence, table and form); then one line on what would make the forecast wrong.`,
+    };
+  },
+
+  /** Plain-English scouting request -> structured filters (JSON only). */
+  scout_query(query: string): RenderedPrompt {
+    return {
+      task: "scout_query",
+      version: 1,
+      system: `You convert football scouting requests into search filters. Reply with ONE JSON object and nothing else — no prose, no code fences.`,
+      maxTokens: 200,
+      cacheSeed: query.toLowerCase().replace(/\s+/g, " ").trim(),
+      prompt: `Request: ${JSON.stringify(query)}
+
+Return JSON with exactly these keys:
+{"positions": [], "maxAge": null, "maxPriceM": null, "foot": null, "traits": []}
+
+- positions: any of "GK","DF","MF","FW". Centre-backs, full-backs, wing-backs = "DF"; holding/central/attacking midfielders = "MF"; wingers and strikers = "FW". Empty if unspecified.
+- maxAge: integer; the player must be YOUNGER than this ("under 23" = 23, "young" = 24). null if unspecified.
+- maxPriceM: budget in millions of euros as an integer ("£50m" = 58, "cheap" = 30). null if unspecified.
+- foot: "Left" or "Right" if a preferred foot is requested, else null.
+- traits: any of "pace","shooting","passing","dribbling","defending","physical","pressing","vision" the request emphasises ("good in the air"/"strong"/"tall" = "physical", "creative" = "vision", "clinical" = "shooting").`,
+    };
+  },
+
   fantasy_advice(context: { gameweek: unknown; picks: unknown; question: string }): RenderedPrompt {
     return {
       task: "fantasy_advice",
@@ -211,6 +301,8 @@ export const promptCatalog = [
   { task: "fantasy_advice", version: 1, hasVariant: false, description: "Gameweek captaincy/differential advice" },
   { task: "tactical_feedback", version: 1, hasVariant: false, description: "Formation critique with team context" },
   { task: "player_comparison", version: 1, hasVariant: false, description: "Multi-player data-grounded comparison" },
+  { task: "scout_query", version: 1, hasVariant: false, description: "Plain-English scouting request to structured filters (JSON)" },
+  { task: "fixture_preview", version: 1, hasVariant: false, description: "Real-fixture preview grounded in the table and the Poisson forecast" },
 ] as const;
 
 /**
