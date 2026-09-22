@@ -272,7 +272,9 @@ export default function Profile() {
                     type="button"
                     onClick={async () => {
                       await signOut();
-                      navigate("/");
+                      // The route guard sends signed-out visitors here anyway (even from the
+                      // exiting page during the transition), so make it the explicit target.
+                      navigate("/signin", { replace: true });
                     }}
                     className="rounded-full border border-line px-4 py-2 text-ui font-semibold text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
                   >
