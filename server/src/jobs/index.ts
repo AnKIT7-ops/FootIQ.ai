@@ -2,8 +2,6 @@ import * as demo from "../data/demo";
 import type { Team } from "../data/demo";
 import type { FootballDataProvider, NormalizedCompetition, NormalizedTeam } from "../providers";
 import type { SnapshotKind, SnapshotStore } from "../services/snapshots";
-import type { AiService } from "../ai/service";
-import { prompts } from "../ai/prompts";
 import { JobRegistry } from "../jobs/registry";
 import { mergeMatches, mergeStandings, mergeTeams, type MatchesGrouped } from "./normalize";
 import { fetchHeadlines } from "../providers/news-rss";
@@ -47,12 +45,11 @@ export function registerJobs(
   deps: {
     provider: FootballDataProvider;
     snapshots: SnapshotStore;
-    ai: AiService;
     /** Headline source; injectable so tests never hit the real feeds. */
     fetchNews?: () => Promise<NewsHeadline[]>;
   },
 ): void {
-  const { provider, snapshots, ai } = deps;
+  const { provider, snapshots } = deps;
   const fetchNews = deps.fetchNews ?? (() => fetchHeadlines());
 
   registry.register({
@@ -157,17 +154,13 @@ export function registerJobs(
     },
   });
 
-  registry.register({
-    name: "warm_ai_reports",
-    description: "Pre-generate scout reports for the top-rated players into the AI cache",
-    async run() {
-      const top = [...demo.players].sort((a, b) => b.stats.rating - a.stats.rating).slice(0, 5);
-      let generated = 0;
-      for (const p of top) {
-        const result = await ai.run(prompts.scout_report(p, demo.teamById.get(p.teamId) ?? null));
-        if (!result.cached) generated++;
-      }
-      return `${generated} generated, ${top.length - generated} already cached (${ai.providerName})`;
-    },
-  });
+  /*
+   * Removed: warm_ai_reports. It pre-generated 5 scout reports every cron tick
+   * for a page that never requests them — no frontend screen calls
+   * /api/ai/scout/:id/report. Against a per-isolate memory cache that was ~240
+   * Gemini calls a day and exhausted the free quota before any visitor asked
+   * anything (429 for every user, 2026-09-22). Warming is only worth
+   * re-introducing for something users actually open, and now that answers
+   * persist in ai_cache it would cost one call per item per day.
+   */
 }

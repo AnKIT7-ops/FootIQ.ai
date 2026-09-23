@@ -61,7 +61,7 @@ export function createServer(env: Env, opts?: { kv?: KVNamespaceLike; services?:
   const snapshots = opts?.services?.snapshots ?? new SnapshotStore(cache, db, logger);
   const ai = opts?.services?.ai ?? new AiService(createAiProvider(env, logger), cache, logger, db);
   const jobs = opts?.services?.jobs ?? new JobRegistry(cache, db, logger);
-  if (!opts?.services?.jobs) registerJobs(jobs, { provider: dataProvider, snapshots, ai, fetchNews: opts?.fetchNews });
+  if (!opts?.services?.jobs) registerJobs(jobs, { provider: dataProvider, snapshots, fetchNews: opts?.fetchNews });
 
   const services: Services = {
     env,

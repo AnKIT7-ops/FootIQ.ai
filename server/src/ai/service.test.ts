@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { AiService } from "./service";
 import { MockAiProvider } from "./providers/mock";
+import { AiProviderError, type AiProvider } from "./types";
 import { MemoryCache } from "../cache/memory";
 import { createLogger } from "../lib/logger";
 import { prompts } from "./prompts";
@@ -69,6 +70,21 @@ describe("AiService", () => {
 
     expect(second.cached).toBe(true);
     expect(provider.calls.length).toBe(1);
+  });
+
+  it("reports a provider daily cap as rate_limited, not a transient outage", async () => {
+    // Gemini's free tier is 20 requests/day per model. "Try again shortly" is false.
+    const capped: AiProvider = {
+      name: "gemini",
+      complete: async () => {
+        throw new AiProviderError("gemini", "API error 429: Quota exceeded for metric …limit: 20", true);
+      },
+    };
+    const service = new AiService(capped, new MemoryCache(), logger);
+    await expect(service.run(prompts.scout_report(players[0], null))).rejects.toMatchObject({
+      code: "rate_limited",
+      message: expect.stringContaining("daily AI allowance"),
+    });
   });
 
   it("bypassCache forces regeneration", async () => {

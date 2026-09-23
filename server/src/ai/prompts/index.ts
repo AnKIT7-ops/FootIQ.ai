@@ -179,9 +179,10 @@ Structure: headline call, three factors driving it, one counter-scenario that wo
     };
     return {
       task: "fixture_preview",
-      version: 1,
+      version: 2,
       system: BASE_SYSTEM,
-      maxTokens: 500,
+      // Headroom: hitting the cap is now a hard error rather than a half-sentence.
+      maxTokens: 700,
       // Re-generate when the table moves, not on every view.
       cacheSeed: JSON.stringify([ctx.matchId, facts]),
       prompt: `Write a short preview of this upcoming fixture for serious fans.
@@ -202,7 +203,7 @@ Structure: a one-line headline call; then 2–3 "-" bullets on what the numbers 
   scout_query(query: string): RenderedPrompt {
     return {
       task: "scout_query",
-      version: 1,
+      version: 2,
       system: `You convert football scouting requests into search filters. Reply with ONE JSON object and nothing else — no prose, no code fences.`,
       maxTokens: 200,
       cacheSeed: query.toLowerCase().replace(/\s+/g, " ").trim(),
@@ -301,8 +302,8 @@ export const promptCatalog = [
   { task: "fantasy_advice", version: 1, hasVariant: false, description: "Gameweek captaincy/differential advice" },
   { task: "tactical_feedback", version: 1, hasVariant: false, description: "Formation critique with team context" },
   { task: "player_comparison", version: 1, hasVariant: false, description: "Multi-player data-grounded comparison" },
-  { task: "scout_query", version: 1, hasVariant: false, description: "Plain-English scouting request to structured filters (JSON)" },
-  { task: "fixture_preview", version: 1, hasVariant: false, description: "Real-fixture preview grounded in the table and the Poisson forecast" },
+  { task: "scout_query", version: 2, hasVariant: false, description: "Plain-English scouting request to structured filters (JSON)" },
+  { task: "fixture_preview", version: 2, hasVariant: false, description: "Real-fixture preview grounded in the table and the Poisson forecast" },
 ] as const;
 
 /**
