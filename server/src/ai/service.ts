@@ -81,6 +81,16 @@ export class AiService {
           retryable: err.retryable,
           message: err.message,
         });
+        // A provider daily cap is not a blip: "try again shortly" is wrong, and
+        // the reader deserves to know AI answers are done for the day. (Gemini's
+        // free tier is 20 requests/day per model, and resets at midnight US Pacific.)
+        if (/\b429\b/.test(err.message)) {
+          throw new ApiError(
+            "rate_limited",
+            "FootIQ's daily AI allowance is used up. Everything else on the page is unaffected — AI answers return tomorrow.",
+            { internal: err },
+          );
+        }
         throw new ApiError("upstream_error", "The AI engine is unavailable right now. Try again shortly.", {
           internal: err,
         });
