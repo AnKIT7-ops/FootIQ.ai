@@ -16,12 +16,11 @@ import { StatTile, Meter } from "@/components/ui/StatTile";
 import { IQInsight } from "@/components/ui/IQInsight";
 import { MatchCard } from "@/components/ui/MatchCard";
 import { DonutGauge } from "@/components/charts/DonutGauge";
-import { getTeam, useTeamsState } from "@/lib/repositories/teams";
-import { playersOf } from "@/lib/repositories/players";
+import { useTeamsState } from "@/lib/repositories/teams";
+import { usePlayers } from "@/lib/repositories/players";
 import { teamMatches } from "@/lib/repositories/matches";
-import { transferRumors } from "@/lib/repositories/transfers";
-import { getPlayer } from "@/lib/repositories/players";
-import { cn, money } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { playerPathFor } from "@/lib/slug-builders";
 import { sportsTeamJsonLd, usePageMeta } from "@/lib/seo";
 import { managerPath, resolveTeam, teamPath } from "@/lib/slugs";
 import { FavoriteButton } from "@/components/ui/FavoriteButton";
@@ -87,18 +86,17 @@ function TeamView({ team }: { team: Team }) {
   }, [team]);
   usePageMeta({
     title: `${team.name} — Squad, Tactics & AI Analysis`,
-    description: `${team.name}: squad depth, fixtures and results, tactical style DNA, transfer threads and the AI tactical report.`,
+    description: `${team.name}: squad and minutes, fixtures and results, availability, tactical style DNA and the AI tactical report.`,
     path: teamPath(team),
     jsonLd: sportsTeamJsonLd(team, teamPath(team)),
     breadcrumbs: [{ name: team.name, path: teamPath(team) }],
   });
-  const stars = playersOf(team.id);
+  // Real Premier League players (FPL); empty for clubs outside the Premier League.
+  const allPlayers = usePlayers();
+  const stars = useMemo(() => allPlayers.filter((p) => p.teamId === team.id).sort((a, b) => b.stats.minutes - a.stats.minutes), [allPlayers, team.id]);
   const squad = useSquad(team.id);
   const { fixtures, results } = teamMatches(team.id);
-  const rumors = transferRumors.filter((r) => r.fromId === team.id || r.toId === team.id);
-  const injuries = stars.flatMap((p) =>
-    p.injuryHistory.filter((i) => i.date.includes("2026") || i.date.includes("Feb 2026") || i.date.includes("Dec 2025")).map((i) => ({ p, i })),
-  );
+  const unavailable = stars.filter((p) => p.availability !== "available");
 
   return (
     <div className="space-y-6">
@@ -151,7 +149,7 @@ function TeamView({ team }: { team: Team }) {
           { value: "squad", label: "Squad" },
           { value: "matches", label: "Matches" },
           { value: "tactics", label: "Tactics & IQ" },
-          { value: "market", label: "Transfers & Injuries" },
+          { value: "market", label: "Availability" },
         ]}
         active={tab}
         onChange={setTab}
@@ -159,29 +157,33 @@ function TeamView({ team }: { team: Team }) {
 
       {tab === "squad" && (
         <div className="space-y-6">
-          <section aria-label="Key players">
-            <SectionHeader title="Key Players" className="mb-3" />
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {stars.map((p) => (
-                <Card hover key={p.id} onClick={() => navigate(`/player/${p.id}`)} className="p-4">
-                  <div className="flex items-center gap-3">
-                    <Avatar name={p.name} playerId={p.id} size={44} ringColor={team.colors[0]} />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-body font-bold text-ink">{p.name}</p>
-                      <p className="text-label text-ink-3">{p.role} · #{p.shirt}</p>
+          {stars.length > 0 && (
+            <section aria-label="Most-used players">
+              <SectionHeader eyebrow="Premier League minutes · FPL" title="Most-Used Players" className="mb-3" />
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {stars.slice(0, 6).map((p) => (
+                  <Card hover key={p.id} onClick={() => navigate(playerPathFor(p))} className="p-4">
+                    <div className="flex items-center gap-3">
+                      <Avatar name={p.name} photoUrl={p.photoUrl} size={44} ringColor={team.colors[0]} />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-body font-bold text-ink">{p.name}</p>
+                        <p className="text-label text-ink-3">
+                          {p.role}
+                          {p.age != null ? ` · ${p.age}y` : ""}
+                        </p>
+                      </div>
                     </div>
-                    <span className={cn("tabular rounded-lg px-2 py-1 font-mono text-caption font-bold", p.stats.rating >= 7.5 ? "bg-accent-soft text-accent-ink" : "bg-surface-3 text-ink-2")}>
-                      {p.stats.rating.toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="mt-3 flex justify-between border-t border-line pt-2.5 font-mono text-label text-ink-3">
-                    <span>{p.stats.goals}G {p.stats.assists}A</span>
-                    <span>{money(p.marketValue)}</span>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </section>
+                    <div className="mt-3 flex justify-between border-t border-line pt-2.5 font-mono text-label text-ink-3">
+                      <span>
+                        {p.stats.goals}G {p.stats.assists}A
+                      </span>
+                      <span>{p.stats.minutes} min</span>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </section>
+          )}
 
           <section aria-label="Full squad">
             <SectionHeader eyebrow="Registered squad · football-data.org" title="Squad List" className="mb-3" />
@@ -212,7 +214,7 @@ function TeamView({ team }: { team: Team }) {
                     {squad.data.map((m) => {
                       // Link through only when we hold a profile for this exact player.
                       const star = stars.find((p) => p.name === m.name);
-                      const open = star ? () => navigate(`/player/${star.id}`) : undefined;
+                      const open = star ? () => navigate(playerPathFor(star)) : undefined;
                       return (
                         <tr
                           key={`${m.name}-${m.dateOfBirth ?? ""}`}
@@ -234,7 +236,6 @@ function TeamView({ team }: { team: Team }) {
                           <td className="py-2.5 pl-4">
                             <span className="flex items-center gap-2 font-medium text-ink">
                               {m.name}
-                              {star && <Badge variant="accent" className="hidden sm:inline-flex">Key</Badge>}
                             </span>
                           </td>
                           <td className="text-ink-2">{m.position ? (POSITION_LABEL[m.position] ?? m.position) : "—"}</td>
@@ -322,52 +323,32 @@ function TeamView({ team }: { team: Team }) {
       )}
 
       {tab === "market" && (
-        <div className="grid gap-6 lg:grid-cols-2">
-          <section aria-label="Transfer involvement">
-            <SectionHeader title="Transfer Threads" className="mb-3" />
-            <div className="space-y-2.5">
-              {rumors.map((r) => {
-                const p = getPlayer(r.playerId);
-                const incoming = r.toId === team.id;
-                return (
-                  <Card hover key={r.id} onClick={() => navigate("/transfers")} className="flex items-center gap-3 p-3.5">
-                    <Avatar name={p.name} playerId={p.id} size={38} />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-ui font-semibold text-ink">{p.name}</p>
-                      <p className="text-label text-ink-3">
-                        {incoming ? `In from ${getTeam(r.fromId).short}` : `Out to ${getTeam(r.toId).short}`} · {money(r.fee)}
-                      </p>
-                    </div>
-                    <Badge variant={incoming ? "accent" : "warn"}>{r.probability}%</Badge>
-                  </Card>
-                );
-              })}
-              {rumors.length === 0 && <p className="text-sm text-ink-3">No active threads for this club.</p>}
-            </div>
-          </section>
-          <section aria-label="Injury list">
-            <SectionHeader title="Injuries & Doubts" className="mb-3" />
-            <div className="space-y-2.5">
-              {injuries.map(({ p, i }, idx) => (
-                <Card key={idx} className="flex items-center gap-3 p-3.5">
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-bad/10 text-bad">
-                    <BriefcaseMedical className="size-4" aria-hidden />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <Link to={`/player/${p.id}`} className="truncate text-ui font-semibold text-ink hover:underline">
-                      {p.name}
-                    </Link>
-                    <p className="text-label text-ink-3">{i.injury} · {i.date}</p>
-                  </div>
-                  <span className="font-mono text-label text-ink-3">{i.gamesMissed} gms</span>
-                </Card>
-              ))}
-              {injuries.length === 0 && (
-                <Card className="p-4 text-sm text-ink-2">Fully fit squad — no current absences flagged by the model.</Card>
-              )}
-            </div>
-          </section>
-        </div>
+        <section aria-label="Injuries and doubts" className="max-w-2xl">
+          <SectionHeader eyebrow="Official FPL flags" title="Injuries & Doubts" className="mb-3" />
+          <div className="space-y-2.5">
+            {unavailable.map((p) => (
+              <Card key={p.id} className="flex items-center gap-3 p-3.5">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-bad/10 text-bad">
+                  <BriefcaseMedical className="size-4" aria-hidden />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <Link to={playerPathFor(p)} className="truncate text-ui font-semibold text-ink hover:underline">
+                    {p.name}
+                  </Link>
+                  <p className="text-label text-ink-3">{p.news || p.availability}</p>
+                </div>
+                {p.chanceOfPlaying != null && <span className="font-mono text-label text-ink-3">{p.chanceOfPlaying}%</span>}
+              </Card>
+            ))}
+            {unavailable.length === 0 && (
+              <Card className="p-4 text-sm text-ink-2">
+                {stars.length > 0
+                  ? "No injuries, doubts or suspensions flagged by the Premier League."
+                  : "Availability comes from the Premier League's FPL feed, so it's only shown for Premier League clubs."}
+              </Card>
+            )}
+          </div>
+        </section>
       )}
     </div>
   );

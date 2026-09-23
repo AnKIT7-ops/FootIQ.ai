@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { SignJWT } from "jose";
-import { createApp } from "./app";
+import { createApp, createServer } from "./app";
+import { samplePlayers } from "./test-fixtures";
 import { loadEnv } from "./config/env";
 import type { ApiFailure, ApiSuccess } from "../../shared/contracts";
 
@@ -12,16 +13,24 @@ import type { ApiFailure, ApiSuccess } from "../../shared/contracts";
 
 const TEST_SECRET = "test-jwt-secret-value-at-least-20-chars";
 
+const testEnv = (extraEnv: Record<string, string> = {}) =>
+  loadEnv({
+    NODE_ENV: "test",
+    RATE_LIMIT_DISABLED: "true",
+    SUPABASE_JWT_SECRET: TEST_SECRET,
+    CORS_ORIGINS: "http://localhost:5173",
+    ...extraEnv,
+  });
+
 function makeApp(extraEnv: Record<string, string> = {}) {
-  return createApp(
-    loadEnv({
-      NODE_ENV: "test",
-      RATE_LIMIT_DISABLED: "true",
-      SUPABASE_JWT_SECRET: TEST_SECRET,
-      CORS_ORIGINS: "http://localhost:5173",
-      ...extraEnv,
-    }),
-  );
+  return createApp(testEnv(extraEnv));
+}
+
+/** Players have no demo fallback: seed the snapshot the FPL sync job would write. */
+function makeAppWithPlayers(extraEnv: Record<string, string> = {}) {
+  const { app, services } = createServer(testEnv(extraEnv));
+  beforeAll(() => services.snapshots.set("players", samplePlayers, "fpl"));
+  return app;
 }
 
 describe("catalog availability contract", () => {
@@ -60,7 +69,7 @@ async function tokenFor(sub: string, extras: Record<string, unknown> = {}): Prom
 const asJson = async <T>(res: Response) => (await res.json()) as T;
 
 describe("API envelope & catalog", () => {
-  const app = makeApp();
+  const app = makeAppWithPlayers();
 
   it("GET /api/health reports demo mode and the mock AI provider", async () => {
     const res = await app.request("/api/health");
@@ -75,8 +84,8 @@ describe("API envelope & catalog", () => {
     const res = await app.request("/api/players");
     const body = await asJson<ApiSuccess<unknown[]>>(res);
     expect(body.ok).toBe(true);
-    expect(body.data.length).toBeGreaterThan(10);
-    expect(body.meta?.source).toBe("demo");
+    expect(body.data.length).toBe(samplePlayers.length);
+    expect(body.meta?.source).toBe("provider");
   });
 
   it("GET /api/players/:id 404s with the error envelope for unknown ids", async () => {
@@ -96,7 +105,7 @@ describe("API envelope & catalog", () => {
   });
 
   it("GET /api/search matches players case-insensitively", async () => {
-    const res = await app.request("/api/search?q=sala");
+    const res = await app.request("/api/search?q=SAM%20Fix");
     const body = await asJson<ApiSuccess<{ kind: string; title: string }[]>>(res);
     expect(body.data.some((r) => r.kind === "player")).toBe(true);
   });
@@ -164,7 +173,8 @@ describe("auth & authorization", () => {
 });
 
 describe("AI endpoints", () => {
-  const app = makeApp();
+  const app = makeAppWithPlayers();
+  const flaggedOff = makeAppWithPlayers({ FLAG_AI_SCOUT: "false" });
 
   it("requires auth", async () => {
     const res = await app.request("/api/ai/scout/p-salah/report", { method: "POST" });
@@ -195,7 +205,6 @@ describe("AI endpoints", () => {
   });
 
   it("honours the ai_scout kill switch", async () => {
-    const flaggedOff = makeApp({ FLAG_AI_SCOUT: "false" });
     const token = await tokenFor("user-1");
     const players = await asJson<ApiSuccess<{ id: string }[]>>(await flaggedOff.request("/api/players"));
     const res = await flaggedOff.request(`/api/ai/scout/${players.data[0].id}/report`, {

@@ -33,13 +33,15 @@ crons = ["*/30 * * * *"]
 NODE_ENV = "production"
 CORS_ORIGINS = "https://footiq-omega.vercel.app,http://localhost:5173"
 SUPABASE_URL = "https://zcemnioniooyyhpjpwbn.supabase.co"
-# Gemini's free tier, not Anthropic: no card, and the AI surface is cached per
-# task+seed+provider and warmed by cron, so the free RPM/RPD caps are not the
-# binding constraint. Swapping providers is env-only — see ai/service.ts.
+# Gemini's free tier, not Anthropic: no card. Free quotas are per project PER
+# MODEL and gemini-3.8-flash allows only 20 requests/day (the 429s of Sept
+# 2026), so AI_MODEL is a fallback list: Flash-Lite models first (far larger
+# daily quotas), full Flash last. A 429 moves to the next model. Check live
+# limits at https://aistudio.google.com/rate-limit — Google changes them.
 # "gemini" is on the frontend's REAL_PROVIDERS allowlist (lib/ai-provenance.ts),
 # so the demo-engine chip goes quiet by itself once GEMINI_API_KEY is set.
 AI_PROVIDER = "gemini"
-AI_MODEL = "gemini-3.8-flash"
+AI_MODEL = "gemini-3.5-flash-lite,gemini-3.1-flash-lite,gemini-2.5-flash-lite,gemini-3.8-flash"
 DATA_PROVIDER = "football-data"
 # The six competitions this key's free tier grants. Europa League and
 # Conference League are NOT on it — their codes would 403 per competition

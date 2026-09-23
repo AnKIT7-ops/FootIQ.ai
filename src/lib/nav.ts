@@ -16,7 +16,7 @@ export const pageEntries: NavEntry[] = [
   { label: "Match Center", to: "/matches", sub: "Live scores & analysis", keywords: "live matches scores xg" },
   { label: "Schedule", to: "/schedule", sub: "Fixtures by date", keywords: "schedule fixtures calendar today tomorrow kickoff when" },
   { label: "News", to: "/news", sub: "Algorithmically summarized football news", keywords: "news articles stories breaking" },
-  { label: "Transfer Center", to: "/transfers", sub: "Rumors with probability", keywords: "transfers rumors market fees" },
+  { label: "Transfer Center", to: "/transfers", sub: "Real transfer headlines", keywords: "transfers signings news market deals" },
   { label: "AI Predictions", to: "/predictions", sub: "Match outcome probabilities", keywords: "predictions odds probability betting" },
   { label: "AI Scout", to: "/scout", sub: "Natural-language player search", keywords: "scout search find players nlp" },
   { label: "Compare", to: "/compare", sub: "Head-to-head analysis", keywords: "compare head to head versus h2h" },
@@ -24,7 +24,6 @@ export const pageEntries: NavEntry[] = [
   { label: "Tactical Board", to: "/tactics", sub: "Formation builder", keywords: "tactics formation board drag" },
   { label: "Historical Explorer", to: "/history", sub: "Iconic matches & milestones", keywords: "history iconic classic retro" },
   { label: "Fantasy Assistant", to: "/fantasy", sub: "Captaincy & transfers", keywords: "fantasy fpl captain differentials" },
-  { label: "Highlights", to: "/highlights", sub: "Short-form clips", keywords: "highlights clips videos goals" },
   { label: "Profile", to: "/profile", sub: "Preferences & watchlists", keywords: "profile settings account alerts" },
 ];
 

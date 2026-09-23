@@ -341,7 +341,7 @@ function MatchBody({ detail }: { detail: MatchDetail }) {
                 <li key={`${p.teamId}-${p.shirt}`} className="flex items-center gap-3">
                   <span className="w-4 text-center font-mono text-label text-ink-3">{i + 1}</span>
                   <span className="relative">
-                    <Avatar name={p.name} playerId={p.playerId} size={30} />
+                    <Avatar name={p.name} size={30} />
                     <Crest teamId={p.teamId} size={14} className="absolute -bottom-0.5 -right-1" />
                   </span>
                   <div className="min-w-0 flex-1">

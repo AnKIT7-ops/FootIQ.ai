@@ -10,21 +10,20 @@ import { IQInsight } from "@/components/ui/IQInsight";
 import { Radar } from "@/components/charts/Radar";
 import { CompareBars } from "@/components/charts/CompareBars";
 import { Legend } from "@/components/charts/common";
-import { players, getPlayer, attributeLabels } from "@/lib/repositories/players";
+import { getPlayer, usePlayersState } from "@/lib/repositories/players";
 import { teams, getTeam } from "@/lib/repositories/teams";
-import { money } from "@/lib/utils";
 import { usePageMeta } from "@/lib/seo";
 import { ShareBar } from "@/components/ui/ShareBar";
 import { track } from "@/lib/analytics";
 import type { Player } from "@/data/types";
 import { DemoDataNotice } from "@/components/ui/DemoDataNotice";
-
-const axes = Object.keys(attributeLabels) as Array<keyof Player["attributes"]>;
+import { DataState } from "@/components/ui/DataState";
+import { AXES, METRICS, MIN_MINUTES, hasSample, percentile, type MetricKey } from "@/lib/player-stats";
 
 export default function Compare() {
   usePageMeta({
     title: "Compare Players, Teams & Managers",
-    description: "Head-to-head comparison with attribute radars, output bars and an AI verdict — players, teams or managers side by side.",
+    description: "Head-to-head comparison on real Premier League per-90 percentiles and season totals — players, teams or managers side by side.",
     path: "/compare",
   });
   const [mode, setMode] = useState("players");
@@ -48,11 +47,8 @@ export default function Compare() {
           />
         }
       />
-      {/* Teams compare on synced league-table numbers, so they carry no notice.
-          Player stats and manager records have no provider behind them. */}
-      {mode === "players" && (
-        <DemoDataNotice domain="player" detail="Player ratings and per-90 statistics here are illustrative sample data. No player-statistics provider is connected." />
-      )}
+      {/* Teams compare on synced league-table numbers and players on FPL season
+          stats, so neither carries a notice. Manager records have no provider. */}
       {mode === "managers" && (
         <DemoDataNotice domain="manager" detail="Manager records and profiles here are illustrative sample data. No manager-data provider is connected." />
       )}
@@ -83,12 +79,28 @@ function Picker({ value, onChange, options, label }: { value: string; onChange: 
 }
 
 function PlayerCompare() {
+  const { data: all, status } = usePlayersState();
+  if (all.length < 2) {
+    return <DataState status={status} empty loadingLabel="Loading players…" emptyTitle="Players haven't synced yet" emptyBody="Player data comes from the Premier League's FPL feed and syncs hourly." />;
+  }
+  return <PlayerCompareView all={all} />;
+}
+
+/** Outfield axes shared by any two outfield players (each ranked within their own position). */
+const OUTFIELD_AXES: MetricKey[] = ["goals", "xG", "assists", "xA", "tackles", "recoveries"];
+
+function PlayerCompareView({ all }: { all: Player[] }) {
   const [params, setParams] = useSearchParams();
-  const validId = (id: string | null) => (id && players.some((p) => p.id === id) ? id : null);
-  const [aId, setA] = useState(() => validId(params.get("a")) ?? "saka");
-  const [bId, setB] = useState(() => validId(params.get("b")) ?? "yamal");
-  const a = getPlayer(aId);
-  const b = getPlayer(bId);
+  const byPoints = useMemo(() => [...all].sort((x, y) => y.fantasy.totalPoints - x.fantasy.totalPoints), [all]);
+  const options = useMemo(
+    () => [...all].sort((x, y) => x.name.localeCompare(y.name)).map((p) => ({ id: p.id, label: `${p.name} — ${getTeam(p.teamId).short}` })),
+    [all],
+  );
+  const validId = (id: string | null) => (id && all.some((p) => p.id === id) ? id : null);
+  const [aId, setA] = useState(() => validId(params.get("a")) ?? byPoints[0].id);
+  const [bId, setB] = useState(() => validId(params.get("b")) ?? byPoints[1].id);
+  const a = getPlayer(aId) ?? byPoints[0];
+  const b = getPlayer(bId) ?? byPoints[1];
   const mounted = useRef(false);
 
   // shareable URLs: the pair lives in ?a=&b= (replace — no history spam)
@@ -98,81 +110,102 @@ function PlayerCompare() {
     mounted.current = true;
   }, [aId, bId, setParams]);
 
-  const diffs = useMemo(() => {
-    return axes
-      .map((k) => ({ k, d: a.attributes[k] - b.attributes[k] }))
-      .sort((x, y) => Math.abs(y.d) - Math.abs(x.d))
-      .slice(0, 3);
-  }, [a, b]);
+  const oneKeeper = (a.position === "GK") !== (b.position === "GK");
+  const axes = a.position === b.position ? AXES[a.position] : OUTFIELD_AXES;
+  const rows = axes.map((k) => ({ k, label: METRICS[k].label, a: percentile(all, a, k), b: percentile(all, b, k) }));
+  const gaps = [...rows].sort((x, y) => Math.abs(y.a - y.b) - Math.abs(x.a - x.b)).slice(0, 3);
 
   return (
     <div className="space-y-6">
       <Card className="flex flex-col gap-4 p-4 sm:flex-row">
-        <Picker label="Player A" value={aId} onChange={setA} options={players.map((p) => ({ id: p.id, label: `${p.name} — ${getTeam(p.teamId).short}` }))} />
-        <Picker label="Player B" value={bId} onChange={setB} options={players.map((p) => ({ id: p.id, label: `${p.name} — ${getTeam(p.teamId).short}` }))} />
+        <Picker label="Player A" value={a.id} onChange={setA} options={options} />
+        <Picker label="Player B" value={b.id} onChange={setB} options={options} />
       </Card>
 
-      <ShareBar title={`${a.name} vs ${b.name}`} path={`/compare?a=${aId}&b=${bId}`} kind="Player Comparison" stat={`${a.stats.rating.toFixed(2)} vs ${b.stats.rating.toFixed(2)} rating`} />
+      <ShareBar
+        title={`${a.name} vs ${b.name}`}
+        path={`/compare?a=${a.id}&b=${b.id}`}
+        kind="Player Comparison"
+        stat={`${a.stats.goals}G ${a.stats.assists}A vs ${b.stats.goals}G ${b.stats.assists}A`}
+      />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_1.35fr]">
         <Card className="p-4 md:p-5">
           <div className="mb-3 flex items-center justify-between gap-3">
             {[a, b].map((p, i) => (
               <div key={p.id} className={`flex items-center gap-2.5 ${i === 1 ? "flex-row-reverse text-right" : ""}`}>
-                <Avatar name={p.name} playerId={p.id} size={44} ringColor={i === 0 ? "var(--chart-1)" : "var(--chart-4)"} />
+                <Avatar name={p.name} photoUrl={p.photoUrl} size={44} ringColor={i === 0 ? "var(--chart-1)" : "var(--chart-4)"} />
                 <div>
                   <p className="text-ui font-bold leading-tight text-ink">{p.name}</p>
                   <p className="text-label text-ink-3">
-                    {getTeam(p.teamId).tla} · {p.age}y · {money(p.marketValue)}
+                    {getTeam(p.teamId).tla} · {p.role}
+                    {p.age != null ? ` · ${p.age}y` : ""}
                   </p>
                 </div>
               </div>
             ))}
           </div>
-          <Radar
-            axes={axes.map((k) => attributeLabels[k])}
-            series={[
-              { label: a.name, color: "var(--chart-1)", values: axes.map((k) => a.attributes[k]) },
-              { label: b.name, color: "var(--chart-4)", values: axes.map((k) => b.attributes[k]) },
-            ]}
-            size={310}
-          />
+          {oneKeeper || !hasSample(a) || !hasSample(b) ? (
+            <p className="py-10 text-center text-caption text-ink-3">
+              {oneKeeper
+                ? "A goalkeeper and an outfielder share no per-90 axes — compare the season totals instead."
+                : `One of these players has under ${MIN_MINUTES} minutes — too small a sample for percentiles.`}
+            </p>
+          ) : (
+            <>
+              <p className="eyebrow mb-1">Per-90 percentile vs own position</p>
+              <Radar
+                axes={rows.map((r) => r.label)}
+                series={[
+                  { label: a.name, color: "var(--chart-1)", values: rows.map((r) => r.a) },
+                  { label: b.name, color: "var(--chart-4)", values: rows.map((r) => r.b) },
+                ]}
+                size={310}
+              />
+            </>
+          )}
         </Card>
 
         <div className="space-y-6">
           <Card className="p-4 md:p-5">
-            <SectionHeader eyebrow="2025/26" title="Side by Side" className="mb-2" />
+            <SectionHeader eyebrow="Premier League season to date" title="Side by Side" className="mb-2" />
             <Legend className="mb-4" items={[{ label: a.name, color: "var(--chart-1)" }, { label: b.name, color: "var(--chart-4)" }]} />
             <CompareBars
               rows={[
+                { label: "Minutes", a: a.stats.minutes, b: b.stats.minutes },
                 { label: "Goals", a: a.stats.goals, b: b.stats.goals },
                 { label: "Assists", a: a.stats.assists, b: b.stats.assists },
                 { label: "xG", a: a.stats.xG, b: b.stats.xG, format: (v) => v.toFixed(1) },
                 { label: "xA", a: a.stats.xA, b: b.stats.xA, format: (v) => v.toFixed(1) },
-                { label: "Key passes / game", a: a.stats.keyPasses, b: b.stats.keyPasses, format: (v) => v.toFixed(1) },
-                { label: "Dribbles / game", a: a.stats.dribblesPerGame, b: b.stats.dribblesPerGame, format: (v) => v.toFixed(1) },
-                { label: "Rating", a: a.stats.rating, b: b.stats.rating, format: (v) => v.toFixed(2), max: 9 },
+                { label: "Tackles", a: a.stats.tackles, b: b.stats.tackles },
+                { label: "Recoveries", a: a.stats.recoveries, b: b.stats.recoveries },
+                { label: "FPL points", a: a.fantasy.totalPoints, b: b.fantasy.totalPoints },
               ]}
             />
           </Card>
-          <IQInsight title="Key differences" feedback="Player comparison — key differences">
-            <ul className="space-y-1.5">
-              {diffs.map(({ k, d }) => (
-                <li key={k}>
-                  <strong>{attributeLabels[k]}:</strong> {d > 0 ? a.name : b.name} leads by {Math.abs(d)} points —{" "}
-                  {Math.abs(d) > 12 ? "a decisive structural edge" : "meaningful but coachable"}.
-                </li>
-              ))}
-              <li>
-                <strong>Valuation:</strong> the market prices {a.marketValue > b.marketValue ? a.name : b.name} higher by{" "}
-                {money(Math.abs(a.marketValue - b.marketValue))}, driven mostly by {a.age < b.age === (a.marketValue > b.marketValue) ? "age curve" : "output"}.
-              </li>
-            </ul>
-          </IQInsight>
+          {!oneKeeper && hasSample(a) && hasSample(b) && (
+            <Card className="p-4 md:p-5">
+              <SectionHeader title="Biggest gaps" className="mb-2" />
+              <ul className="space-y-1.5 text-ui text-ink-2">
+                {gaps.map((g) => (
+                  <li key={g.k}>
+                    <strong className="text-ink">{g.label} per 90:</strong> {g.a >= g.b ? a.name : b.name} — {ordinal(Math.max(g.a, g.b))} vs{" "}
+                    {ordinal(Math.min(g.a, g.b))} percentile.
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
         </div>
       </div>
     </div>
   );
+}
+
+function ordinal(n: number): string {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
 function TeamCompare() {

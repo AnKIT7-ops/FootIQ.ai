@@ -14,9 +14,8 @@ function sitemapPlugin(): Plugin {
     name: "footiq-sitemap",
     apply: "build",
     async generateBundle() {
-      const [{ players }, { teams }, { historicalMoments }, content, slugs, nav] =
+      const [{ teams }, { historicalMoments }, content, slugs, nav] =
         await Promise.all([
-          import("./src/data/players"),
           import("./src/data/teams"),
           import("./src/data/history"),
           import("./src/data/content"),
@@ -29,7 +28,8 @@ function sitemapPlugin(): Plugin {
       const paths = [
         ...[...nav.pageEntries, ...nav.legalEntries].map((e) => e.to),
         "/intelligence",
-        ...players.map(slugs.playerPathFor),
+        // Not listed: players. They sync from FPL at runtime, so the build can't
+        // see them; a sitemap route on the API is the upgrade path.
         ...teams.map(slugs.teamPathFor),
         ...teams.map(slugs.managerPathFor),
         // Not listed: demo fixtures, demo predictions and demo news. They describe

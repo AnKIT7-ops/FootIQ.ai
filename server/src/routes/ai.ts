@@ -40,7 +40,7 @@ export function aiRoutes(catalog: CatalogService) {
     async (c) => {
       const services = c.get("services");
       await gate(services, "ai_scout");
-      const player = catalog.player(c.req.valid("param").id);
+      const player = await catalog.player(c.req.valid("param").id);
       const team = await teamOrNull(catalog, player.teamId);
       // A/B: users inside the prompt_experiments rollout cohort get variant B;
       // variant versions are distinct so cached A/B results never mix.
@@ -63,21 +63,6 @@ export function aiRoutes(catalog: CatalogService) {
   );
 
   r.post(
-    "/transfers/:id/analysis",
-    validate("param", z.object({ id })),
-    consumeQuota("ai_requests"),
-    async (c) => {
-      await gate(c.get("services"), "ai_scout");
-      const rumor = catalog.transfers().find((t) => t.id === c.req.valid("param").id);
-      if (!rumor) throw ApiError.notFound("Transfer rumour");
-      const player = catalog.player(rumor.playerId);
-      const from = await teamOrNull(catalog, rumor.fromId);
-      const to = await teamOrNull(catalog, rumor.toId);
-      return ok(c, await c.get("services").ai.run(prompts.transfer_analysis(rumor, player, from, to)));
-    },
-  );
-
-  r.post(
     "/predictions/:id/explanation",
     validate("param", z.object({ id })),
     consumeQuota("ai_requests"),
@@ -94,12 +79,7 @@ export function aiRoutes(catalog: CatalogService) {
 const SCOUT_FILTERS = z.object({
     positions: z.array(z.enum(["GK", "DF", "MF", "FW"])).max(4).default([]),
     maxAge: z.number().int().min(16).max(45).nullish(),
-    maxPriceM: z.number().int().min(1).max(500).nullish(),
-    foot: z.enum(["Left", "Right"]).nullish(),
-    traits: z
-      .array(z.enum(["pace", "shooting", "passing", "dribbling", "defending", "physical", "pressing", "vision"]))
-      .max(8)
-      .default([]),
+    traits: z.array(z.enum(["scoring", "creating", "defending", "ball_winning", "shot_stopping"])).max(5).default([]),
   });
 
   /**
@@ -131,8 +111,6 @@ const SCOUT_FILTERS = z.object({
           positions: f.positions,
           traits: f.traits,
           ...(f.maxAge != null ? { maxAge: f.maxAge } : {}),
-          ...(f.maxPriceM != null ? { maxPriceM: f.maxPriceM } : {}),
-          ...(f.foot ? { foot: f.foot } : {}),
         },
         provider: result.provider,
         model: result.model,
@@ -180,13 +158,13 @@ const SCOUT_FILTERS = z.object({
     async (c) => {
       await gate(c.get("services"), "ai_scout");
       const question = cleanText(c.req.valid("json").question, 500);
-      const f = catalog.fantasy();
-      return ok(
-        c,
-        await c.get("services").ai.run(
-          prompts.fantasy_advice({ gameweek: f.gameweek, picks: f.captainPicks, question }),
-        ),
-      );
+      const [{ data: board }, { data: players }] = await Promise.all([catalog.fantasy(), catalog.players()]);
+      const picks = players
+        .filter((p) => p.availability === "available")
+        .sort((a, b) => b.fantasy.expectedPoints - a.fantasy.expectedPoints)
+        .slice(0, 12)
+        .map((p) => ({ name: p.name, position: p.role, teamId: p.teamId, ...p.fantasy }));
+      return ok(c, await c.get("services").ai.run(prompts.fantasy_advice({ gameweek: board.gameweek, picks, question })));
     },
   );
 
@@ -225,7 +203,7 @@ const SCOUT_FILTERS = z.object({
     consumeQuota("ai_requests"),
     async (c) => {
       await gate(c.get("services"), "ai_scout");
-      const players = c.req.valid("json").playerIds.map((pid) => catalog.player(pid));
+      const players = await Promise.all(c.req.valid("json").playerIds.map((pid) => catalog.player(pid)));
       return ok(c, await c.get("services").ai.run(prompts.player_comparison(players)));
     },
   );

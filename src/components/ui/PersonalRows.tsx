@@ -6,7 +6,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { useUserData } from "@/lib/user";
 import { useRecentViews } from "@/lib/recent";
 import { getTeam } from "@/lib/repositories/teams";
-import { getPlayer } from "@/lib/repositories/players";
+import { getPlayer, usePlayers } from "@/lib/repositories/players";
 import { playerPathFor, teamPathFor } from "@/lib/slug-builders";
 import { agoFromMinutes } from "@/lib/utils";
 
@@ -23,10 +23,11 @@ export function PersonalRows() {
     .filter((f) => f.kind === "team")
     .map((f) => getTeam(f.refId))
     .filter((t) => favorites.some((f) => f.kind === "team" && f.refId === t.id)); // getTeam falls back to the first team for unknown ids — keep only real hits
+  usePlayers(); // players arrive from the API — re-render when they do
   const favPlayers = favorites
     .filter((f) => f.kind === "player")
     .map((f) => getPlayer(f.refId))
-    .filter((p) => favorites.some((f) => f.kind === "player" && f.refId === p.id));
+    .filter((p) => p !== undefined); // follows of retired demo ids resolve to nothing
   const reading = bookmarks.slice(0, 3);
   const viewed = recents.slice(0, 8);
   const lastPlayer = recents.find((r) => r.kind === "player");
@@ -78,7 +79,7 @@ export function PersonalRows() {
                 {favPlayers.slice(0, 4).map((p) => (
                   <li key={p.id}>
                     <Link to={playerPathFor(p)} className="group flex items-center gap-2.5 rounded-xl p-1.5 transition-colors hover:bg-surface-2">
-                      <Avatar name={p.name} size={26} />
+                      <Avatar name={p.name} photoUrl={p.photoUrl} size={26} />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-ui font-semibold text-ink">{p.name}</span>
                         <span className="block text-label text-ink-3">

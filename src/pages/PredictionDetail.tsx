@@ -3,15 +3,13 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { recordPredictionView } from "@/lib/user";
 import { Card, SectionHeader } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Crest } from "@/components/ui/Crest";
 import { AIMeta } from "@/components/ui/AIMeta";
 import { ShareBar } from "@/components/ui/ShareBar";
 import { getTeam } from "@/lib/repositories/teams";
-import { getPlayer } from "@/lib/repositories/players";
 import { predictionByMatch } from "@/lib/repositories/predictions";
-import { matchPath, matchSlug, playerPath, predictionPath, resolveMatch, teamPath } from "@/lib/slugs";
+import { matchPath, matchSlug, predictionPath, resolveMatch, teamPath } from "@/lib/slugs";
 import { usePageMeta } from "@/lib/seo";
 import { weekStamp } from "@/lib/repositories/content";
 
@@ -126,23 +124,6 @@ export default function PredictionDetail() {
             </li>
           ))}
         </ul>
-        {pred.mvp.length > 0 && (
-          <div className="mt-5">
-            <p className="eyebrow mb-2">Most likely MVP</p>
-            <div className="flex flex-wrap gap-2">
-              {pred.mvp.map((m) => {
-                const p = getPlayer(m.playerId);
-                return (
-                  <Link key={m.playerId} to={playerPath(p)}>
-                    <Badge variant="outline" className="transition-colors hover:border-accent/50">
-                      {p.name} · {m.p}%
-                    </Badge>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </Card>
 
       <AIMeta

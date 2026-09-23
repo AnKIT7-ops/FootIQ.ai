@@ -1,5 +1,6 @@
 import * as demo from "../data/demo";
-import type { Team } from "../data/demo";
+import type { FantasyBoard, Player, Team } from "../data/demo";
+import { fetchFpl, type FplSync } from "../providers/fpl";
 import type { FootballDataProvider, NormalizedCompetition, NormalizedTeam } from "../providers";
 import type { SnapshotKind, SnapshotStore } from "../services/snapshots";
 import { JobRegistry } from "../jobs/registry";
@@ -28,6 +29,9 @@ export type { MatchesGrouped } from "./normalize";
 const SNAPSHOT_TTL_MS: Partial<Record<SnapshotKind, number>> = {
   team_identity: 24 * 60 * 60_000,
   competitions: 24 * 60 * 60_000,
+  // FPL updates stats after each match and injury news a few times a day;
+  // hourly is fresh enough and keeps a ~1.7 MB fetch off every cron tick.
+  players: 60 * 60_000,
 };
 
 /** True when the last write is still inside the kind's TTL. */
@@ -47,10 +51,13 @@ export function registerJobs(
     snapshots: SnapshotStore;
     /** Headline source; injectable so tests never hit the real feeds. */
     fetchNews?: () => Promise<NewsHeadline[]>;
+    /** Player source; injectable so tests never hit FPL. */
+    fetchPlayers?: (teams: Team[]) => Promise<FplSync>;
   },
 ): void {
   const { provider, snapshots } = deps;
   const fetchNews = deps.fetchNews ?? (() => fetchHeadlines());
+  const fetchPlayers = deps.fetchPlayers ?? ((teams: Team[]) => fetchFpl(teams));
 
   registry.register({
     name: "sync_competitions",
@@ -125,6 +132,23 @@ export function registerJobs(
       await snapshots.set<NewsHeadline[]>("headlines", rows, "rss");
       const sources = [...new Set(rows.map((r) => r.source))].join(", ");
       return `${rows.length} headlines (${sources})`;
+    },
+  });
+
+  registry.register({
+    name: "sync_players",
+    description: "Every current Premier League player + gameweek state from the FPL API → players and fantasy snapshots (1h TTL)",
+    async run() {
+      if (await isFresh(snapshots, "players")) return "skipped — snapshot still fresh (1h TTL)";
+      // Clubs resolve against the synced league, so this needs a table first.
+      const teams = (await snapshots.get<Team[]>("teams"))?.payload ?? [];
+      if (!teams.some((t) => t.league === "Premier League")) return "skipped — no synced Premier League table yet";
+      const { players, board, unmatchedClubs } = await fetchPlayers(teams);
+      if (players.length === 0) throw new Error("FPL sync produced 0 players — keeping last snapshot");
+      await snapshots.set<Player[]>("players", players, "fpl");
+      await snapshots.set<FantasyBoard>("fantasy", board, "fpl");
+      const unmatched = unmatchedClubs.length ? `; unmatched clubs: ${unmatchedClubs.join(", ")}` : "";
+      return `${players.length} players, gameweek ${board.gameweek.number} (fpl)${unmatched}`;
     },
   });
 

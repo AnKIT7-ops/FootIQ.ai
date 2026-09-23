@@ -1,29 +1,28 @@
 import { useState } from "react";
 import { cn, initials, hashCode } from "@/lib/utils";
-import { playerPhotoUrl } from "@/data/images";
 
 const HUES = [158, 200, 262, 20, 330, 90];
 
 /**
- * Player facecard: real portrait (FotMob CDN) over the duotone disc when a
- * playerId with a known photo is supplied; initials fallback otherwise/offline.
+ * Player facecard: real portrait (Premier League CDN, from the FPL sync) over
+ * the duotone disc; initials when there's no photo or it fails to load.
  */
 export function Avatar({
   name,
-  playerId,
+  photoUrl,
   size = 40,
   ringColor,
   className,
 }: {
   name: string;
-  playerId?: string;
+  photoUrl?: string;
   size?: number;
   ringColor?: string;
   className?: string;
 }) {
   const [failed, setFailed] = useState(false);
   const hue = HUES[hashCode(name) % HUES.length];
-  const photo = playerPhotoUrl(playerId);
+  const photo = photoUrl;
   const showPhoto = photo !== undefined && !failed;
 
   return (

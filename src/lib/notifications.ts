@@ -1,7 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { upcomingMatches } from "@/lib/repositories/matches";
 import { headlines } from "@/lib/repositories/headlines";
-import { transferRumors } from "@/lib/repositories/transfers";
 import { getTeam } from "@/lib/repositories/teams";
 import { getPlayer } from "@/lib/repositories/players";
 import { contentLibrary } from "@/lib/repositories/content";
@@ -87,23 +86,23 @@ export function buildNotifications(prefs: { matchReminders: boolean; favoriteTea
     }
   }
 
+  const followedPlayers = [...favPlayers].map((id) => getPlayer(id)).filter((p) => p !== undefined);
+
   if (prefs.transferUpdates) {
-    for (const r of transferRumors) {
-      if (favPlayers.has(r.playerId) || favTeams.has(r.fromId) || favTeams.has(r.toId)) {
-        const p = getPlayer(r.playerId);
-        out.push({
-          id: `transfer-${r.id}`,
-          kind: "transfer",
-          title: `${p.name} → ${getTeam(r.toId).short}: ${r.probability}%`,
-          body: `${r.stage} · trend ${r.trend}.`,
-          path: "/transfers",
-        });
+    // Real transfer headlines naming a followed club, or a followed player by surname.
+    const clubs = [...favTeams].map((id) => getTeam(id)).filter((t) => favTeams.has(t.id)).map((t) => t.short.toLowerCase());
+    const surnames = followedPlayers.map((p) => p.name.split(" ").pop()!.toLowerCase()).filter((s) => s.length >= 4);
+    const seen = new Set(out.map((n) => n.id));
+    for (const h of clubs.length || surnames.length ? headlines : []) {
+      const title = h.title.toLowerCase();
+      if (h.category === "Transfers" && !seen.has(`news-${h.id}`) && [...clubs, ...surnames].some((n) => title.includes(n))) {
+        out.push({ id: `transfer-${h.id}`, kind: "transfer", title: h.title, body: `${h.source} · Transfers`, path: "/news" });
       }
     }
   }
 
   if (prefs.aiReports) {
-    const favPlayerNames = [...favPlayers].map((id) => getPlayer(id).name);
+    const favPlayerNames = followedPlayers.map((p) => p.name);
     const favTeamNames = [...favTeams].map((id) => getTeam(id).name);
     for (const a of contentLibrary()) {
       if (a.tags.some((t) => favPlayerNames.includes(t) || favTeamNames.includes(t))) {

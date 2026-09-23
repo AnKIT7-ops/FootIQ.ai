@@ -1,5 +1,5 @@
 import * as demo from "../data/demo";
-import type { NewsArticle, Player, Team } from "../data/demo";
+import type { NewsArticle, Team } from "../data/demo";
 import { ApiError } from "../lib/errors";
 
 /**
@@ -23,7 +23,7 @@ export class RecommendService {
         const score = sharedTags.length + sharedTeams.length * 2 + sharedPlayers.length * 3 + (n.category === base.category ? 1 : 0);
         const reason =
           sharedPlayers.length > 0
-            ? `also about ${demo.playerById.get(sharedPlayers[0])?.name ?? "the same player"}`
+            ? "also about the same player"
             : sharedTeams.length > 0
               ? `also covers ${demo.teamById.get(sharedTeams[0])?.name ?? "the same club"}`
               : sharedTags.length > 0
@@ -35,25 +35,6 @@ export class RecommendService {
       .sort((a, b) => b.score - a.score)
       .slice(0, limit)
       .map(({ score: _s, ...r }) => r);
-  }
-
-  /** Comparison pairs worth opening for a player: same position, closest profile. */
-  suggestedComparisons(playerId: string, limit = 3): Array<{ player: Player; reason: string }> {
-    const base = demo.playerById.get(playerId);
-    if (!base) throw ApiError.notFound("Player");
-    const dist = (a: Player, b: Player) => {
-      const keys = Object.keys(a.attributes) as Array<keyof Player["attributes"]>;
-      return keys.reduce((s, k) => s + Math.abs(a.attributes[k] - b.attributes[k]), 0) / keys.length;
-    };
-    return demo.players
-      .filter((p) => p.id !== base.id && p.position === base.position)
-      .map((p) => ({ p, d: dist(base, p), valueGap: Math.abs(p.marketValue - base.marketValue) }))
-      .sort((a, b) => a.d - b.d)
-      .slice(0, limit)
-      .map(({ p, d }) => ({
-        player: p,
-        reason: d < 8 ? `near-identical attribute profile (Δ${d.toFixed(1)})` : `closest ${base.position} profile in the dataset`,
-      }));
   }
 
   /** Teams a user would plausibly follow next, from style similarity to their favorites. */

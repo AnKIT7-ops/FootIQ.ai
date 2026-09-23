@@ -30,10 +30,10 @@ export function exportRoutes(catalog: CatalogService) {
     data,
   });
 
-  r.get("/players/:id", validate("param", idParam), (c) => {
-    const player = catalog.player(c.req.valid("param").id);
+  r.get("/players/:id", validate("param", idParam), async (c) => {
+    const player = await catalog.player(c.req.valid("param").id);
     attachment(c, `footiq-player-${player.id}.json`);
-    return c.body(JSON.stringify(envelope("player-report", player, "demo"), null, 2));
+    return c.body(JSON.stringify(envelope("player-report", player, "provider"), null, 2));
   });
 
   r.get("/teams/:id", validate("param", idParam), async (c) => {
@@ -51,11 +51,11 @@ export function exportRoutes(catalog: CatalogService) {
   r.get(
     "/comparison",
     validate("query", z.object({ ids: z.string().max(300) })),
-    (c) => {
+    async (c) => {
       const ids = c.req.valid("query").ids.split(",").map((s) => s.trim()).filter((s) => /^[\w.-]{1,64}$/.test(s)).slice(0, 4);
-      const players = ids.map((id) => catalog.player(id));
+      const players = await Promise.all(ids.map((id) => catalog.player(id)));
       attachment(c, `footiq-comparison-${ids.join("-vs-")}.json`);
-      return c.body(JSON.stringify(envelope("comparison-report", players, "demo"), null, 2));
+      return c.body(JSON.stringify(envelope("comparison-report", players, "provider"), null, 2));
     },
   );
 

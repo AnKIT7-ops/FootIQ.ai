@@ -35,12 +35,12 @@ async function post(app: ReturnType<typeof createApp>, query: string) {
 describe("POST /api/ai/scout/parse", () => {
   it("accepts fenced JSON and returns validated filters", async () => {
     const app = appWith(
-      replying('```json\n{"positions":["DF"],"maxAge":23,"maxPriceM":null,"foot":null,"traits":["physical"]}\n```'),
+      replying('```json\n{"positions":["DF"],"maxAge":23,"traits":["defending"]}\n```'),
     );
-    const res = await post(app, "tall centre back under 23 good in the air");
+    const res = await post(app, "centre back under 23 good in the air");
     expect(res.status).toBe(200);
     const body = (await res.json()) as ApiSuccess<{ filters: ScoutFilters; provider: string }>;
-    expect(body.data.filters).toEqual({ positions: ["DF"], maxAge: 23, traits: ["physical"] });
+    expect(body.data.filters).toEqual({ positions: ["DF"], maxAge: 23, traits: ["defending"] });
     expect(body.data.provider).toBe("gemini");
   });
 

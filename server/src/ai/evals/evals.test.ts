@@ -6,6 +6,7 @@ import { AiService, createAiProvider } from "../service";
 import { MemoryCache } from "../../cache/memory";
 import { createLogger } from "../../lib/logger";
 import { loadEnv } from "../../config/env";
+import { samplePlayers } from "../../test-fixtures";
 
 /**
  * Prompt/eval harness — the MLOps offline gate.
@@ -27,14 +28,16 @@ interface GoldenCase {
   expect: { minWords: number; mustMention: string[]; mustNotMention: string[] };
 }
 
+const playerById = new Map(samplePlayers.map((p) => [p.id, p]));
+
 function render(c: GoldenCase): RenderedPrompt {
   switch (c.task) {
     case "scout_report": {
-      const p = demo.playerById.get(c.input.playerId as string)!;
+      const p = playerById.get(c.input.playerId as string)!;
       return prompts.scout_report(p, demo.teamById.get(p.teamId) ?? null);
     }
     case "scout_report_variant_b": {
-      const p = demo.playerById.get(c.input.playerId as string)!;
+      const p = playerById.get(c.input.playerId as string)!;
       return promptVariants.scout_report(p, demo.teamById.get(p.teamId) ?? null);
     }
     case "news_summary":
@@ -45,7 +48,7 @@ function render(c: GoldenCase): RenderedPrompt {
       return prompts.prediction_explanation(pred, demo.teamById.get(m.homeId) ?? null, demo.teamById.get(m.awayId) ?? null);
     }
     case "player_comparison":
-      return prompts.player_comparison((c.input.playerIds as string[]).map((id) => demo.playerById.get(id)!));
+      return prompts.player_comparison((c.input.playerIds as string[]).map((id) => playerById.get(id)!));
     default:
       throw new Error(`No renderer for golden task: ${c.task}`);
   }
@@ -66,7 +69,7 @@ describe("prompt evals (offline)", () => {
   });
 
   it("variant B has a distinct version from variant A (cache isolation)", () => {
-    const p = demo.playerById.get("saka")!;
+    const p = samplePlayers[0];
     const a = prompts.scout_report(p, null);
     const b = promptVariants.scout_report(p, null);
     expect(b.version).not.toBe(a.version);
