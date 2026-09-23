@@ -2,16 +2,15 @@
 // must stay resolvable without Vite's "@" alias
 import { hashCode, seeded, clamp } from "../lib/utils";
 import type { LineupPlayer, Position, Team } from "./types";
-import { playersOf } from "./players";
 import { getTeam } from "./teams";
 
-/* ---------- squad depth generation (fills team squads around the star core) ---------- */
+/* ---------- generic squads for demo fixtures ---------- */
 
 const FIRST = ["Marco", "Jaden", "Luca", "Theo", "Rafael", "Nico", "Emile", "Sergi", "Kaan", "Tommy", "Diego", "Ivan", "Noah", "Sami", "Jorge", "Felix", "Andre", "Louis", "Mats", "Dani"];
 const LAST = ["Ferreira", "Okafor", "Lindqvist", "Marchetti", "Dubois", "Kovac", "Sørensen", "Alcántara", "Weber", "Hughes", "Romero", "Petit", "Zielinski", "Costa", "Bakker", "Silva", "Novak", "Beaumont", "Keller", "Iversen"];
 const NATIONS: Array<[string, string]> = [["England", "🏴󠁧󠁢󠁥󠁮󠁧󠁿"], ["France", "🇫🇷"], ["Brazil", "🇧🇷"], ["Spain", "🇪🇸"], ["Germany", "🇩🇪"], ["Netherlands", "🇳🇱"], ["Portugal", "🇵🇹"], ["Argentina", "🇦🇷"], ["Denmark", "🇩🇰"], ["Croatia", "🇭🇷"]];
 
-export interface DepthPlayer {
+interface DepthPlayer {
   id: string;
   name: string;
   position: Position;
@@ -34,21 +33,18 @@ const ROLE: Record<Position, string[]> = {
   FW: ["Winger", "Striker"],
 };
 
-/** Deterministic depth squad so every team page fields ~18 players. */
-export function depthSquad(teamId: string): DepthPlayer[] {
+/**
+ * Deterministic generic squad for DEMO fixtures only (real fixtures never get
+ * synthesized play). Invented names on purpose — real players are never put
+ * into matches they didn't play.
+ */
+function depthSquad(teamId: string): DepthPlayer[] {
   const rnd = seeded(hashCode(teamId));
-  const stars = playersOf(teamId);
   const need: Position[] = ["GK", "DF", "DF", "DF", "DF", "MF", "MF", "MF", "FW", "FW", "GK", "DF", "MF", "FW"];
-  const have = new Set(stars.map((s) => s.id));
   const out: DepthPlayer[] = [];
-  const usedShirts = new Set(stars.map((s) => s.shirt));
+  const usedShirts = new Set<number>();
 
   need.forEach((pos, i) => {
-    // skip slots the star core already covers well
-    const coverage = stars.filter((s) => s.position === pos).length;
-    const skip = (pos === "GK" && coverage > 0 && i < 10) || coverage > 2;
-    if (skip && rnd() < 0.7) return;
-
     let shirt = Math.floor(rnd() * 30) + 2;
     while (usedShirts.has(shirt)) shirt++;
     usedShirts.add(shirt);
@@ -71,11 +67,10 @@ export function depthSquad(teamId: string): DepthPlayer[] {
       marketValue: (Math.floor(rnd() * 38) + 4) * 1_000_000,
     });
   });
-  if (!have.size && out.length === 0) return out;
   return out;
 }
 
-/* ---------- pitch point clouds (heatmaps, shots, passes) ---------- */
+/* ---------- pitch heat clouds (demo match pages) ---------- */
 
 export interface HeatCell {
   x: number; // 0-100 length of pitch (attack →)
@@ -122,62 +117,6 @@ export function heatmapFor(playerId: string, position: Position, role: string): 
   return cells;
 }
 
-export interface Shot {
-  x: number; // 0-100, attacking right goal at x=100
-  y: number;
-  xg: number;
-  outcome: "goal" | "saved" | "missed" | "blocked";
-  minute: number;
-}
-
-export function shotMapFor(playerId: string, goals: number, xg: number): Shot[] {
-  const rnd = seeded(hashCode(playerId + "shots"));
-  const n = Math.max(10, Math.round(xg * 4 + 6));
-  const shots: Shot[] = [];
-  let goalsLeft = goals > 0 ? Math.min(goals, Math.round(goals * 0.6)) + 2 : 1;
-  for (let i = 0; i < n; i++) {
-    const central = rnd() < 0.62;
-    const x = central ? 84 + rnd() * 13 : 72 + rnd() * 18;
-    const y = central ? 38 + rnd() * 24 : 20 + rnd() * 60;
-    const dist = Math.hypot(100 - x, 50 - y);
-    const shotXg = clamp(0.75 - dist / 40 + rnd() * 0.15, 0.02, 0.85);
-    let outcome: Shot["outcome"];
-    const roll = rnd();
-    if (goalsLeft > 0 && roll < shotXg + 0.12) {
-      outcome = "goal";
-      goalsLeft--;
-    } else if (roll < 0.45) outcome = "saved";
-    else if (roll < 0.75) outcome = "missed";
-    else outcome = "blocked";
-    shots.push({ x, y, xg: shotXg, outcome, minute: Math.floor(rnd() * 90) + 1 });
-  }
-  return shots;
-}
-
-export interface PassArrow {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-  key: boolean; // key pass / assist-like
-}
-
-export function passMapFor(playerId: string, position: Position): PassArrow[] {
-  const rnd = seeded(hashCode(playerId + "pass"));
-  const n = 26;
-  const out: PassArrow[] = [];
-  const baseX = position === "DF" ? 30 : position === "MF" ? 52 : 68;
-  for (let i = 0; i < n; i++) {
-    const x1 = clamp(baseX + (rnd() - 0.5) * 34, 4, 92);
-    const y1 = clamp(50 + (rnd() - 0.5) * 74, 4, 96);
-    const forward = rnd() < 0.72;
-    const x2 = clamp(x1 + (forward ? 8 + rnd() * 22 : -(4 + rnd() * 10)), 4, 98);
-    const y2 = clamp(y1 + (rnd() - 0.5) * 36, 2, 98);
-    out.push({ x1, y1, x2, y2, key: rnd() < 0.18 });
-  }
-  return out;
-}
-
 /* ---------- lineups ---------- */
 
 const FORMATION_SLOTS: Record<string, Array<[number, number, Position]>> = {
@@ -204,7 +143,7 @@ const FORMATION_SLOTS: Record<string, Array<[number, number, Position]>> = {
 };
 
 /**
- * Build a plausible XI mixing star players into formation slots.
+ * Build a generic XI for a demo fixture.
  *
  * `team` may be passed by callers holding a provider-synced club: the bundled
  * `getTeam` throws for any id outside the demo set, which crashed every real
@@ -217,23 +156,15 @@ export function lineupFor(
 ): { formation: string; players: LineupPlayer[] } {
   const formation = FORMATION_SLOTS[team.style.formation] ? team.style.formation : "4-3-3";
   const slots = FORMATION_SLOTS[formation];
-  const stars = playersOf(teamId);
   const depth = depthSquad(teamId);
   const rnd = seeded(hashCode(teamId + opponentSeed));
 
-  const pool = {
-    GK: [...stars.filter((p) => p.position === "GK"), ...depth.filter((p) => p.position === "GK")],
-    DF: [...stars.filter((p) => p.position === "DF"), ...depth.filter((p) => p.position === "DF")],
-    MF: [...stars.filter((p) => p.position === "MF"), ...depth.filter((p) => p.position === "MF")],
-    FW: [...stars.filter((p) => p.position === "FW"), ...depth.filter((p) => p.position === "FW")],
-  };
   const used = new Set<string>();
   const take = (pos: Position): { name: string; shirt: number; id?: string } => {
-    const cand = pool[pos].find((p) => !used.has(p.id));
+    const cand = depth.find((p) => p.position === pos && !used.has(p.id));
     if (cand) {
       used.add(cand.id);
-      const isStar = "teamId" in cand;
-      return { name: cand.name, shirt: cand.shirt, id: isStar ? cand.id : undefined };
+      return { name: cand.name, shirt: cand.shirt };
     }
     // fabricate if pool exhausted
     const shirt = Math.floor(rnd() * 30) + 40;

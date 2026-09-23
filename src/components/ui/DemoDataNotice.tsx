@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
  *
  * Sibling of `DemoEngineChip`, which marks who *inferred* something. This marks
  * where the underlying *data* came from. Matches and standings are provider-
- * synced and never carry this; players, news, transfers, predictions, fantasy,
- * clips and history have no real provider yet and always do.
+ * synced and never carry this; nor do players and fantasy (FPL sync). History
+ * and manager profiles have no real provider yet and always do.
  *
  * Deliberately a banner, not a chip: a chip in a corner is easy to miss, and
  * an entire page of invented transfer rumours reads as reporting unless

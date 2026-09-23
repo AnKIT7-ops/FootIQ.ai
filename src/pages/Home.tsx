@@ -1,6 +1,7 @@
+import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
-import { ArrowRight, Play, Radio, Sparkles, TrendingUp } from "lucide-react";
+import { ArrowRight, Radio, Sparkles } from "lucide-react";
 import { Card, SectionHeader } from "@/components/ui/Card";
 import { Badge, FormPills } from "@/components/ui/Badge";
 import { Crest } from "@/components/ui/Crest";
@@ -11,13 +12,12 @@ import { IQInsight } from "@/components/ui/IQInsight";
 import { WaitlistForm } from "@/components/ui/Waitlist";
 import { PersonalRows } from "@/components/ui/PersonalRows";
 import { MomentumRiver } from "@/components/charts/MomentumRiver";
-import { Sparkline } from "@/components/charts/Sparkline";
 import { matchDetail, useMatchesState } from "@/lib/repositories/matches";
 import { useHeadlinesState } from "@/lib/repositories/headlines";
 import { HeadlineCard } from "@/components/ui/HeadlineCard";
-import { clips } from "@/lib/repositories/clips";
 import { getTeam, leagueTable } from "@/lib/repositories/teams";
-import { getPlayer } from "@/lib/repositories/players";
+import { usePlayersState } from "@/lib/repositories/players";
+import { playerPathFor } from "@/lib/slug-builders";
 import { cn } from "@/lib/utils";
 import { kickoffLabel, kickoffTime } from "@/lib/kickoff";
 import { usePageMeta } from "@/lib/seo";
@@ -27,7 +27,7 @@ export default function Home() {
   usePageMeta({
     title: "AI Football Intelligence",
     description:
-      "FootIQ is the AI intelligence layer for football — live match reads, outcome predictions, natural-language scouting and transfer probabilities, algorithmically generated and clearly marked apart from verified fact.",
+      "FootIQ is the AI intelligence layer for football — live match reads, outcome predictions and natural-language scouting on real Premier League data, algorithmically generated and clearly marked apart from verified fact.",
     path: "/",
   });
   const { data: matchData, status: matchStatus } = useMatchesState();
@@ -47,6 +47,11 @@ export default function Home() {
   const away = featured ? getTeam(featured.awayId) : null;
   const navigate = useNavigate();
   const headlineState = useHeadlinesState();
+  const { data: allPlayers, status: playerStatus } = usePlayersState();
+  const formLeaders = useMemo(
+    () => allPlayers.filter((p) => p.stats.minutes > 0).sort((a, b) => b.fantasy.form - a.fantasy.form).slice(0, 4),
+    [allPlayers],
+  );
   const tickerItems = headlineState.data.slice(0, 10);
   const transferHeadlines = headlineState.data.filter((h) => h.category === "Transfers");
 
@@ -64,7 +69,7 @@ export default function Home() {
               Not the scores. <span className="text-accent-ink">The reasons.</span>
             </h1>
             <p className="mt-1.5 max-w-2xl text-ui leading-relaxed text-ink-2">
-              Every match, transfer and player on FootIQ carries a model's read on <em>why</em> — predictions, scouting and tactics in
+              Every match and player on FootIQ carries a model's read on <em>why</em> — predictions, scouting and tactics in
               plain language. <span className="text-accent-ink">Emerald is measured fact</span>,{" "}
               <span className="text-iq-ink">amber is AI inference</span>.
             </p>
@@ -225,37 +230,6 @@ export default function Home() {
             )}
           </section>
 
-          {/* viral clips */}
-          <section aria-label="Viral clips">
-            <SectionHeader title="Clips" action={<SeeAll to="/highlights" />} />
-            <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 md:-mx-6 md:px-6">
-              {clips.slice(0, 6).map((c) => {
-                const team = getTeam(c.teamId);
-                return (
-                  <Link
-                    key={c.id}
-                    to="/highlights"
-                    className="group relative h-56 w-36 shrink-0 overflow-hidden rounded-2xl border border-line"
-                    style={{ background: `linear-gradient(160deg, ${team.colors[0]}33, var(--surface-2) 65%)` }}
-                  >
-                    <div className="absolute inset-x-0 top-0 p-3">
-                      <Crest teamId={c.teamId} size={22} />
-                    </div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="flex size-10 items-center justify-center rounded-full bg-black/45 backdrop-blur-sm transition-transform group-hover:scale-110">
-                        <Play className="size-4 fill-white text-white" aria-hidden />
-                      </span>
-                    </div>
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-3 pt-8">
-                      <p className="line-clamp-2 text-xs font-semibold leading-snug text-white">{c.title}</p>
-                      <p className="mt-1 font-mono text-micro text-white/70">{c.views} views</p>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </section>
-
           {/* trending transfers */}
           <section aria-label="Trending transfers">
             <SectionHeader title="Transfer News" action={<SeeAll to="/transfers" />} />
@@ -363,41 +337,25 @@ export default function Home() {
             </Card>
           </section>
 
-          <section aria-label="AI recommendations">
-            <SectionHeader title="FootIQ Picks" />
-            <div className="space-y-3">
-              <IQInsight compact title="Watch next">
-                <span className="font-semibold">Bayern vs PSG</span> is 31 minutes into the tactical chess match of the round — Europe's two
-                heaviest presses cancelling each other out. <Link className="text-iq-ink underline underline-offset-2" to="/match/bay-psg">Join live</Link>
-              </IQInsight>
-              <IQInsight compact title="Scout alert">
-                Your watchlist profile matches <span className="font-semibold">Désiré Doué</span> — 92 similarity to Saka's age-20 season and
-                rumored available. <Link className="text-iq-ink underline underline-offset-2" to="/player/doue">Profile</Link>
-              </IQInsight>
-              <IQInsight compact title="Fantasy deadline">
-                <span className="font-semibold">Haaland (C)</span> projects 8.4 pts vs Chelsea. Deadline Sat 11:00.{" "}
-                <Link className="text-iq-ink underline underline-offset-2" to="/fantasy">Assistant</Link>
-              </IQInsight>
-            </div>
-          </section>
-
           <section aria-label="Form watch">
-            <SectionHeader title="Form Watch" />
+            <SectionHeader eyebrow="FPL form · last 30 days" title="Form Watch" action={<SeeAll to="/fantasy" />} />
             <Card className="divide-y divide-line">
-              {["yamal", "dembele", "kane"].map((id) => {
-                const p = getPlayer(id);
-                return (
-                  <Link key={id} to={`/player/${id}`} className="flex items-center gap-3 p-3.5 transition-colors hover:bg-surface-2">
-                    <Avatar name={p.name} playerId={p.id} size={36} />
+              {formLeaders.length === 0 ? (
+                <DataState status={playerStatus} empty loadingLabel="Loading players…" emptyTitle="No form data yet" emptyBody="Player form syncs hourly from the FPL feed." />
+              ) : (
+                formLeaders.map((p) => (
+                  <Link key={p.id} to={playerPathFor(p)} className="flex items-center gap-3 p-3.5 transition-colors hover:bg-surface-2">
+                    <Avatar name={p.name} photoUrl={p.photoUrl} size={36} />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-ui font-semibold text-ink">{p.name}</p>
-                      <p className="text-label text-ink-3">{getTeam(p.teamId).short} · rating {p.stats.rating.toFixed(2)}</p>
+                      <p className="text-label text-ink-3">
+                        {getTeam(p.teamId).short} · {p.stats.goals}G {p.stats.assists}A
+                      </p>
                     </div>
-                    <Sparkline data={p.form} width={72} height={24} />
-                    <TrendingUp className="size-4 text-accent-ink" aria-hidden />
+                    <span className="tabular font-mono text-ui font-semibold text-accent-ink">{p.fantasy.form.toFixed(1)}</span>
                   </Link>
-                );
-              })}
+                ))
+              )}
             </Card>
           </section>
         </div>

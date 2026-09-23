@@ -1,6 +1,6 @@
 import * as demo from "../data/demo";
 import { matchDetailFor } from "../../../src/data/matches";
-import type { MatchDetail, Team } from "../data/demo";
+import type { FantasyBoard, MatchDetail, Player, Team } from "../data/demo";
 import type { MatchesGrouped } from "../jobs/normalize";
 import type { NormalizedCompetition } from "../providers/types";
 import type { CacheStore } from "../cache/types";
@@ -25,9 +25,8 @@ const EMPTY_MATCHES: MatchesGrouped = { live: [], upcoming: [], finished: [], po
  *
  * Snapshot-backed domains (teams, standings, matches) report where the data
  * came from per response: "provider" when a sync job wrote it from a real
- * source, "demo" otherwise. Player-level depth (attributes, xG, bios) stays
- * demo/derived until a stats-capable provider lands — by design, the shapes
- * never change, only the truth inside them.
+ * source, "demo" otherwise. Players and the fantasy board come from the FPL
+ * sync only — there is no demo player data to fall back to.
  */
 export class CatalogService {
   constructor(
@@ -82,19 +81,28 @@ export class CatalogService {
     };
   }
 
-  // ---- players (demo-depth until a stats provider exists) -------------------
+  // ---- players (FPL-synced; no demo fallback) -----------------------------
 
-  players() {
-    return demo.players;
+  /** Every current Premier League player. No snapshot = not synced yet, reported as an outage. */
+  async players(): Promise<{ data: Player[]; syncedAt: string }> {
+    const snap = await this.snapshots.get<Player[]>("players");
+    if (!snap || snap.payload.length === 0) throw ApiError.unavailable("Player data hasn't synced yet.");
+    return { data: snap.payload, syncedAt: snap.syncedAt };
   }
-  player(id: string) {
-    const p = demo.playerById.get(id);
+  async player(id: string): Promise<Player> {
+    const p = (await this.players()).data.find((x) => x.id === id);
     if (!p) throw ApiError.notFound("Player");
     return p;
   }
-  similarPlayers(id: string) {
-    const p = this.player(id);
-    return p.similar.map((sid) => demo.playerById.get(sid)).filter(Boolean);
+  /** Search must keep working (teams, news) before the first player sync. */
+  private async playersOrEmpty(): Promise<Player[]> {
+    return (await this.snapshots.get<Player[]>("players"))?.payload ?? [];
+  }
+  /** FPL gameweek state + FPL fixture difficulty. Player picks are derived client-side from players. */
+  async fantasy(): Promise<{ data: FantasyBoard; syncedAt: string }> {
+    const snap = await this.snapshots.get<FantasyBoard>("fantasy");
+    if (!snap) throw ApiError.unavailable("Fantasy data hasn't synced yet.");
+    return { data: snap.payload, syncedAt: snap.syncedAt };
   }
 
   // ---- teams / standings (snapshot-backed) -----------------------------------
@@ -181,9 +189,9 @@ export class CatalogService {
     return { data: table, source, competition: target };
   }
 
-  async teamPlayers(id: string) {
+  async teamPlayers(id: string): Promise<Player[]> {
     await this.team(id); // 404 for unknown team
-    return demo.playersOf(id); // synced-only teams have no demo squad — empty is honest
+    return (await this.players()).data.filter((p) => p.teamId === id);
   }
 
   // ---- matches (snapshot-backed) ----------------------------------------------
@@ -229,9 +237,6 @@ export class CatalogService {
     if (!n) throw ApiError.notFound("Article");
     return n;
   }
-  transfers() {
-    return demo.trendingTransfers;
-  }
   predictions() {
     return demo.predictions;
   }
@@ -240,21 +245,8 @@ export class CatalogService {
     if (!p) throw ApiError.notFound("Prediction");
     return p;
   }
-  clips() {
-    return demo.clips;
-  }
   history() {
     return demo.historicalMoments;
-  }
-  fantasy() {
-    return {
-      gameweek: demo.gameweek,
-      captainPicks: demo.captainPicks,
-      differentials: demo.differentials,
-      transferTips: demo.transferTips,
-      injuryAlerts: demo.injuryAlerts,
-      fixtureDifficulty: demo.fixtureDifficulty,
-    };
   }
 
   // ---- search --------------------------------------------------------------------
@@ -280,14 +272,15 @@ export class CatalogService {
       return 0;
     };
 
-    for (const p of demo.players) {
+    const byTeam = new Map(teams.map((t) => [t.id, t.name]));
+    for (const p of await this.playersOrEmpty()) {
       const s = Math.max(score(p.name), score(p.role) / 2);
       if (s > 0) {
         results.push({
           kind: "player",
           id: p.id,
           title: p.name,
-          subtitle: `${p.position} · ${demo.teamById.get(p.teamId)?.name ?? ""}`,
+          subtitle: `${p.role} · ${byTeam.get(p.teamId) ?? ""}`,
           score: s + 10, // players are the primary entity
         });
       }
@@ -329,7 +322,7 @@ export class CatalogService {
       return lower.startsWith(q) || lower.split(/\s+/).some((w) => w.startsWith(q));
     };
 
-    for (const p of demo.players) if (starts(p.name)) out.push({ kind: "player", id: p.id, title: p.name, subtitle: p.position });
+    for (const p of await this.playersOrEmpty()) if (starts(p.name)) out.push({ kind: "player", id: p.id, title: p.name, subtitle: p.position });
     for (const t of teams) {
       if (starts(t.name) || starts(t.tla)) out.push({ kind: "team", id: t.id, title: t.name, subtitle: t.league });
       if (t.manager !== "—" && starts(t.manager)) out.push({ kind: "manager", id: t.id, title: t.manager, subtitle: t.name });

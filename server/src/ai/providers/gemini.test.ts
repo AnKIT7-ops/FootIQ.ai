@@ -43,4 +43,29 @@ describe("GeminiProvider", () => {
     });
     await expect(provider.complete(request)).rejects.toBeInstanceOf(AiProviderError);
   });
+
+  it("falls through the model list on a quota 429 — free-tier quotas are per model", async () => {
+    const tried: string[] = [];
+    const perModel = (async (url: string) => {
+      const model = url.match(/models\/([^:]+):/)![1];
+      tried.push(model);
+      return model === "lite-b"
+        ? new Response(JSON.stringify(completion("answer")))
+        : new Response(JSON.stringify({ error: { code: 429, message: "quota" } }), { status: 429 });
+    }) as unknown as typeof fetch;
+
+    const result = await new GeminiProvider("k", "lite-a, lite-b, flash", perModel).complete(request);
+    expect(tried).toEqual(["lite-a", "lite-b"]);
+    expect(result.model).toBe("lite-b");
+  });
+
+  it("does not fall through on non-quota errors (a bad key is bad for every model)", async () => {
+    const tried: string[] = [];
+    const denied = (async (url: string) => {
+      tried.push(url);
+      return new Response("{}", { status: 403 });
+    }) as unknown as typeof fetch;
+    await expect(new GeminiProvider("k", "a,b", denied).complete(request)).rejects.toThrow(/API error 403/);
+    expect(tried).toHaveLength(1);
+  });
 });

@@ -11,34 +11,20 @@ import { usePageMeta } from "@/lib/seo";
 const FILTERS: Array<{ key: ContentKind | "all"; label: string }> = [
   { key: "all", label: "All" },
   { key: "match-preview", label: "Previews" },
-  { key: "player-analysis", label: "Players" },
   { key: "team-form", label: "Form" },
   { key: "manager-style", label: "Managers" },
-  { key: "transfer-analysis", label: "Transfers" },
-  { key: "historical-comparison", label: "Head to Head" },
-  { key: "best-xi", label: "Weekly" },
+  { key: "weekly-digest", label: "Weekly" },
 ];
-
-/** "Weekly" groups the composite drops. */
-const WEEKLY: ContentKind[] = ["best-xi", "rising-players", "fantasy-briefing", "weekly-digest"];
 
 export default function Intelligence() {
   const [filter, setFilter] = useState<ContentKind | "all">("all");
   const library = useMemo(() => contentLibrary(), []);
-  const shown = useMemo(
-    () =>
-      filter === "all"
-        ? library
-        : filter === "best-xi"
-          ? library.filter((a) => WEEKLY.includes(a.kind))
-          : library.filter((a) => a.kind === filter),
-    [library, filter],
-  );
+  const shown = useMemo(() => (filter === "all" ? library : library.filter((a) => a.kind === filter)), [library, filter]);
 
   usePageMeta({
     title: "Football Intelligence Library",
     description:
-      "Algorithmically generated football analysis, regenerated weekly: match previews, player deep-dives, team form checks, manager tactical DNA, transfer probabilities and the weekly Best XI.",
+      "Algorithmically generated football analysis, regenerated weekly: match previews, team form checks, manager tactical DNA and the weekly digest.",
     path: "/intelligence",
     breadcrumbs: [{ name: "Intelligence", path: "/intelligence" }],
   });

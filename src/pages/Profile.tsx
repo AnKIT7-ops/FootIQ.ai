@@ -7,17 +7,17 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Crest } from "@/components/ui/Crest";
 import { IQInsight } from "@/components/ui/IQInsight";
 import { teams, getTeam } from "@/lib/repositories/teams";
-import { players } from "@/lib/repositories/players";
+import { usePlayers } from "@/lib/repositories/players";
 import { favoritesOf, setPref, toggleFavorite, toggleBookmark, useUserData, type NotificationPrefs } from "@/lib/user";
 import { playerPath } from "@/lib/slugs";
-import { cn, money } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { usePageMeta } from "@/lib/seo";
 import { displayNameOf, useAuth } from "@/lib/auth/AuthContext";
 
 const prefLabels: Record<keyof NotificationPrefs, string> = {
   matchReminders: "Match reminders for followed teams",
   aiReports: "New AI reports on your watchlist",
-  transferUpdates: "Transfer probability moves ±10%",
+  transferUpdates: "Transfer headlines about who you follow",
   favoriteTeamNews: "Breaking news for followed teams",
   weeklyDigest: "Weekly AI digest by email",
 };
@@ -36,6 +36,8 @@ export default function Profile() {
   const navigate = useNavigate();
 
   const favTeams = favoritesOf("team");
+  const players = usePlayers(); // re-render when players arrive from the API
+  const popular = [...players].sort((a, b) => b.fantasy.selectedBy - a.fantasy.selectedBy);
   const favPlayers = favoritesOf("player");
 
   return (
@@ -102,11 +104,11 @@ export default function Profile() {
               .filter((p) => favPlayers.includes(p.id))
               .map((p) => (
                 <div key={p.id} className="flex items-center gap-3 p-3.5">
-                  <Avatar name={p.name} playerId={p.id} size={38} ringColor={getTeam(p.teamId).colors[0]} />
+                  <Avatar name={p.name} photoUrl={p.photoUrl} size={38} ringColor={getTeam(p.teamId).colors[0]} />
                   <button onClick={() => navigate(playerPath(p))} className="min-w-0 flex-1 text-left">
                     <p className="truncate text-ui font-semibold text-ink hover:underline">{p.name}</p>
                     <p className="text-label text-ink-3">
-                      {getTeam(p.teamId).short} · {p.role} · {money(p.marketValue)}
+                      {getTeam(p.teamId).short} · {p.role} · {p.stats.goals}G {p.stats.assists}A
                     </p>
                   </button>
                   <button
@@ -121,10 +123,9 @@ export default function Profile() {
               <EmptyState
                 icon={UserRoundSearch}
                 title="Your watchlist is empty"
-                body="Follow players to get AI reports, transfer alerts and a personalized home feed. Popular right now:"
+                body="Follow players to get transfer headlines about them and a personalized home feed. Most-picked in FPL right now:"
               >
-                {[...players]
-                  .sort((a, b) => b.form.slice(-3).reduce((x, y) => x + y, 0) - a.form.slice(-3).reduce((x, y) => x + y, 0))
+                {popular
                   .slice(0, 4)
                   .map((p) => (
                     <button
@@ -139,7 +140,7 @@ export default function Profile() {
             )}
           </Card>
           <div className="mt-3 flex flex-wrap gap-1.5">
-            {players
+            {popular
               .filter((p) => !favPlayers.includes(p.id))
               .slice(0, 6)
               .map((p) => (

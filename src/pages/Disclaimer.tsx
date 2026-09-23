@@ -23,10 +23,10 @@ export default function Disclaimer() {
 
       <ProseSection title="1. Demo platform">
         <p>
-          FootIQ is in public beta. League standings and fixtures sync from live football data (football-data.org) where available — the
-          provenance chip in the top bar tells you which mode you're in. Everything else — player statistics, transfer probabilities,
-          fantasy projections and news items — may be <strong className="text-ink">simulated, delayed or fictionalized</strong> for
-          demonstration purposes, even where real player and club names appear.
+          FootIQ is in public beta. League standings and fixtures sync from live football data (football-data.org); Premier League player
+          statistics, availability and fantasy data sync from the official Fantasy Premier League API; headlines come from publishers' RSS
+          feeds. Some remaining features — historical moments, manager profiles, team style ratings and demo fixtures — may still be{" "}
+          <strong className="text-ink">simulated or illustrative</strong> and are labelled where they appear.
         </p>
       </ProseSection>
 

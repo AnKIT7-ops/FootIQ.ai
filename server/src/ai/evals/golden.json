@@ -1,17 +1,17 @@
 {
-  "description": "Golden evaluation set for FootIQ AI tasks. Offline mode checks prompt construction (grounding data present, injection containment, structure asked for). Live mode (EVAL_LIVE=1 + a configured provider) additionally scores the completions against `expect`.",
+  "description": "Golden evaluation set for FootIQ AI tasks. Offline mode checks prompt construction (grounding data present, injection containment, structure asked for). Live mode (EVAL_LIVE=1 + a configured provider) additionally scores the completions against `expect`. Player cases use the fictional fixtures in src/test-fixtures.ts.",
   "cases": [
     {
       "task": "scout_report",
-      "input": { "playerId": "saka" },
-      "promptMustInclude": ["Bukayo Saka", "seasonStats", "injuryHistory", "suitability rating"],
-      "expect": { "minWords": 120, "mustMention": ["Saka"], "mustNotMention": ["as an AI", "I cannot"] }
+      "input": { "playerId": "fpl-1001" },
+      "promptMustInclude": ["Sam Fixture", "premierLeagueSeason", "ONLY information you have", "do not describe them"],
+      "expect": { "minWords": 120, "mustMention": ["Fixture"], "mustNotMention": ["as an AI", "I cannot", "contract", "market value"] }
     },
     {
       "task": "scout_report",
-      "input": { "playerId": "haaland" },
-      "promptMustInclude": ["Erling Haaland", "attributes", "marketValueEUR"],
-      "expect": { "minWords": 120, "mustMention": ["Haaland"], "mustNotMention": ["as an AI"] }
+      "input": { "playerId": "fpl-1002" },
+      "promptMustInclude": ["Jo Sample", "\"minutes\":450", "Small samples"],
+      "expect": { "minWords": 120, "mustMention": ["Sample"], "mustNotMention": ["as an AI"] }
     },
     {
       "task": "news_summary",
@@ -27,15 +27,15 @@
     },
     {
       "task": "player_comparison",
-      "input": { "playerIds": ["saka", "yamal"] },
-      "promptMustInclude": ["Bukayo Saka", "Lamine Yamal", "Pick X if"],
-      "expect": { "minWords": 100, "mustMention": ["Saka", "Yamal"], "mustNotMention": ["as an AI"] }
+      "input": { "playerIds": ["fpl-1001", "fpl-1002"] },
+      "promptMustInclude": ["Sam Fixture", "Jo Sample", "Pick X if", "per 90"],
+      "expect": { "minWords": 100, "mustMention": ["Fixture", "Sample"], "mustNotMention": ["as an AI"] }
     },
     {
       "task": "scout_report_variant_b",
-      "input": { "playerId": "saka" },
+      "input": { "playerId": "fpl-1001" },
       "promptMustInclude": ["headline verdict", "contrarian consideration"],
-      "expect": { "minWords": 120, "mustMention": ["Saka"], "mustNotMention": ["as an AI"] }
+      "expect": { "minWords": 120, "mustMention": ["Fixture"], "mustNotMention": ["as an AI"] }
     }
   ]
 }

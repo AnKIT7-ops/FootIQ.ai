@@ -15,10 +15,6 @@ export function recommendRoutes(recommend: RecommendService) {
     ok(c, recommend.relatedArticles(c.req.valid("param").id)),
   );
 
-  r.get("/comparisons/:id", validate("param", idParam), (c) =>
-    ok(c, recommend.suggestedComparisons(c.req.valid("param").id)),
-  );
-
   r.get(
     "/teams",
     validate("query", z.object({ favorites: z.string().max(400).optional() })),

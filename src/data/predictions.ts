@@ -17,11 +17,6 @@ export const predictions: Prediction[] = [
     ],
     over25: 61,
     btts: 54,
-    mvp: [
-      { playerId: "haaland", p: 26 },
-      { playerId: "foden", p: 18 },
-      { playerId: "palmer", p: 15 },
-    ],
     reasoning: [
       "City's home xG differential (+1.4/match) is the division's best; Chelsea concede 0.4 more big chances away than at home.",
       "Palmer-vs-Rodri is the leverage matchup: when Palmer receives between the lines 8+ times, Chelsea's win probability doubles.",
@@ -45,11 +40,6 @@ export const predictions: Prediction[] = [
     ],
     over25: 66,
     btts: 63,
-    mvp: [
-      { playerId: "kudus", p: 21 },
-      { playerId: "bruno", p: 19 },
-      { playerId: "mainoo", p: 12 },
-    ],
     reasoning: [
       "Spurs' high line vs United's dual-ten counters is the model's highest-variance fixture of the weekend.",
       "Kudus is drawing 5.1 fouls/90 at home — set-piece expected goals alone add 0.3 to Spurs' baseline.",
@@ -73,11 +63,6 @@ export const predictions: Prediction[] = [
     ],
     over25: 55,
     btts: 52,
-    mvp: [
-      { playerId: "gordon", p: 24 },
-      { playerId: "tonali", p: 16 },
-      { playerId: "watkins", p: 14 },
-    ],
     reasoning: [
       "St James' Park second-ball dominance (58% win rate) directly attacks Villa's structured build-up.",
       "Villa's offside trap (4.1 catches/match) meets Watkins-style runners in Gordon and Isak's replacement profile — VAR margins will decide at least one goal.",
@@ -101,11 +86,6 @@ export const predictions: Prediction[] = [
     ],
     over25: 71,
     btts: 68,
-    mvp: [
-      { playerId: "wirtz", p: 20 },
-      { playerId: "haaland", p: 19 },
-      { playerId: "salah", p: 17 },
-    ],
     reasoning: [
       "Anfield vs City remains the league's highest-xG fixture across five seasons (3.6 combined average).",
       "Liverpool's counter-press regains vs City's box-midfield escape rate is the single matchup the model weighs heaviest.",
@@ -129,11 +109,6 @@ export const predictions: Prediction[] = [
     ],
     over25: 64,
     btts: 66,
-    mvp: [
-      { playerId: "mbappe", p: 22 },
-      { playerId: "dembele", p: 20 },
-      { playerId: "vinicius", p: 16 },
-    ],
     reasoning: [
       "Mbappé faces PSG for the first time in Europe — his transition profile attacks the exact space behind PSG's full-pitch press.",
       "PSG's positionless front three vs Madrid's adaptive block: rotation rate (90s/station-swap) meets the best transition killers in Europe.",
@@ -157,11 +132,6 @@ export const predictions: Prediction[] = [
     ],
     over25: 58,
     btts: 57,
-    mvp: [
-      { playerId: "saka", p: 23 },
-      { playerId: "palmer", p: 18 },
-      { playerId: "rice", p: 13 },
-    ],
     reasoning: [
       "Arsenal's set-piece machine (14 corner goals) meets the league's 16th-ranked defensive corner unit.",
       "Chelsea's 11 points dropped from winning positions is the model's largest game-state penalty in the top six.",

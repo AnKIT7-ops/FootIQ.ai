@@ -1,6 +1,6 @@
 import type { AiTask } from "../../../../shared/contracts";
 import type { Forecast } from "../../../../shared/forecast";
-import type { Player, Prediction, Team, TransferRumor, NewsArticle } from "../../data/demo";
+import type { Player, Prediction, Team, NewsArticle } from "../../data/demo";
 
 /**
  * Prompt registry — every prompt the product sends lives here, versioned and
@@ -29,36 +29,37 @@ Write in a sharp, factual scouting-desk tone. British football vocabulary.
 Ground every claim in the data provided; if the data doesn't support a claim, don't make it.
 No preamble, no meta commentary about being an AI. Markdown allowed: short paragraphs and "-" bullets only.`;
 
+/** The real facts we hold on a player (FPL): nothing the model could mistake for a scouting grade. */
+const playerFacts = (p: Player, teamName?: string) => ({
+  name: p.name,
+  age: p.age,
+  position: p.role,
+  team: teamName ?? p.teamId,
+  availability: p.availability,
+  availabilityNote: p.news || null,
+  premierLeagueSeason: p.stats,
+});
+
 export const prompts = {
   scout_report(player: Player, team: Team | null): RenderedPrompt {
     return {
       task: "scout_report",
-      version: 2,
+      version: 3,
       system: BASE_SYSTEM,
       maxTokens: 1200,
-      cacheSeed: `${player.id}`,
+      // Stats change after every match; re-generate then, not on every view.
+      cacheSeed: JSON.stringify(playerFacts(player, team?.name)),
       prompt: `Write a scout report on the following player.
 
-PLAYER DATA (JSON):
-${JSON.stringify({
-  name: player.name,
-  age: player.age,
-  position: player.position,
-  role: player.role,
-  team: team?.name ?? player.teamId,
-  attributes: player.attributes,
-  seasonStats: player.stats,
-  strengths: player.strengths,
-  weaknesses: player.weaknesses,
-  style: player.style,
-  marketValueEUR: player.marketValue,
-  contractUntil: player.contractUntil,
-  injuryHistory: player.injuryHistory,
-})}
+PLAYER DATA (JSON, Premier League season to date — the ONLY information you have):
+${JSON.stringify(playerFacts(player, team?.name))}
 
-Structure: 1) Profile summary (2-3 sentences). 2) Technical & tactical assessment.
-3) Key risks (fitness, age curve, adaptation). 4) Verdict with a suitability rating out of 10
-and the profile of club he fits best.`,
+Rules:
+- Use only these numbers. You have no data on technique, pace, playing style, contract, value or injury history — do not describe them.
+- Small samples (few minutes) limit what the numbers mean; say so.
+
+Structure: 1) Profile summary (2-3 sentences). 2) What the output says (goals, xG, creation, defensive work, per 90 where useful).
+3) What the numbers can't tell you yet. 4) One-line verdict.`,
     };
   },
 
@@ -74,33 +75,6 @@ and the profile of club he fits best.`,
 TITLE: ${article.title}
 BODY:
 ${article.body.join("\n")}`,
-    };
-  },
-
-  transfer_analysis(rumor: TransferRumor, player: Player, from: Team | null, to: Team | null): RenderedPrompt {
-    return {
-      task: "transfer_analysis",
-      version: 1,
-      system: BASE_SYSTEM,
-      maxTokens: 800,
-      cacheSeed: rumor.id,
-      prompt: `Analyse this transfer rumour.
-
-RUMOUR (JSON):
-${JSON.stringify({
-  player: player.name,
-  from: from?.name,
-  to: to?.name,
-  feeEUR: rumor.fee,
-  weeklyWagesEUR: rumor.wages,
-  probability: rumor.probability,
-  stage: rumor.stage,
-  timeline: rumor.timeline,
-  playerStats: player.stats,
-})}
-
-Cover: tactical fit at the destination, fee vs market value, squad-role impact,
-and a one-line verdict on whether the move makes sense for each party.`,
     };
   },
 
@@ -203,35 +177,33 @@ Structure: a one-line headline call; then 2–3 "-" bullets on what the numbers 
   scout_query(query: string): RenderedPrompt {
     return {
       task: "scout_query",
-      version: 2,
+      version: 3,
       system: `You convert football scouting requests into search filters. Reply with ONE JSON object and nothing else — no prose, no code fences.`,
       maxTokens: 200,
       cacheSeed: query.toLowerCase().replace(/\s+/g, " ").trim(),
       prompt: `Request: ${JSON.stringify(query)}
 
 Return JSON with exactly these keys:
-{"positions": [], "maxAge": null, "maxPriceM": null, "foot": null, "traits": []}
+{"positions": [], "maxAge": null, "traits": []}
 
 - positions: any of "GK","DF","MF","FW". Centre-backs, full-backs, wing-backs = "DF"; holding/central/attacking midfielders = "MF"; wingers and strikers = "FW". Empty if unspecified.
 - maxAge: integer; the player must be YOUNGER than this ("under 23" = 23, "young" = 24). null if unspecified.
-- maxPriceM: budget in millions of euros as an integer ("£50m" = 58, "cheap" = 30). null if unspecified.
-- foot: "Left" or "Right" if a preferred foot is requested, else null.
-- traits: any of "pace","shooting","passing","dribbling","defending","physical","pressing","vision" the request emphasises ("good in the air"/"strong"/"tall" = "physical", "creative" = "vision", "clinical" = "shooting").`,
+- traits: any of "scoring","creating","defending","ball_winning","shot_stopping" the request emphasises ("clinical"/"goals" = "scoring", "creative"/"playmaker"/"assists" = "creating", "tackles"/"blocks"/"good in the air" = "defending", "presses"/"work rate"/"wins the ball back" = "ball_winning", "keeper who saves" = "shot_stopping"). Budget, foot, pace and style can't be measured — ignore them.`,
     };
   },
 
   fantasy_advice(context: { gameweek: unknown; picks: unknown; question: string }): RenderedPrompt {
     return {
       task: "fantasy_advice",
-      version: 1,
+      version: 2,
       system: BASE_SYSTEM,
       maxTokens: 600,
-      // user question participates in the seed — different questions, different cache rows
-      cacheSeed: context.question.toLowerCase().slice(0, 120),
-      prompt: `You are advising a fantasy football manager.
+      // Question AND data: the same question next gameweek needs a new answer.
+      cacheSeed: JSON.stringify([context.question.toLowerCase().slice(0, 120), context.gameweek]),
+      prompt: `You are advising a Fantasy Premier League manager.
 
-GAMEWEEK DATA (JSON):
-${JSON.stringify({ gameweek: context.gameweek, modelPicks: context.picks })}
+GAMEWEEK DATA (JSON, from the official FPL API; expectedPoints is FPL's own projection):
+${JSON.stringify({ gameweek: context.gameweek, topProjectedPlayers: context.picks })}
 
 MANAGER'S QUESTION: ${context.question}
 
@@ -262,29 +234,19 @@ and which opposition setup would punish it.`,
     const ids = players.map((p) => p.id).sort();
     return {
       task: "player_comparison",
-      version: 1,
+      version: 2,
       system: BASE_SYSTEM,
       maxTokens: 900,
-      cacheSeed: ids.join("+"),
+      cacheSeed: JSON.stringify([ids, players.map((p) => p.stats.minutes)]),
       prompt: `Compare these players head-to-head.
 
-PLAYERS (JSON):
-${JSON.stringify(
-  players.map((p) => ({
-    name: p.name,
-    age: p.age,
-    position: p.position,
-    role: p.role,
-    attributes: p.attributes,
-    stats: p.stats,
-    style: p.style,
-    marketValueEUR: p.marketValue,
-  })),
-)}
+PLAYERS (JSON, Premier League season to date — the ONLY information you have):
+${JSON.stringify(players.map((p) => playerFacts(p)))}
+
+Rules: use only these numbers (per 90 where minutes differ); no claims about technique, style, value or contracts.
 
 Structure: verdict up front (who and in which context), then per-dimension comparison
-(attacking output, creation, defensive work, physical/age profile, value for money).
-Finish with "Pick X if ... / Pick Y if ...".`,
+(attacking output, creation, defensive work, availability). Finish with "Pick X if ... / Pick Y if ...".`,
     };
   },
 } as const;
@@ -295,14 +257,13 @@ Finish with "Pick X if ... / Pick Y if ...".`,
  * the prompts so a new prompt without a catalog row fails review, not prod.
  */
 export const promptCatalog = [
-  { task: "scout_report", version: 2, hasVariant: true, description: "Player scouting report (profile, assessment, risks, verdict)" },
+  { task: "scout_report", version: 3, hasVariant: true, description: "Player scouting report grounded in real FPL season stats" },
   { task: "news_summary", version: 1, hasVariant: false, description: "3-bullet article summary + why it matters" },
-  { task: "transfer_analysis", version: 1, hasVariant: false, description: "Rumour probability, package, fit and fallout" },
   { task: "prediction_explanation", version: 1, hasVariant: false, description: "Reasoning behind match outcome probabilities" },
-  { task: "fantasy_advice", version: 1, hasVariant: false, description: "Gameweek captaincy/differential advice" },
+  { task: "fantasy_advice", version: 2, hasVariant: false, description: "Gameweek captaincy/differential advice from real FPL data" },
   { task: "tactical_feedback", version: 1, hasVariant: false, description: "Formation critique with team context" },
-  { task: "player_comparison", version: 1, hasVariant: false, description: "Multi-player data-grounded comparison" },
-  { task: "scout_query", version: 2, hasVariant: false, description: "Plain-English scouting request to structured filters (JSON)" },
+  { task: "player_comparison", version: 2, hasVariant: false, description: "Head-to-head comparison on real season stats" },
+  { task: "scout_query", version: 3, hasVariant: false, description: "Plain-English scouting request to structured filters (JSON)" },
   { task: "fixture_preview", version: 2, hasVariant: false, description: "Real-fixture preview grounded in the table and the Poisson forecast" },
 ] as const;
 
@@ -316,12 +277,12 @@ export const promptVariants = {
     const base = prompts.scout_report(player, team);
     return {
       ...base,
-      version: 102, // variant versions live in the 100+ range
+      version: 103, // variant versions live in the 100+ range
       prompt: `${base.prompt}
 
 ADDITIONAL INSTRUCTIONS (variant B): Lead with a single-sentence "headline verdict"
-before the profile summary, and end with one contrarian consideration the market
-is likely mispricing about this player.`,
+before the profile summary, and end with one contrarian consideration the headline
+numbers may be hiding (sample size, xG vs goals, minutes share).`,
     };
   },
 } as const;

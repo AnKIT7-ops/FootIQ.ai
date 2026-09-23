@@ -31,7 +31,6 @@ const Predictions = lazy(() => import("@/pages/Predictions"));
 const Scout = lazy(() => import("@/pages/Scout"));
 const TacticalBoard = lazy(() => import("@/pages/TacticalBoard"));
 const Fantasy = lazy(() => import("@/pages/Fantasy"));
-const Highlights = lazy(() => import("@/pages/Highlights"));
 const History = lazy(() => import("@/pages/History"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const SignIn = lazy(() => import("@/pages/SignIn"));
@@ -129,7 +128,7 @@ function Shell() {
                 <Route path="/scout" element={<Scout />} />
                 <Route path="/tactics" element={<TacticalBoard />} />
                 <Route path="/fantasy" element={<Fantasy />} />
-                <Route path="/highlights" element={<Highlights />} />
+                <Route path="/highlights" element={<Navigate to="/" replace />} />
                 <Route path="/history" element={<History />} />
                 <Route path="/history/:slug" element={<HistoryMoment />} />
                 <Route path="/intelligence" element={<Intelligence />} />

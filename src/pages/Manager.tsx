@@ -6,7 +6,7 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Crest } from "@/components/ui/Crest";
 import { IQInsight } from "@/components/ui/IQInsight";
 import { ShareBar } from "@/components/ui/ShareBar";
-import { playersOf } from "@/lib/repositories/players";
+import { playersOf, usePlayers } from "@/lib/repositories/players";
 import { managerPath, managerSlug, playerPath, resolveManager, teamPath } from "@/lib/slugs";
 import { personJsonLd, usePageMeta } from "@/lib/seo";
 
@@ -19,6 +19,7 @@ const DIALS: Array<{ key: "tempo" | "width" | "directness" | "pressIntensity"; l
 
 export default function Manager() {
   const { slug } = useParams();
+  usePlayers(); // re-render when players arrive from the API
   const team = resolveManager(slug);
 
   usePageMeta(
@@ -28,7 +29,7 @@ export default function Manager() {
           description: `${team.manager}'s game model at ${team.name}: formation, build-up, pressing scheme and the four dials that define the system.`,
           path: managerPath(team),
           jsonLd: personJsonLd(
-            { name: team.manager, nationality: "", role: "Manager" },
+            { name: team.manager, role: "Manager" },
             { teamName: team.name, path: managerPath(team) },
           ),
           breadcrumbs: [
@@ -41,7 +42,7 @@ export default function Manager() {
 
   if (!team) return <Navigate to="/" replace />;
 
-  const squad = playersOf(team.id).sort((a, b) => b.stats.rating - a.stats.rating).slice(0, 4);
+  const squad = playersOf(team.id).sort((a, b) => b.stats.minutes - a.stats.minutes).slice(0, 4);
   const s = team.style;
 
   return (
@@ -114,7 +115,7 @@ export default function Manager() {
       </div>
 
       <Card className="p-5">
-        <SectionHeader title="Key players in the system" action={
+        <SectionHeader title="Most-used players" action={
           <Link to={teamPath(team)} className="font-mono text-label uppercase tracking-wider text-ink-3 transition-colors hover:text-ink">
             Full squad <ArrowRight className="inline size-3.5" aria-hidden />
           </Link>
@@ -124,7 +125,7 @@ export default function Manager() {
             <Link key={p.id} to={playerPath(p)} className="group">
               <Card hover className="p-4">
                 <p className="display text-body font-bold text-ink transition-colors group-hover:text-accent-ink">{p.name}</p>
-                <p className="mt-0.5 text-label text-ink-3">{p.role} · rating {p.stats.rating.toFixed(2)}</p>
+                <p className="mt-0.5 text-label text-ink-3">{p.role} · {p.stats.minutes} min</p>
               </Card>
             </Link>
           ))}

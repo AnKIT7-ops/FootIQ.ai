@@ -1,72 +1,62 @@
 export type Position = "GK" | "DF" | "MF" | "FW";
 
-export interface PlayerAttributes {
-  pace: number;
-  shooting: number;
-  passing: number;
-  dribbling: number;
-  defending: number;
-  physical: number;
-  pressing: number;
-  vision: number;
-}
-
+/** Premier League season totals, as published by the Fantasy Premier League API. */
 export interface SeasonStats {
-  apps: number;
+  starts: number;
   minutes: number;
   goals: number;
   assists: number;
   xG: number;
   xA: number;
-  keyPasses: number;
-  passAccuracy: number;
-  dribblesPerGame: number;
-  tacklesPerGame: number;
-  interceptionsPerGame: number;
-  aerialsWonPerGame: number;
-  rating: number;
+  cleanSheets: number;
+  goalsConceded: number;
+  saves: number;
+  yellowCards: number;
+  redCards: number;
+  tackles: number;
+  recoveries: number;
+  /** Clearances, blocks and interceptions. */
+  cbi: number;
+  bonus: number;
 }
 
-export interface InjuryRecord {
-  injury: string;
-  date: string;
-  daysOut: number;
-  gamesMissed: number;
+/** FPL's availability flag. Players who left the club ("u") are not synced. */
+export type Availability = "available" | "doubtful" | "injured" | "suspended" | "ineligible";
+
+/** FPL's own numbers. `expectedPoints` is FPL's projection — a model output, not a fact. */
+export interface FantasyNumbers {
+  price: number; // £m
+  totalPoints: number;
+  form: number;
+  pointsPerGame: number;
+  selectedBy: number; // % of FPL managers
+  expectedPoints: number;
+  transfersIn: number; // this gameweek
+  transfersOut: number;
 }
 
-export interface TransferRecord {
-  season: string;
-  from: string;
-  to: string;
-  fee: number | "free" | "loan" | "academy";
-}
-
+/**
+ * A real Premier League player, synced from the Fantasy Premier League API.
+ * Nothing here is invented: ratings, wages, bios and style notes were demo
+ * fiction and no free source publishes them, so they no longer exist.
+ */
 export interface Player {
+  /** `fpl-<code>` — FPL's `code` (the Opta id) is stable across seasons; its `id` is not. */
   id: string;
   name: string;
   teamId: string;
   position: Position;
+  /** "Goalkeeper" / "Defender" / "Midfielder" / "Forward". */
   role: string;
-  age: number;
-  nationality: string;
-  flag: string;
-  heightCm: number;
-  foot: "Left" | "Right" | "Both";
-  shirt: number;
-  marketValue: number;
-  weeklyWage: number;
-  contractUntil: number;
-  attributes: PlayerAttributes;
+  age: number | null;
+  photoUrl: string;
+  availability: Availability;
+  /** FPL's injury/suspension note, verbatim; "" when fit. */
+  news: string;
+  /** Chance of playing next round, %; null when FPL has no doubt flagged. */
+  chanceOfPlaying: number | null;
   stats: SeasonStats;
-  form: number[];
-  injuryHistory: InjuryRecord[];
-  transferHistory: TransferRecord[];
-  strengths: string[];
-  weaknesses: string[];
-  style: string;
-  bio: string;
-  similar: string[];
-  starter: boolean;
+  fantasy: FantasyNumbers;
 }
 
 export interface TacticalStyle {
@@ -218,24 +208,6 @@ export interface NewsArticle {
   updates: { time: string; note: string }[];
 }
 
-export interface TransferRumor {
-  id: string;
-  playerId: string;
-  fromId: string;
-  toId: string;
-  fee: number;
-  wages: number;
-  probability: number;
-  reliability: number;
-  stage: string;
-  trend: "rising" | "cooling" | "stable";
-  timeline: { date: string; event: string }[];
-  finances: { label: string; value: string }[];
-  replacements: string[];
-  sentiment: { positive: number; sample: { handle: string; text: string; mood: "for" | "against" }[] };
-  aiNote: string;
-}
-
 export interface Prediction {
   matchId: string;
   homeWin: number;
@@ -246,20 +218,7 @@ export interface Prediction {
   topScores: { score: string; p: number }[];
   over25: number;
   btts: number;
-  mvp: { playerId: string; p: number }[];
   reasoning: string[];
-}
-
-export interface Clip {
-  id: string;
-  title: string;
-  type: "goal" | "assist" | "save" | "skill" | "tackle" | "moment";
-  playerId?: string;
-  teamId: string;
-  seconds: number;
-  views: string;
-  likes: string;
-  caption: string;
 }
 
 export interface HistoricalMoment {
@@ -273,10 +232,16 @@ export interface HistoricalMoment {
   stat: { label: string; value: string };
 }
 
-export interface FantasyPick {
-  playerId: string;
-  expectedPoints: number;
-  ownership: number;
-  fixtureEase: number; // 1 hard - 5 easy
-  note: string;
+/** Real FPL gameweek state plus FPL's own fixture difficulty ratings (1 easy – 5 hard). */
+export interface FantasyBoard {
+  gameweek: {
+    number: number;
+    deadlineIso: string;
+    averageScore: number | null;
+    highestScore: number | null;
+  };
+  fixtureDifficulty: {
+    teamId: string;
+    fixtures: { gameweek: number; opponentId: string; home: boolean; difficulty: number }[];
+  }[];
 }

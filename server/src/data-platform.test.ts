@@ -380,9 +380,9 @@ describe("v1 alias + suggest + recommendations + export", () => {
   const app = createApp(testEnv());
 
   it("serves identical payloads at /api and /api/v1", async () => {
-    const a = await json(await app.request("/api/players/saka"));
-    const b = await json(await app.request("/api/v1/players/saka"));
-    expect(a.data.id).toBe("saka");
+    const a = await json(await app.request("/api/teams/ars"));
+    const b = await json(await app.request("/api/v1/teams/ars"));
+    expect(a.data.id).toBe("ars");
     expect(b.data).toEqual(a.data);
   });
 
@@ -399,19 +399,18 @@ describe("v1 alias + suggest + recommendations + export", () => {
     expect(res.data[0].reason.length).toBeGreaterThan(3);
   });
 
-  it("suggested comparisons stay within the player's position", async () => {
-    const res = await json(await app.request("/api/recommendations/comparisons/saka"));
-    const base = demo.playerById.get("saka")!;
-    for (const r of res.data) expect(r.player.position).toBe(base.position);
+  it("export returns a JSON attachment with provenance", async () => {
+    const res = await app.request("/api/export/teams/ars");
+    expect(res.headers.get("content-disposition")).toContain("footiq-team-ars.json");
+    const body = JSON.parse(await res.text());
+    expect(body.kind).toBe("team-report");
+    expect(body.disclaimer).toContain("AI");
+    expect(body.data.id).toBe("ars");
   });
 
-  it("export returns a JSON attachment with provenance", async () => {
-    const res = await app.request("/api/export/players/saka");
-    expect(res.headers.get("content-disposition")).toContain("footiq-player-saka.json");
-    const body = JSON.parse(await res.text());
-    expect(body.kind).toBe("player-report");
-    expect(body.disclaimer).toContain("AI");
-    expect(body.data.id).toBe("saka");
+  it("players are unavailable (503), never demo, before the first FPL sync", async () => {
+    const res = await app.request("/api/players");
+    expect(res.status).toBe(503);
   });
 
   it("health v2 reports provider, cache backend and job state", async () => {

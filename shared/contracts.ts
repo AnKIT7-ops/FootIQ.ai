@@ -282,10 +282,8 @@ export interface ScoutFilters {
   positions: Array<"GK" | "DF" | "MF" | "FW">;
   /** Strictly younger than. */
   maxAge?: number;
-  /** Euros, whole millions. */
-  maxPriceM?: number;
-  foot?: "Left" | "Right";
-  traits: Array<"pace" | "shooting" | "passing" | "dribbling" | "defending" | "physical" | "pressing" | "vision">;
+  /** Each maps to measured per-90 output (see src/lib/player-stats.ts). */
+  traits: Array<"scoring" | "creating" | "defending" | "ball_winning" | "shot_stopping">;
 }
 
 export interface AiResult {

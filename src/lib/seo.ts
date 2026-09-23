@@ -133,13 +133,12 @@ export function usePageMeta(meta: PageMeta): void {
 
 // ---- JSON-LD builders for the entity pages ---------------------------------
 
-export function personJsonLd(p: { name: string; nationality: string; role: string }, opts: { teamName: string; path: string }): Record<string, unknown> {
+export function personJsonLd(p: { name: string; role: string }, opts: { teamName: string; path: string }): Record<string, unknown> {
   return {
     "@context": "https://schema.org",
     "@type": "Person",
     name: p.name,
     url: abs(opts.path),
-    nationality: p.nationality,
     jobTitle: `Footballer — ${p.role}`,
     memberOf: { "@type": "SportsTeam", name: opts.teamName },
   };

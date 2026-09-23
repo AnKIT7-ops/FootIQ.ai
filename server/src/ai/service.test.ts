@@ -5,7 +5,7 @@ import { AiProviderError, type AiProvider } from "./types";
 import { MemoryCache } from "../cache/memory";
 import { createLogger } from "../lib/logger";
 import { prompts } from "./prompts";
-import { players } from "../data/demo";
+import { samplePlayers as players } from "../test-fixtures";
 
 const logger = createLogger("error");
 

@@ -9,17 +9,17 @@ const pillars = [
   {
     icon: Sparkles,
     title: "Predictions",
-    body: "Outcome probabilities, expected scorelines and MVP candidates for every fixture — with the reasoning shown, never hidden.",
+    body: "Outcome probabilities and expected scorelines for every fixture — with the reasoning shown, never hidden.",
   },
   {
     icon: Radar,
     title: "AI Scout",
-    body: "Describe a player in plain language and get ranked matches with fit scores, budgets and traits understood automatically.",
+    body: "Describe a player in plain language and get Premier League players ranked on their real per-90 output.",
   },
   {
     icon: GitCompareArrows,
     title: "Comparison engine",
-    body: "Players, teams and managers side by side — attribute radars, output bars and a model verdict on what separates them.",
+    body: "Players, teams and managers side by side — per-90 percentile radars and season totals from real data.",
   },
   {
     icon: ClipboardList,
@@ -49,7 +49,7 @@ export default function About() {
           <a href="https://www.football-data.org" target="_blank" rel="noreferrer" className="underline decoration-line-strong underline-offset-2 hover:text-ink">
             football-data.org
           </a>
-          ), layered over a curated demonstration dataset so every feature works end-to-end.
+          ), and Premier League players from the official Fantasy Premier League API. A few features still use illustrative data and say so where they appear.
         </p>
         <button
           onClick={() => window.dispatchEvent(new Event("footiq:tour"))}

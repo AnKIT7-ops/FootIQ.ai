@@ -17,12 +17,14 @@ export function catalogRoutes(catalog: CatalogService) {
   const r = new Hono<AppEnv>();
   const demoMeta = { source: "demo" as const };
 
-  r.get("/players", (c) => ok(c, catalog.players(), demoMeta));
-  r.get("/players/:id", validate("param", idParam), (c) =>
-    ok(c, catalog.player(c.req.valid("param").id), demoMeta),
-  );
-  r.get("/players/:id/similar", validate("param", idParam), (c) =>
-    ok(c, catalog.similarPlayers(c.req.valid("param").id), demoMeta),
+  // Real Premier League players (FPL sync, hourly). ~340 KB raw, ~50 KB gzipped.
+  r.get("/players", async (c) => {
+    const { data, syncedAt } = await catalog.players();
+    c.header("Cache-Control", "public, max-age=900");
+    return ok(c, data, { source: "provider", syncedAt });
+  });
+  r.get("/players/:id", validate("param", idParam), async (c) =>
+    ok(c, await catalog.player(c.req.valid("param").id), { source: "provider" }),
   );
 
   // Cache-Control by volatility, matching the sync cadence behind each domain:
@@ -66,7 +68,7 @@ export function catalogRoutes(catalog: CatalogService) {
     return ok(c, data, { source });
   });
   r.get("/teams/:id/players", validate("param", idParam), async (c) =>
-    ok(c, await catalog.teamPlayers(c.req.valid("param").id), demoMeta),
+    ok(c, await catalog.teamPlayers(c.req.valid("param").id), { source: "provider" }),
   );
 
   /**
@@ -96,14 +98,16 @@ export function catalogRoutes(catalog: CatalogService) {
     ok(c, catalog.article(c.req.valid("param").id), demoMeta),
   );
 
-  r.get("/transfers", (c) => ok(c, catalog.transfers(), demoMeta));
   r.get("/predictions", (c) => ok(c, catalog.predictions(), demoMeta));
   r.get("/predictions/:id", validate("param", idParam), (c) =>
     ok(c, catalog.prediction(c.req.valid("param").id), demoMeta),
   );
-  r.get("/clips", (c) => ok(c, catalog.clips(), demoMeta));
   r.get("/history", (c) => ok(c, catalog.history(), demoMeta));
-  r.get("/fantasy", (c) => ok(c, catalog.fantasy(), demoMeta));
+  r.get("/fantasy", async (c) => {
+    const { data, syncedAt } = await catalog.fantasy();
+    c.header("Cache-Control", "public, max-age=900");
+    return ok(c, data, { source: "provider", syncedAt });
+  });
 
   r.get(
     "/search",

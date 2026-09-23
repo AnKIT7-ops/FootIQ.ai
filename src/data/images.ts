@@ -1,8 +1,9 @@
 /**
- * Real imagery via public CDNs (FotMob crests/portraits, flagcdn flags).
+ * Real imagery via public CDNs (FotMob crests, flagcdn flags). Player photos
+ * come with the synced player (Premier League CDN, see server/src/providers/fpl.ts).
  * Every consumer falls back to the local SVG crest / initials avatar / emoji
  * when a URL is missing or fails to load, so the app still works fully offline.
- * IDs resolved and verified against the live CDN on 2026-07-09 (scripts/resolve-images.mjs).
+ * Crest IDs were resolved and verified against the live CDN on 2026-07-09.
  */
 
 const teamLogoIds: Record<string, number> = {
@@ -18,41 +19,6 @@ const teamLogoIds: Record<string, number> = {
   bar: 8634,
   bay: 9823,
   psg: 9847,
-};
-
-const playerPhotoIds: Record<string, number> = {
-  saka: 961995,
-  odegaard: 534670,
-  rice: 654096,
-  saliba: 955406,
-  raya: 562727,
-  haaland: 737066,
-  rodri: 675088,
-  foden: 815006,
-  salah: 292462,
-  vvd: 209405,
-  wirtz: 1152455,
-  isak: 690107,
-  palmer: 1096353,
-  caicedo: 1137668,
-  bruno: 422685,
-  mainoo: 1292810,
-  kudus: 891743,
-  gordon: 906937,
-  tonali: 867414,
-  watkins: 540088,
-  mbappe: 701154,
-  bellingham: 1077894,
-  vinicius: 846033,
-  yamal: 1467236,
-  pedri: 1083323,
-  raphinha: 696679,
-  kane: 194165,
-  musiala: 1156141,
-  olise: 1029063,
-  dembele: 692984,
-  vitinha: 1061249,
-  doue: 1339208,
 };
 
 const nationFlagCodes: Record<string, string> = {
@@ -77,12 +43,6 @@ const nationFlagCodes: Record<string, string> = {
 export function teamLogoUrl(teamId: string): string | undefined {
   const id = teamLogoIds[teamId];
   return id ? `https://images.fotmob.com/image_resources/logo/teamlogo/${id}.png` : undefined;
-}
-
-export function playerPhotoUrl(playerId: string | undefined): string | undefined {
-  if (!playerId) return undefined;
-  const id = playerPhotoIds[playerId];
-  return id ? `https://images.fotmob.com/image_resources/playerimages/${id}.png` : undefined;
 }
 
 export function flagUrl(nationality: string, width: 20 | 40 = 40): string | undefined {

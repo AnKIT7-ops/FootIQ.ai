@@ -30,7 +30,7 @@ Production foundation lives alongside the app — Hono API (`server/`), Supabase
 - **motion** (Framer Motion) — page transitions & micro-interactions
 - **Hand-rolled SVG charts** — radar, momentum river, pitch/heatmap/shot/pass maps, gauges (no chart lib)
 - All stats/text data is local demo data (`src/data/`) — no APIs, no keys
-- **Real imagery** (club crests + player portraits via FotMob CDN, flags via flagcdn) with automatic fallback to generated SVG crests / initials when offline — `src/data/images.ts`; re-resolve IDs with `node scripts/resolve-images.mjs`
+- **Real imagery** (club crests via FotMob CDN, player portraits from the Premier League CDN via the FPL sync, flags via flagcdn) with automatic fallback to generated SVG crests / initials when offline — `src/data/images.ts`
 
 ## Design system
 

@@ -1,5 +1,6 @@
 import { players } from "@/lib/repositories/players";
-import { teams } from "@/lib/repositories/teams";
+import { teams, teamById } from "@/lib/repositories/teams";
+import type { Player } from "@/data/types";
 import { contentLibrary, contentKindLabels } from "@/lib/repositories/content";
 import { legalEntries, pageEntries } from "@/lib/nav";
 import { managerPathFor, playerPathFor, teamPathFor } from "@/lib/slug-builders";
@@ -15,15 +16,26 @@ export interface SearchItem {
   keywords: string;
 }
 
+// Players load from the API after this module does, so their entries are
+// rebuilt whenever the repository swaps in a new list.
+let indexedPlayers: Player[] | null = null;
+let playerItems: SearchItem[] = [];
+function currentPlayerItems(): SearchItem[] {
+  if (indexedPlayers !== players) {
+    indexedPlayers = players;
+    playerItems = players.map((p) => ({
+      id: `player-${p.id}`,
+      kind: "player" as const,
+      label: p.name,
+      sub: `${p.role} · ${teamById.get(p.teamId)?.short ?? ""}`,
+      to: playerPathFor(p),
+      keywords: `${p.name} ${p.role} ${p.position} ${teamById.get(p.teamId)?.name ?? ""}`.toLowerCase(),
+    }));
+  }
+  return playerItems;
+}
+
 export const searchIndex: SearchItem[] = [
-  ...players.map((p) => ({
-    id: `player-${p.id}`,
-    kind: "player" as const,
-    label: p.name,
-    sub: `${p.role} · ${p.nationality}`,
-    to: playerPathFor(p),
-    keywords: `${p.name} ${p.role} ${p.nationality} ${p.position}`.toLowerCase(),
-  })),
   ...teams.map((t) => ({
     id: `team-${t.id}`,
     kind: "team" as const,
@@ -96,7 +108,7 @@ export function runSearch(query: string, limit = 9): SearchItem[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
   const words = q.split(/\s+/);
-  return searchIndex
+  return [...currentPlayerItems(), ...searchIndex]
     .map((item) => {
       let score = 0;
       const label = item.label.toLowerCase();
@@ -149,10 +161,10 @@ export function recordSearch(query: string): void {
  */
 export function trendingSearches(): string[] {
   const local = top("search", 4).map((e) => e.key);
-  const formLeader = [...players].sort(
-    (a, b) => b.form.slice(-3).reduce((x, y) => x + y, 0) - a.form.slice(-3).reduce((x, y) => x + y, 0),
-  )[0];
-  const seeded = [formLeader?.name ?? "Erling Haaland", "Best XI", teams[0]?.name ?? "Arsenal", "left-footed winger under €30M"];
+  const formLeader = [...players].sort((a, b) => b.fantasy.form - a.fantasy.form)[0];
+  const seeded = [formLeader?.name, "Fantasy", teams[0]?.name ?? "Arsenal", "young midfielder who creates chances"].filter(
+    (s): s is string => Boolean(s),
+  );
   const merged: string[] = [];
   for (const s of [...local, ...seeded]) {
     if (!merged.some((m) => m.toLowerCase() === s.toLowerCase())) merged.push(s);

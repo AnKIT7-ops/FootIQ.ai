@@ -1,9 +1,8 @@
-import { players, getPlayer } from "@/lib/repositories/players";
+import { players } from "@/lib/repositories/players";
 import { teams, getTeam } from "@/lib/repositories/teams";
 import { predictions } from "@/lib/repositories/predictions";
 import { matchById } from "@/lib/repositories/matches";
-import { captainPicks } from "@/lib/repositories/fantasy";
-import { money } from "@/lib/utils";
+import { playerPathFor } from "@/lib/slug-builders";
 
 /**
  * Scripted concierge: answers from local data, clearly marked as the amber IQ layer.
@@ -12,16 +11,19 @@ import { money } from "@/lib/utils";
 export function answer(raw: string): string {
   const q = raw.toLowerCase();
 
-  const player = players.find((p) => q.includes(p.name.toLowerCase()) || q.includes(p.id));
+  const player = players.find((p) => q.includes(p.name.toLowerCase()));
   if (player) {
     const s = player.stats;
-    return `${player.name} (${player.role}, ${getTeam(player.teamId).short}) is rated ${s.rating.toFixed(2)} this season: ${s.goals} goals, ${s.assists} assists, ${s.xG.toFixed(1)} xG in ${s.apps} apps. Market value ${money(player.marketValue)}. Strengths: ${player.strengths[0].toLowerCase()}; watch-out: ${player.weaknesses[0].toLowerCase()}. Full profile → /player/${player.id}`;
+    const fitness = player.news ? ` Availability: ${player.news}.` : "";
+    return `${player.name} (${player.role}, ${getTeam(player.teamId).short}) this Premier League season: ${s.goals} goals, ${s.assists} assists, ${s.xG.toFixed(1)} xG and ${s.xA.toFixed(1)} xA in ${s.minutes} minutes.${fitness} Full profile → ${playerPathFor(player)}`;
   }
 
   if (q.includes("captain") || q.includes("fantasy")) {
-    const top = captainPicks[0];
-    const p = getPlayer(top.playerId);
-    return `Captaincy model says ${p.name} — ${top.expectedPoints.toFixed(1)} expected points (${top.ownership}% owned). ${top.note} More in the Fantasy Assistant → /fantasy`;
+    const top = [...players].filter((p) => p.availability === "available").sort((a, b) => b.fantasy.expectedPoints - a.fantasy.expectedPoints)[0];
+    if (top) {
+      return `FPL's own projection has ${top.name} top for next gameweek at ${top.fantasy.expectedPoints.toFixed(1)} points (${top.fantasy.selectedBy}% owned). That's the Premier League's model, not a promise. More in the Fantasy Assistant → /fantasy`;
+    }
+    return "Fantasy data hasn't loaded yet — open the Fantasy Assistant → /fantasy";
   }
 
   if (q.includes("predict") || q.includes(" vs ") || q.includes("who wins")) {
@@ -34,7 +36,7 @@ export function answer(raw: string): string {
         return `${h.short} vs ${a.short}: model says ${pred.homeWin}% home / ${pred.draw}% draw / ${pred.awayWin}% away, expected ${pred.expectedHome.toFixed(1)}–${pred.expectedAway.toFixed(1)}. Key factor: ${pred.reasoning[0]} These are probabilities, not promises — full breakdown → /predictions`;
       }
     }
-    return "I model every upcoming fixture with outcome probabilities, score distributions and MVP candidates — open Predictions (→ /predictions) or name a fixture like 'predict City vs Chelsea'.";
+    return "I model every upcoming fixture with outcome probabilities and score distributions — open Predictions (→ /predictions) or name a fixture like 'predict City vs Chelsea'.";
   }
 
   const team = teams.find((t) => q.includes(t.short.toLowerCase()) || q.includes(t.name.toLowerCase()));
@@ -43,15 +45,15 @@ export function answer(raw: string): string {
   }
 
   if (q.includes("transfer") || q.includes("rumor") || q.includes("rumour")) {
-    return "The Transfer Center tracks every rumor with a completion probability, source-reliability score, financial breakdown and fan sentiment. Hottest right now: Watkins → Newcastle at 41%. → /transfers";
+    return "FootIQ doesn't track rumours — there's no verified feed for them. Real transfer headlines from BBC Sport, the Guardian and Sky Sports are in News → /news";
   }
   if (q.includes("scout") || q.includes("find")) {
-    return "Describe the player you need in plain language — e.g. 'left-footed winger under €30M who presses hard' — and AI Scout will rank matches with fit scores. → /scout";
+    return "Describe the player you need in plain language — e.g. 'young midfielder who creates chances' — and AI Scout ranks Premier League players on their real per-90 output. → /scout";
   }
   if (q.includes("hello") || q.includes("hi") || q.length < 8) {
-    return "I'm the FootIQ concierge — ask me about any player, team, prediction, transfer or fantasy call. Everything I say is algorithmically generated from FootIQ's data (that's why I wear amber).";
+    return "I'm the FootIQ concierge — ask me about any Premier League player, team, prediction or fantasy call. My answers are generated from FootIQ's data (that's why I wear amber).";
   }
-  return "I can answer from live FootIQ data: try a player ('how good is Wirtz?'), a team ('Arsenal form'), a fixture ('predict Madrid vs PSG'), fantasy ('who to captain?') or transfers.";
+  return "I can answer from FootIQ data: try a player ('Bukayo Saka'), a team ('Arsenal form'), a fixture ('predict City vs Chelsea') or fantasy ('who to captain?').";
 }
 
 function ordinal(n: number): string {

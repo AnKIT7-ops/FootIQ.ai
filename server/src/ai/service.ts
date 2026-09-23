@@ -83,7 +83,8 @@ export class AiService {
         });
         // A provider daily cap is not a blip: "try again shortly" is wrong, and
         // the reader deserves to know AI answers are done for the day. (Gemini's
-        // free tier is 20 requests/day per model, and resets at midnight US Pacific.)
+        // free quotas are per model and reset at midnight US Pacific; reaching
+        // here means every model in AI_MODEL's fallback list is spent.)
         if (/\b429\b/.test(err.message)) {
           throw new ApiError(
             "rate_limited",
@@ -130,9 +131,12 @@ function ttlFor(task: AiTask): number {
   switch (task) {
     case "scout_report":
     case "player_comparison":
+    // Both seeds hash every input fact, so new data means a new key — a long
+    // TTL can't serve a stale answer, it only stops re-buying the same one.
+    case "fixture_preview":
+    case "scout_query":
       return TTL.aiScout;
     case "news_summary":
-    case "fixture_preview":
       return TTL.aiSummary;
     default:
       return TTL.aiGeneric;
