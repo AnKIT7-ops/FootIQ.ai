@@ -42,16 +42,15 @@ const EMPTY_COPY: Record<Range, { title: string; body: string }> = {
  * When nothing has kicked off yet, say when it does and where the fixtures are;
  * the season dates are real provider data, so this replaces a shrug with a fact.
  */
-function offSeasonBody(next: CompetitionDto | null, fallback: string, hasUpcoming: boolean): string {
-  if (!next?.season) return fallback;
-  const when = new Date(next.season.startDateIso).toLocaleDateString(undefined, {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
+function offSeasonBody(next: CompetitionDto | null, fallback: string, nextKickoffIso: string | null): string {
+  const day = (iso: string) => new Date(iso).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
   // Only point at a tab that actually has something in it.
-  const where = hasUpcoming ? " All upcoming has the published fixtures." : "";
-  return `The ${next.name} season starts on ${when}.${where}`;
+  const where = nextKickoffIso ? " All upcoming has the published fixtures." : "";
+  if (next?.season) return `The ${next.name} season starts on ${day(next.season.startDateIso)}.${where}`;
+  // Mid-season gaps are real too — the merged Sep–Oct FIFA window is 16 days
+  // with no league football. Name the next kickoff instead of blaming "between seasons".
+  if (nextKickoffIso) return `The next fixture is on ${day(nextKickoffIso)}.${where}`;
+  return fallback;
 }
 
 /**
@@ -71,13 +70,30 @@ export default function Schedule() {
 
   const { data, status } = useMatchesState();
   const comps = useCompetitions();
-  const [range, setRange] = useState<Range>("today");
+  const [picked, setRange] = useState<Range | null>(null);
   const [competition, setCompetition] = useState<string>("all");
 
   const scheduled = useMemo(
     () => [...data.upcoming, ...data.postponed, ...data.cancelled],
     [data.upcoming, data.postponed, data.cancelled],
   );
+
+  const nextKickoffIso = useMemo(
+    () => data.upcoming.reduce<string | null>((min, m) => (!min || m.kickoffIso < min ? m.kickoffIso : min), null),
+    [data.upcoming],
+  );
+
+  // Until the reader picks a tab, land on the first one with fixtures in it —
+  // during a break Today and This Week are empty and the page reads as broken.
+  const range: Range =
+    picked ??
+    (!scheduled.length || scheduled.some((m) => isToday(m.kickoffIso))
+      ? "today"
+      : data.live.length
+        ? "live"
+        : scheduled.some((m) => isThisWeek(m.kickoffIso))
+          ? "week"
+          : "all");
 
   const competitions = useMemo(() => {
     const all = [...scheduled, ...data.live, ...data.finished, ...data.unconfirmed].map((m) => m.competition);
@@ -196,7 +212,7 @@ export default function Schedule() {
           emptyTitle={EMPTY_COPY[range].title}
           emptyBody={
             range === "today" || range === "tomorrow" || range === "week"
-              ? offSeasonBody(nextSeasonStart(comps), EMPTY_COPY[range].body, scheduled.length > 0)
+              ? offSeasonBody(nextSeasonStart(comps), EMPTY_COPY[range].body, nextKickoffIso)
               : EMPTY_COPY[range].body
           }
         />
