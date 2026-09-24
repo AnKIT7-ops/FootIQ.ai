@@ -32,10 +32,39 @@ store.onChange((next) => {
   leagueTable = d.table;
 });
 
+/**
+ * An id we don't hold yet — real matches can land while teams is still the demo
+ * seed — must not borrow another club's identity: falling back to teams[0]
+ * rendered "Arsenal vs Arsenal" (and duplicate React keys). A neutral stand-in
+ * keeps every caller non-null; the synced team replaces it on the next render.
+ */
+const unknownTeam = (id: string): Team => ({
+  id,
+  name: "TBC",
+  short: "TBC",
+  tla: "TBC",
+  colors: ["#1d2533", "#eef2f8"],
+  stadium: "",
+  manager: "",
+  league: "",
+  position: 0,
+  played: 0,
+  won: 0,
+  drawn: 0,
+  lost: 0,
+  gf: 0,
+  ga: 0,
+  points: 0,
+  form: "",
+  chemistry: 0,
+  style: { formation: "", buildUp: "", press: "", line: "", tempo: 0, width: 0, directness: 0, pressIntensity: 0 },
+  styleTags: [],
+  aiReport: [],
+  trophies: [],
+});
+
 export function getTeam(id: string): Team {
-  const t = teamById.get(id);
-  if (t) return t;
-  return teams[0];
+  return teamById.get(id) ?? unknownTeam(id);
 }
 
 export const useTeams = store.use;
