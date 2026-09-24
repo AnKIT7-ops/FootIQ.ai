@@ -24,7 +24,7 @@ const html = `<!doctype html><html><head><meta charset="utf-8"><style>
   }
   .row { display: flex; align-items: center; gap: 22px; position: relative; }
   .word { font-size: 58px; font-weight: 900; letter-spacing: -1px; }
-  .word i { font-style: normal; color: #5eead4; }
+  .word i { font-style: normal; color: #fcd34d; }
   .tag { position: relative; font-size: 76px; line-height: 1.06; font-weight: 900; letter-spacing: -2px; max-width: 980px; text-transform: uppercase; }
   .tag .a { color: #5eead4; }
   .foot { position: relative; display: flex; align-items: center; justify-content: space-between; }
@@ -36,7 +36,7 @@ const html = `<!doctype html><html><head><meta charset="utf-8"><style>
 </style></head><body>
   <div class="grid"></div>
   <div class="row">
-    <svg width="84" height="84" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#1d2533"/><circle cx="32" cy="32" r="17" fill="none" stroke="#10b981" stroke-width="3"/><path d="M32 15v10M32 39v10M15 32h10M39 32h10" stroke="#10b981" stroke-width="3" stroke-linecap="round"/><circle cx="32" cy="32" r="5.5" fill="#fbbf24"/></svg>
+    <svg width="84" height="84" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#1d2533"/><path d="M32 14a18 18 0 0 0 0 36" fill="none" stroke="#10b981" stroke-width="6"/><path d="M32 14a18 18 0 0 1 0 36" fill="none" stroke="#fbbf24" stroke-width="6"/><path d="M32 0v64" stroke="#eef2f8" stroke-width="3"/><circle cx="32" cy="32" r="4.5" fill="#eef2f8"/></svg>
     <div class="word">Foot<i>IQ</i></div>
   </div>
   <div class="tag">Not the scores.<br><span class="a">The reasons.</span></div>
