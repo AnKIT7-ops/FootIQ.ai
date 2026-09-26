@@ -249,6 +249,71 @@ Structure: verdict up front (who and in which context), then per-dimension compa
 (attacking output, creation, defensive work, availability). Finish with "Pick X if ... / Pick Y if ...".`,
     };
   },
+
+  /**
+   * Concierge chat: an open question answered from a snapshot of what FootIQ
+   * holds. The fan's question is the only free text and stays in the user turn.
+   * Players are narrowed here (named in the question + FPL's top projections)
+   * so a 560-player squad list never reaches the model.
+   */
+  concierge_answer(ctx: {
+    question: string;
+    teams: Team[];
+    upcoming: { competition: string; kickoffIso: string; homeId: string; awayId: string; forecast: Forecast | null }[];
+    players: Player[];
+  }): RenderedPrompt {
+    const teamName = new Map(ctx.teams.map((t) => [t.id, t.name]));
+    const q = ctx.question.toLowerCase();
+    // Whole words, Unicode-aware: "Ødegaard" matches, "art" doesn't hit "Arteta".
+    const words = new Set(q.split(/[^\p{L}'-]+/u));
+    const surname = (name: string) => name.toLowerCase().split(" ").pop() ?? "";
+    const named = ctx.players
+      .filter((p) => q.includes(p.name.toLowerCase()) || (surname(p.name).length >= 4 && words.has(surname(p.name))))
+      .slice(0, 3);
+    const facts = {
+      tables: ctx.teams.map((t) => ({
+        team: t.name,
+        league: t.league,
+        position: t.position,
+        points: t.points,
+        played: t.played,
+        goalDifference: t.gf - t.ga,
+        recentForm: t.form || null,
+      })),
+      nextFixtures: ctx.upcoming.map((m) => ({
+        competition: m.competition,
+        kickoffUtc: m.kickoffIso,
+        home: teamName.get(m.homeId) ?? m.homeId,
+        away: teamName.get(m.awayId) ?? m.awayId,
+        forecastPercent: m.forecast ? { home: m.forecast.homeWin, draw: m.forecast.draw, away: m.forecast.awayWin } : null,
+      })),
+      fplTopProjected: ctx.players
+        .filter((p) => p.availability === "available")
+        .sort((a, b) => b.fantasy.expectedPoints - a.fantasy.expectedPoints)
+        .slice(0, 8)
+        .map((p) => ({ name: p.name, team: teamName.get(p.teamId) ?? p.teamId, expectedPoints: p.fantasy.expectedPoints, selectedByPercent: p.fantasy.selectedBy })),
+      playersNamedInQuestion: named.map((p) => playerFacts(p, teamName.get(p.teamId))),
+    };
+    return {
+      task: "concierge_answer",
+      version: 1,
+      system: BASE_SYSTEM,
+      maxTokens: 700,
+      // The same question tomorrow sits on a new table and new fixtures.
+      cacheSeed: JSON.stringify([q.trim().slice(0, 200), new Date().toISOString().slice(0, 10)]),
+      prompt: `Answer a fan's question as FootIQ's assistant.
+
+FOOTIQ DATA (JSON — league tables, the next fixtures with FootIQ's Poisson forecast, FPL's own points projections, and any Premier League players named in the question; the ONLY information you have):
+${JSON.stringify(facts)}
+
+FAN'S QUESTION: ${ctx.question}
+
+Rules:
+- Answer from this data only. If it doesn't cover the question (a player outside the Premier League, transfers, injuries beyond FPL's note, past seasons), say plainly that FootIQ doesn't hold that — never fill the gap from memory.
+- Forecasts and FPL projections are model outputs: give them as probabilities, not promises.
+- 2-5 sentences, or a few "-" bullets. No headings.`,
+    };
+  },
 } as const;
 
 /**
@@ -265,6 +330,7 @@ export const promptCatalog = [
   { task: "player_comparison", version: 2, hasVariant: false, description: "Head-to-head comparison on real season stats" },
   { task: "scout_query", version: 3, hasVariant: false, description: "Plain-English scouting request to structured filters (JSON)" },
   { task: "fixture_preview", version: 2, hasVariant: false, description: "Real-fixture preview grounded in the table and the Poisson forecast" },
+  { task: "concierge_answer", version: 1, hasVariant: false, description: "Chat answer grounded in tables, next fixtures, FPL projections and named players" },
 ] as const;
 
 /**
