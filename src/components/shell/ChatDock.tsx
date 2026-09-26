@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { Send, Sparkles, X } from "lucide-react";
 import type { AiResult } from "@shared/contracts";
-import { api, ApiRequestError } from "@/lib/api/client";
+import { api, ApiRequestError, ApiUnavailableError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { AiText } from "@/components/ui/AiText";
 import { DemoEngineChip } from "@/components/ui/DemoEngineChip";
@@ -74,7 +74,7 @@ export function ChatDock() {
     const reply: Promise<Msg> = user
       ? api.post<AiResult>("/api/ai/ask", { question: t }).then(
           (r) => ({ from: "iq", text: r.text, provider: r.provider }),
-          (err) => scripted(err instanceof ApiRequestError ? err.message : "The AI model didn't answer."),
+          (err) => scripted(err instanceof ApiRequestError || err instanceof ApiUnavailableError ? err.message : "The AI model didn't answer."),
         )
       : scripted();
     void Promise.all([reply, minDelay]).then(([msg]) => {

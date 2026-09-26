@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GeminiProvider } from "./gemini";
+import { GeminiProvider, thinkingOff } from "./gemini";
 import { AiProviderError } from "../types";
 
 const reply = (body: unknown, status = 200) =>
@@ -21,8 +21,14 @@ describe("GeminiProvider", () => {
     }) as unknown as typeof fetch;
 
     const result = await new GeminiProvider("k", "gemini-3.8-flash", capture).complete(request);
-    expect((sent.generationConfig as { thinkingConfig: unknown }).thinkingConfig).toEqual({ thinkingBudget: 0 });
+    expect((sent.generationConfig as { thinkingConfig: unknown }).thinkingConfig).toEqual({ thinkingLevel: "minimal" });
     expect(result.usage).toEqual({ inputTokens: 10, outputTokens: 20 });
+  });
+
+  it("speaks each generation's thinking dialect — Gemini 3 Flash-Lite 400s on a zero budget", () => {
+    expect(thinkingOff("gemini-3.5-flash-lite")).toEqual({ thinkingLevel: "minimal" });
+    expect(thinkingOff("gemini-3.1-flash-lite")).toEqual({ thinkingLevel: "minimal" });
+    expect(thinkingOff("gemini-2.5-flash-lite")).toEqual({ thinkingBudget: 0 });
   });
 
   it("rejects a MAX_TOKENS answer instead of caching half a sentence", async () => {
