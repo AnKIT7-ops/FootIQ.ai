@@ -43,7 +43,7 @@ SUPABASE_URL = "https://zcemnioniooyyhpjpwbn.supabase.co"
 AI_PROVIDER = "gemini"
 AI_MODEL = "gemini-3.5-flash-lite,gemini-3.1-flash-lite,gemini-2.5-flash-lite,gemini-3.8-flash"
 DATA_PROVIDER = "football-data"
-# The six competitions this key's free tier grants. Europa League and
+# The competitions this key's free tier grants that we sync. Europa League and
 # Conference League are NOT on it — their codes would 403 per competition
 # (tolerated and logged, but pointless). Full free-tier set: PL, PD, BL1, SA,
 # FL1, CL, ELC, DED, PPL, BSA, EC, WC.
@@ -51,9 +51,15 @@ DATA_PROVIDER = "football-data"
 # NOTE: do not reintroduce the singular FOOTBALL_DATA_COMPETITION here. It is
 # kept as a deprecated alias that WINS when set, so leaving it in place would
 # silently pin production back to a single league.
-FOOTBALL_DATA_COMPETITIONS = "PL,PD,BL1,SA,FL1,CL"
-# Wide enough to span the European off-season: in mid-July the next fixtures
-# are five weeks out, and a narrow window makes a healthy sync look broken.
-FOOTBALL_DATA_WINDOW_PAST_DAYS = "14"
+#
+# Each code costs ~2 requests per cron tick (standings + matches) and one more
+# daily (teams). A tick must stay under the Workers free plan's 50 subrequests,
+# Supabase and RSS calls included — 8 codes is about 46 on the daily tick, so
+# adding ELC (Championship) means moving team identity to its own cron first.
+FOOTBALL_DATA_COMPETITIONS = "PL,PD,BL1,SA,FL1,CL,DED,PPL"
+# Past: the home page shows a club's last results, so keep ~5 league rounds.
+# Future: wide enough to span the European off-season — in mid-July the next
+# fixtures are five weeks out, and a narrow window makes a healthy sync look broken.
+FOOTBALL_DATA_WINDOW_PAST_DAYS = "35"
 FOOTBALL_DATA_WINDOW_FUTURE_DAYS = "60"
 # Non-secret config only. Secrets go via `wrangler secret put`.
