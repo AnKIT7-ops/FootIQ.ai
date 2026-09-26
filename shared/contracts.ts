@@ -252,7 +252,8 @@ export type AiTask =
   | "tactical_feedback"
   | "player_comparison"
   | "fixture_preview"
-  | "scout_query";
+  | "scout_query"
+  | "concierge_answer";
 
 /**
  * Structured scouting filters parsed from a plain-English request by the AI.

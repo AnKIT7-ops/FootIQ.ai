@@ -168,6 +168,41 @@ const SCOUT_FILTERS = z.object({
     },
   );
 
+  /**
+   * Concierge chat. The model answers from a snapshot of what FootIQ holds and
+   * is told to say so when that isn't enough. Each source degrades to "not
+   * held" instead of failing the answer: players 503 until the first FPL sync.
+   */
+  r.post(
+    "/ask",
+    validate("json", z.object({ question: z.string().min(2).max(500) })),
+    consumeQuota("ai_requests"),
+    async (c) => {
+      await gate(c.get("services"), "ai_scout");
+      const held = <T>(p: Promise<T>) => p.catch(() => null);
+      const [teams, matches, players] = await Promise.all([held(catalog.teams()), held(catalog.matches()), held(catalog.players())]);
+      const teamList = teams?.data ?? [];
+      const upcoming = [...(matches?.data.upcoming ?? [])]
+        .sort((a, b) => a.kickoffIso.localeCompare(b.kickoffIso))
+        .slice(0, 12)
+        .map((m) => {
+          const f = forecastFixture(m, teamList);
+          return { ...m, forecast: f.ok ? f.forecast : null };
+        });
+      return ok(
+        c,
+        await c.get("services").ai.run(
+          prompts.concierge_answer({
+            question: cleanText(c.req.valid("json").question, 500),
+            teams: teamList,
+            upcoming,
+            players: players?.data ?? [],
+          }),
+        ),
+      );
+    },
+  );
+
   r.post(
     "/tactics/feedback",
     validate(

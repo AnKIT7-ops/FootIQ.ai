@@ -1,11 +1,21 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { Send, Sparkles, X } from "lucide-react";
+import type { AiResult } from "@shared/contracts";
+import { api, ApiRequestError } from "@/lib/api/client";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { AiText } from "@/components/ui/AiText";
+import { DemoEngineChip } from "@/components/ui/DemoEngineChip";
 import { cn } from "@/lib/utils";
 
 interface Msg {
   from: "you" | "iq";
   text: string;
+  /** Who wrote an answer: a real provider, or "script" for the local engine. Unset on the greeting. */
+  provider?: string;
+  /** Why a signed-in question fell back to the script (quota, outage). */
+  note?: string;
 }
 
 /** The answer engine ships with the data bundle — pulled in on first open, not at boot. */
@@ -22,6 +32,7 @@ async function loadAnswerEngine(): Promise<AnswerFn> {
 const starters = ["How good is Yamal?", "Predict City vs Chelsea", "Who should I captain?", "Arsenal form"];
 
 export function ChatDock() {
+  const { authEnabled, user } = useAuth();
   const [open, setOpen] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([
     { from: "iq", text: "Evening. Matchday is live — ask me about any player, fixture, transfer or fantasy call." },
@@ -56,8 +67,18 @@ export function ChatDock() {
     setDraft("");
     setThinking(true);
     const minDelay = new Promise((r) => setTimeout(r, 650));
-    void Promise.all([loadAnswerEngine(), minDelay]).then(([fn]) => {
-      setMsgs((m) => [...m, { from: "iq", text: fn(t) }]);
+    const scripted = (note?: string): Promise<Msg> =>
+      loadAnswerEngine().then((fn) => ({ from: "iq", text: fn(t), provider: "script", note }));
+    // Signed in → the real model (metered, so it needs an account). Any failure
+    // falls back to the script, which the chip then labels as the demo engine.
+    const reply: Promise<Msg> = user
+      ? api.post<AiResult>("/api/ai/ask", { question: t }).then(
+          (r) => ({ from: "iq", text: r.text, provider: r.provider }),
+          (err) => scripted(err instanceof ApiRequestError ? err.message : "The AI model didn't answer."),
+        )
+      : scripted();
+    void Promise.all([reply, minDelay]).then(([msg]) => {
+      setMsgs((m) => [...m, msg]);
       setThinking(false);
     });
   };
@@ -103,7 +124,9 @@ export function ChatDock() {
                       m.from === "you" ? "rounded-br-md bg-accent-soft text-ink" : "rounded-bl-md border border-iq/20 bg-iq-soft text-ink",
                     )}
                   >
-                    {m.text}
+                    {m.from === "iq" ? <AiText text={m.text} /> : m.text}
+                    {m.note && <p className="mt-2 text-caption text-ink-3">{m.note}</p>}
+                    {m.provider !== undefined && <DemoEngineChip provider={m.provider} className="mt-2" />}
                   </div>
                 </div>
               ))}
@@ -134,6 +157,14 @@ export function ChatDock() {
                       {s}
                     </button>
                   ))}
+                  {authEnabled && !user && (
+                    <Link
+                      to={`/signin?next=${encodeURIComponent(window.location.pathname + window.location.search)}`}
+                      className="basis-full pt-1 text-caption text-ink-3 underline decoration-iq/40 underline-offset-2 hover:text-ink"
+                    >
+                      Sign in for answers from the AI model — it's free.
+                    </Link>
+                  )}
                 </div>
               )}
             </div>
