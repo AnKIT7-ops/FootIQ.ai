@@ -37,7 +37,7 @@ const groups: Array<{ title: string; items: Array<{ to: string; label: string; i
 
 export function Sidebar() {
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-line bg-bg-deep/60 backdrop-blur-sm lg:flex">
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-line bg-bg-deep lg:flex">
       <div className="flex h-16 items-center px-5">
         <Logo />
       </div>

@@ -105,7 +105,7 @@ export function ChatDock() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.97 }}
             transition={{ duration: 0.2 }}
-            className="glass fixed bottom-36 right-4 z-40 flex h-[26rem] w-[min(24rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl shadow-2xl lg:bottom-22 lg:right-6"
+            className="panel-float fixed bottom-36 right-4 z-40 flex h-[26rem] w-[min(24rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl shadow-2xl lg:bottom-22 lg:right-6"
             role="dialog"
             aria-label="FootIQ AI assistant"
           >

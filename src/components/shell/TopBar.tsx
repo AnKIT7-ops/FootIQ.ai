@@ -20,7 +20,7 @@ export function TopBar({ onOpenSearch }: { onOpenSearch: () => void }) {
   useEffect(() => setBellReady(true), []); // mount lazy bell post-paint
 
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-bg/80 backdrop-blur-md">
+    <header className="sticky top-0 z-30 border-b border-line bg-bg">
       <div className="flex h-16 items-center gap-3 px-4 md:px-6">
         <div className="lg:hidden">
           <Logo compact />

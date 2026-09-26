@@ -58,7 +58,7 @@ export function NotificationCenter() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -6, scale: 0.98 }}
               transition={{ duration: 0.16 }}
-              className="glass absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-2xl shadow-2xl"
+              className="panel-float absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-2xl shadow-2xl"
               role="dialog"
               aria-label="Notifications"
             >

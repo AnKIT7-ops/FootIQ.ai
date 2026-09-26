@@ -106,7 +106,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/55 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-black/55"
             onClick={onClose}
             aria-hidden
           />
@@ -120,7 +120,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
             aria-modal="true"
             aria-label="Universal search"
           >
-            <div className="glass overflow-hidden rounded-2xl shadow-2xl">
+            <div className="panel-float overflow-hidden rounded-2xl shadow-2xl">
               <div className="flex items-center gap-3 border-b border-line px-4">
                 <Search className="size-4 shrink-0 text-ink-3" aria-hidden />
                 <input
