@@ -113,7 +113,7 @@ export function Onboarding({ open, onClose }: { open: boolean; onClose: () => vo
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/55 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-black/55"
             onClick={() => close("skipped")}
             aria-hidden
           />
@@ -127,7 +127,7 @@ export function Onboarding({ open, onClose }: { open: boolean; onClose: () => vo
             aria-modal="true"
             aria-label="Welcome tour"
           >
-            <div ref={panelRef} tabIndex={-1} className="glass overflow-hidden rounded-2xl shadow-2xl outline-none">
+            <div ref={panelRef} tabIndex={-1} className="panel-float overflow-hidden rounded-2xl shadow-2xl outline-none">
               <div className="flex items-center justify-between border-b border-line px-5 py-3">
                 <p className="font-mono text-micro uppercase tracking-[0.14em] text-ink-3">
                   {step + 1} / {steps.length}

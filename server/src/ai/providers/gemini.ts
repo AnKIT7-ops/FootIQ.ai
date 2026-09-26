@@ -2,6 +2,17 @@ import type { AiCompletion, AiProvider, AiRequest } from "../types";
 import { AiProviderError } from "../types";
 
 /**
+ * The least thinking each generation accepts. Gemini 3 can't switch it off:
+ * its Flash-Lite tiers answer `thinkingBudget: 0` with 400 INVALID_ARGUMENT,
+ * which failed every AI request once Flash-Lite led the fallback list (Sep
+ * 2026). "minimal" is Gemini 3's floor; the budget form is 2.5's, and a
+ * request carrying both is also a 400.
+ */
+export function thinkingOff(model: string): { thinkingBudget: 0 } | { thinkingLevel: "minimal" } {
+  return /^gemini-2\./.test(model) ? { thinkingBudget: 0 } : { thinkingLevel: "minimal" };
+}
+
+/**
  * Google Gemini generateContent via REST.
  *
  * `models` is a comma-separated fallback list (AI_MODEL="a,b,c"). Free-tier
@@ -51,13 +62,13 @@ export class GeminiProvider implements AiProvider {
           generationConfig: {
             maxOutputTokens: request.maxTokens,
             /**
-             * Gemini 3.x thinks by default and its thinking tokens are spent from
+             * Gemini thinks by default and its thinking tokens are spent from
              * maxOutputTokens. That silently ate the answer: fixture previews
              * stopped mid-sentence ("…against an") and the 200-token scout
              * parse returned nothing at all. These are short, grounded,
              * format-constrained tasks — no reasoning budget needed.
              */
-            thinkingConfig: { thinkingBudget: 0 },
+            thinkingConfig: thinkingOff(model),
           },
         }),
         signal: AbortSignal.timeout(60_000),

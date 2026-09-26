@@ -240,7 +240,7 @@ The `--glow-accent` / `--glow-iq` tokens exist for one job only: making a live e
 
 **The Stacking Ladder.** `z-10` in-card overlays · `z-20` chart tooltips and board tokens · `z-30` sticky chrome · `z-40` docked panels · `z-50` modals and the command palette · `z-skip` the skip link, which must clear all of it. Named steps only; an arbitrary `z-[9999]` means the ladder was never read.
 
-**The Glass Rule.** The `glass` utility (blur + saturate) is permitted on exactly two things: the sticky top bar and the command palette, where content genuinely scrolls beneath. Decorative glass cards are forbidden — that is generic AI SaaS, an explicit anti-reference.
+**The Solid Rule.** No surface is see-through: no backdrop blur, no semi-transparent panel, top bar or sidebar (owner decision, Sep 2026 — content bleeding through the chat dock read as broken). Floating panels use the `panel-float` utility: solid `--surface`, strong hairline, `shadow-2xl` per the Float-Or-Flat Rule. The one translucent layer left is the modal scrim, which dims the page behind a dialog and carries no content.
 
 ## 5. Components
 

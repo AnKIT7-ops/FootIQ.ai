@@ -34,7 +34,7 @@ export function MobileNav() {
   return (
     <>
       <nav
-        className="glass fixed inset-x-3 bottom-3 z-40 flex items-center justify-around rounded-2xl px-2 py-1.5 shadow-2xl lg:hidden"
+        className="panel-float fixed inset-x-3 bottom-3 z-40 flex items-center justify-around rounded-2xl px-2 py-1.5 shadow-2xl lg:hidden"
         style={{ marginBottom: "env(safe-area-inset-bottom, 0px)" }}
         aria-label="Mobile navigation"
       >
@@ -73,7 +73,7 @@ export function MobileNav() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-black/55 backdrop-blur-sm lg:hidden"
+              className="fixed inset-0 z-50 bg-black/55 lg:hidden"
               onClick={() => setMoreOpen(false)}
               aria-hidden
             />
