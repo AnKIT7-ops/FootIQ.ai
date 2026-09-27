@@ -26,8 +26,10 @@ function sitemapPlugin(): Plugin {
       const site = (process.env.VITE_SITE_URL ?? "https://footiq.ai").replace(/\/$/, "");
       const noIndex = new Set(["/profile", "/insights"]);
       const paths = [
-        ...[...nav.pageEntries, ...nav.legalEntries].map((e) => e.to),
-        "/intelligence",
+        // Not listed: /intelligence and its articles. The library is generated from
+        // demo data and gated off on live data (src/lib/repositories/content.ts);
+        // this build is the live deploy.
+        ...[...nav.pageEntries, ...nav.legalEntries].map((e) => e.to).filter((p) => p !== "/intelligence"),
         // Not listed: players. They sync from FPL at runtime, so the build can't
         // see them; a sitemap route on the API is the upgrade path.
         ...teams.map(slugs.teamPathFor),
@@ -37,7 +39,6 @@ function sitemapPlugin(): Plugin {
         // engines must not index them as fact. Real fixtures change daily and are
         // reached through /matches and /predictions.
         ...historicalMoments.map(slugs.momentPathFor),
-        ...content.contentLibrary().map((a) => `/intelligence/${a.slug}`),
       ].filter((p) => !noIndex.has(p));
 
       const lastmod = content.weekStamp();

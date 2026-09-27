@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 import { motion } from "motion/react";
 import { ArrowLeftRight, CalendarDays, ClipboardList, GitCompareArrows, Landmark, LayoutDashboard, Newspaper, Radio, Search, Sparkles, Trophy, UserRound, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useDataMode } from "@/lib/freshness";
 import { Logo } from "./Logo";
 
 const groups: Array<{ title: string; items: Array<{ to: string; label: string; icon: typeof Radio }> }> = [
@@ -36,6 +37,7 @@ const groups: Array<{ title: string; items: Array<{ to: string; label: string; i
 ];
 
 export function Sidebar() {
+  const mode = useDataMode();
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-line bg-bg-deep lg:flex">
       <div className="flex h-16 items-center px-5">
@@ -98,7 +100,10 @@ export function Sidebar() {
             </NavLink>
           ))}
         </div>
-        <p className="font-mono text-micro uppercase tracking-widest text-ink-3">FootIQ · Beta · Demo data</p>
+        {/* Same signal as the top-bar chip; says nothing until the backend has answered. */}
+        <p className="font-mono text-micro uppercase tracking-widest text-ink-3">
+          FootIQ · Beta{mode === "provider" ? " · Live data" : mode === "demo" ? " · Demo data" : ""}
+        </p>
       </div>
     </aside>
   );
