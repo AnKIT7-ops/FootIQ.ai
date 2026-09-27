@@ -151,13 +151,13 @@ function ForecastView({ match, home, away, forecast: f }: { match: Match; home: 
             role="img"
             aria-label={`Model win probabilities: ${home.short} ${f.homeWin}%, draw ${f.draw}%, ${away.short} ${f.awayWin}%`}
           >
-            <motion.div initial={{ flexBasis: 0 }} animate={{ flexBasis: `${f.homeWin}%` }} transition={{ duration: 0.6 }} className="flex items-center justify-center bg-chart-1 font-mono text-caption font-bold text-[#04110c]">
+            <motion.div initial={{ flexBasis: 0 }} animate={{ flexBasis: `${f.homeWin}%` }} transition={{ duration: 0.6 }} className="flex items-center justify-center bg-iq font-mono text-caption font-bold text-[#04110c]">
               {f.homeWin}%
             </motion.div>
             <motion.div initial={{ flexBasis: 0 }} animate={{ flexBasis: `${f.draw}%` }} transition={{ duration: 0.6 }} className="flex items-center justify-center bg-surface-3 font-mono text-caption font-bold text-ink-2">
               {f.draw}%
             </motion.div>
-            <motion.div initial={{ flexBasis: 0 }} animate={{ flexBasis: `${f.awayWin}%` }} transition={{ duration: 0.6 }} className="flex items-center justify-center bg-chart-4 font-mono text-caption font-bold text-white">
+            <motion.div initial={{ flexBasis: 0 }} animate={{ flexBasis: `${f.awayWin}%` }} transition={{ duration: 0.6 }} className="flex items-center justify-center bg-iq font-mono text-caption font-bold text-[#04110c]">
               {f.awayWin}%
             </motion.div>
           </div>
@@ -229,7 +229,7 @@ function ForecastView({ match, home, away, forecast: f }: { match: Match; home: 
           <SectionHeader eyebrow="Model estimate" title="Likeliest scores" className="mb-4" />
           <div className="space-y-3">
             {f.topScores.map((s) => (
-              <Meter key={s.score} label={s.score} value={s.p} max={20} color="var(--chart-3)" />
+              <Meter key={s.score} label={s.score} value={s.p} max={20} color="var(--iq)" />
             ))}
           </div>
         </Card>

@@ -18,11 +18,11 @@ colors:
   ink-2: "#9aa7ba"
   ink-3: "#7c8ca5"
   pitch-turf: "#0d1a17"
-  chart-1: "#10b981"
-  chart-2: "#38bdf8"
-  chart-3: "#fbbf24"
-  chart-4: "#a78bfa"
-  chart-5: "#fb7185"
+  chart-1: "#4b8efe"
+  chart-2: "#a738a2"
+  chart-3: "#8080fc"
+  chart-4: "#bc2b74"
+  chart-5: "#009edb"
 typography:
   display:
     fontFamily: "Archivo Variable, Archivo, system-ui, sans-serif"
@@ -164,7 +164,8 @@ Floodlit night: a cold indigo stage lit by two disciplined signals, one green, o
 - **Signal Amber** (`#fbbf24`): the color of model inference — the AI raising its hand. Every `IQInsight`, `IQTag`, prediction, and generated article wears it. **Signal Amber Ink** (`#fcd34d`) carries amber text. Amber is never used for a measured value, and emerald is never used for a guess. This is the product's honesty rule expressed as pigment.
 
 ### Tertiary
-- **Chart palette** (`#10b981`, `#38bdf8`, `#fbbf24`, `#a78bfa`, `#fb7185`): five categorical series, validated for colorblind separation and contrast on both the dark (`#11161f`) and light (`#f7f6f3`) surfaces, each with a `-deep` fill step for marks. Used only inside data visualization. Sky, violet and rose exist nowhere else in the UI.
+- **Chart palette** — blue · magenta · indigo · pink · sky. Dark `#4b8efe` `#a738a2` `#8080fc` `#bc2b74` `#009edb`; light `#1961d4` `#871082` `#5952d2` `#960157` `#01729f`. Five categorical series for **identity only** (which team, which player): no slot sits in the emerald, amber or rose family, so a series colour never claims to be a fact or a guess. Validated with the dataviz validator (OKLab ΔE×100, Machado 2009 simulation) on the adjacent pairs plus 1↔4, the A-vs-B pair every comparison uses: worst protan/deutan ΔE **14.5** dark / **11.7** light (target ≥8), worst tritan **23.7** dark / **23.0** light, worst normal-vision ΔE **19.6** / **18.0** (floor 15), OKLCH L inside the mode band, every mark ≥3:1 on the card and page surfaces (dark `#11161f` / `#0a0e16`: 3.22–6.36; light `#f7f6f3` / `#f2f3ef`: 4.82–8.01). Each slot has a `-deep` step (same hue, one step darker) for a fill that carries a white label, ≥4.6:1. The ceiling, measured not assumed: with emerald, amber and rose off the table, no three of these hues stay pairwise-distinct (blue↔indigo is ΔE 0.7 under deuteranopia), so a form where any two marks can touch (scatter, map, board, a legend of more than two) carries **two series, slots 1 and 4**; more than two means a one-hue ramp, facets, or direct labels doing the identity work. Ordered categories (pitch zones) take a one-hue ramp of slot 1 mixed toward ink, not extra hues. Used only inside data visualization; these hues exist nowhere else in the UI.
+- **Model output in a chart wears amber, never a series colour.** Win/draw/loss probabilities, likeliest scores, fit and likeness scores and FootIQ ratings are the model's estimates, so their marks are Signal Amber (the draw, belonging to neither side, is neutral) with `#04110c` labels on the fill (11.5:1 dark, 6.0:1 light), inside a block that carries the amber `Model estimate` label. The measured inputs beside them stay emerald.
 - **Bad Rose** (`#fb7185`): losses, errors, negative deltas. Never decorative.
 
 ### Neutral

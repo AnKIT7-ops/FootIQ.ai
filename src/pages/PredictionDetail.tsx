@@ -3,6 +3,7 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { recordPredictionView } from "@/lib/user";
 import { Card, SectionHeader } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Crest } from "@/components/ui/Crest";
 import { AIMeta } from "@/components/ui/AIMeta";
@@ -16,7 +17,8 @@ import { useMatchesState } from "@/lib/repositories/matches";
 import { DataState } from "@/components/ui/DataState";
 
 function Bar({ label, value, tone }: { label: string; value: number; tone: "home" | "draw" | "away" }) {
-  const color = tone === "home" ? "bg-accent" : tone === "away" ? "bg-chart-2" : "bg-surface-3";
+  // Model output wears amber (the honesty rule); the draw belongs to neither side.
+  const color = tone === "draw" ? "bg-ink-3" : "bg-iq";
   return (
     <div>
       <div className="mb-1 flex items-center justify-between font-mono text-micro uppercase tracking-wider">
@@ -86,6 +88,7 @@ export default function PredictionDetail() {
           <Crest teamId={home.id} size={40} />
           <SectionHeader level={1} title={`${home.short} vs ${away.short}`} className="mb-0" />
           <Crest teamId={away.id} size={40} />
+          <Badge variant="iq" className="ml-auto">Model estimate</Badge>
         </div>
         <p className="mb-5 font-mono text-label uppercase tracking-wider text-ink-3">
           {match.competition} · {match.venue} · expected {pred.expectedHome.toFixed(1)}–{pred.expectedAway.toFixed(1)}

@@ -49,7 +49,7 @@ function PlayerDot({ p, color, mirror, showRating }: { p: LineupPlayer; color: s
       </text>
       {showRating && (
         <g>
-          <rect x={pillX} y={py - 5.4} width="5.4" height="3" rx="1.5" fill={good ? "var(--chart-1)" : "var(--surface-3)"} />
+          <rect x={pillX} y={py - 5.4} width="5.4" height="3" rx="1.5" fill={good ? "var(--iq)" : "var(--surface-3)"} />
           <text x={pillX + 2.7} y={py - 3.2} textAnchor="middle" fontSize="2" fontWeight="700" fontFamily="var(--font-mono)" fill={good ? "#04110c" : "var(--ink-2)"}>
             {p.rating.toFixed(1)}
           </text>

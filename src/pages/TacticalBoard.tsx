@@ -108,11 +108,18 @@ function teamFrame(chip: Chip): { tx: number; ty: number } {
   return chip.team === "A" ? { tx: chip.x, ty: chip.y } : { tx: 100 - chip.x, ty: 100 - chip.y };
 }
 
+/*
+  Zones are ordered along the pitch, so they read as an ordinal ramp of the
+  side's own series colour (chart-1, the same blue it wears in h2h), mixed
+  toward ink: keeper nearest ink, attack at full strength. Never amber or
+  emerald — a position is neither a guess nor a measured stat. Chip text uses
+  --bg, which clears 5:1 on every step in both themes.
+*/
 const zoneColor: Record<Zone, string> = {
-  GK: "var(--chart-3)",
-  DF: "var(--chart-2)",
-  MF: "var(--chart-1)",
-  FW: "var(--chart-5)",
+  GK: "color-mix(in oklab, var(--chart-1) 25%, var(--ink))",
+  DF: "color-mix(in oklab, var(--chart-1) 50%, var(--ink))",
+  MF: "color-mix(in oklab, var(--chart-1) 75%, var(--ink))",
+  FW: "var(--chart-1)",
 };
 
 /* ---------- chip builders ---------- */
@@ -389,7 +396,7 @@ export default function TacticalBoard() {
               const { tx, ty } = teamFrame(c);
               const { role, zone } = roleAt(tx, ty);
               const fill = mode === "h2h" ? (c.team === "A" ? colorA : colorB) : zoneColor[zone];
-              const textColor = mode === "h2h" ? (isDarkHex(fill) ? "#f5f7fa" : "#10151e") : "#04110c";
+              const textColor = mode === "h2h" ? (isDarkHex(fill) ? "#f5f7fa" : "#10151e") : "var(--bg)";
               return (
                 <button
                   key={c.id}
@@ -437,9 +444,10 @@ export default function TacticalBoard() {
               </>
             ) : (
               <div className="space-y-3.5">
-                <Meter label="Defensive line height" value={mA.line} max={50} color="var(--chart-2)" />
+                {/* One side, one series: every meter wears that side's colour, as in h2h. */}
+                <Meter label="Defensive line height" value={mA.line} max={50} color="var(--chart-1)" />
                 <Meter label="Vertical compactness (lower = tighter)" value={mA.compact} color="var(--chart-1)" />
-                <Meter label="Width utilisation" value={mA.width} color="var(--chart-3)" />
+                <Meter label="Width utilisation" value={mA.width} color="var(--chart-1)" />
               </div>
             )}
           </Card>

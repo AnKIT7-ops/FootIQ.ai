@@ -120,7 +120,7 @@ function SimilarView({ all }: { all: Player[] }) {
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className={cn("tabular font-display text-xl font-black", sim >= 85 ? "text-accent-ink" : "text-ink")}>{sim}</p>
+                  <p className={cn("tabular font-display text-xl font-black", sim >= 85 ? "text-iq-ink" : "text-ink")}>{sim}</p>
                   <IQTag>likeness</IQTag>
                 </div>
               </button>
