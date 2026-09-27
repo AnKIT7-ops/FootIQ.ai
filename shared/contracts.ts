@@ -207,6 +207,12 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
   club: { aiRequestsPerDay: 2000, savedBoards: 500, savedComparisons: 1000, advancedPredictions: true },
 };
 
+/**
+ * AI generations per UTC day for anonymous (guest) sessions, whatever the
+ * plan. Guest identities cost nothing to mint, so each one must be worth little.
+ */
+export const GUEST_AI_REQUESTS_PER_DAY = 3;
+
 // ---------------------------------------------------------------------------
 // Feature flags
 // ---------------------------------------------------------------------------

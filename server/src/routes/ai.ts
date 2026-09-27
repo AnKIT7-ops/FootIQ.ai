@@ -1,12 +1,12 @@
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { z } from "zod";
 import type { AppEnv, Services } from "../types";
 import type { CatalogService } from "../services/catalog";
-import { prompts, promptVariants } from "../ai/prompts";
+import { prompts, promptVariants, type RenderedPrompt } from "../ai/prompts";
 import { ok } from "../lib/respond";
 import { validate } from "../middleware/validate";
 import { requireUser } from "../middleware/auth";
-import { consumeQuota } from "../middleware/entitlements";
+import { aiCharge } from "../middleware/entitlements";
 import { rateLimit, rateLimits } from "../middleware/rate-limit";
 import { ApiError } from "../lib/errors";
 import { cleanText } from "../lib/sanitize";
@@ -16,8 +16,10 @@ const id = z.string().min(1).max(64).regex(/^[\w.-]+$/);
 
 /**
  * AI generation surface. Every endpoint:
- *   flag check -> auth -> rate limit -> quota -> prompt registry -> AiService
- * Free-text user input is length-capped, sanitized, and only ever lands in
+ *   auth -> rate limit (user + IP) -> flag check -> prompt registry -> AiService
+ * AiService charges the user's daily quota and the global ceiling only on a
+ * cache miss. Endpoints the frontend doesn't call sit behind experimental_ai
+ * (default off) so they aren't free extra surface. Free-text user input is length-capped, sanitized, and only ever lands in
  * the prompt's user turn — never the system prompt.
  */
 export function aiRoutes(catalog: CatalogService) {
@@ -32,11 +34,12 @@ export function aiRoutes(catalog: CatalogService) {
       throw ApiError.unavailable("This AI feature is currently disabled.");
     }
   };
+  const generate = (c: Context<AppEnv>, rendered: RenderedPrompt) =>
+    c.get("services").ai.run(rendered, { charge: aiCharge(c) });
 
   r.post(
     "/scout/:id/report",
     validate("param", z.object({ id })),
-    consumeQuota("ai_requests"),
     async (c) => {
       const services = c.get("services");
       await gate(services, "ai_scout");
@@ -46,7 +49,7 @@ export function aiRoutes(catalog: CatalogService) {
       // variant versions are distinct so cached A/B results never mix.
       const inExperiment = await services.flags.isEnabled("prompt_experiments", c.get("user")?.id);
       const rendered = inExperiment ? promptVariants.scout_report(player, team) : prompts.scout_report(player, team);
-      const result = await services.ai.run(rendered);
+      const result = await generate(c, rendered);
       return ok(c, { ...result, promptVersion: rendered.version });
     },
   );
@@ -54,25 +57,23 @@ export function aiRoutes(catalog: CatalogService) {
   r.post(
     "/news/:id/summary",
     validate("param", z.object({ id })),
-    consumeQuota("ai_requests"),
     async (c) => {
-      await gate(c.get("services"), "ai_scout");
+      await gate(c.get("services"), "experimental_ai"); // not called by the frontend
       const article = catalog.article(c.req.valid("param").id);
-      return ok(c, await c.get("services").ai.run(prompts.news_summary(article)));
+      return ok(c, await generate(c, prompts.news_summary(article)));
     },
   );
 
   r.post(
     "/predictions/:id/explanation",
     validate("param", z.object({ id })),
-    consumeQuota("ai_requests"),
     async (c) => {
-      await gate(c.get("services"), "ai_scout");
+      await gate(c.get("services"), "experimental_ai"); // not called by the frontend
       const prediction = catalog.prediction(c.req.valid("param").id);
       const match = (await catalog.match(prediction.matchId)).data;
       const home = await teamOrNull(catalog, match.homeId);
       const away = await teamOrNull(catalog, match.awayId);
-      return ok(c, await c.get("services").ai.run(prompts.prediction_explanation(prediction, home, away)));
+      return ok(c, await generate(c, prompts.prediction_explanation(prediction, home, away)));
     },
   );
 
@@ -89,10 +90,9 @@ const SCOUT_FILTERS = z.object({
   r.post(
     "/scout/parse",
     validate("json", z.object({ query: z.string().min(3).max(300) })),
-    consumeQuota("ai_requests"),
     async (c) => {
       await gate(c.get("services"), "ai_scout");
-      const result = await c.get("services").ai.run(prompts.scout_query(cleanText(c.req.valid("json").query, 300)));
+      const result = await generate(c, prompts.scout_query(cleanText(c.req.valid("json").query, 300)));
       // Models wrap JSON in fences or prose now and then; take the first object.
       const raw = result.text.match(/\{[\s\S]*\}/)?.[0];
       let parsed: unknown = null;
@@ -123,7 +123,6 @@ const SCOUT_FILTERS = z.object({
   r.post(
     "/fixtures/:id/preview",
     validate("param", z.object({ id })),
-    consumeQuota("ai_requests"),
     async (c) => {
       await gate(c.get("services"), "ai_scout");
       const match = (await catalog.match(c.req.valid("param").id)).data;
@@ -135,7 +134,8 @@ const SCOUT_FILTERS = z.object({
       const f = forecastFixture(match, teams);
       return ok(
         c,
-        await c.get("services").ai.run(
+        await generate(
+          c,
           prompts.fixture_preview({
             matchId: match.id,
             competition: match.competition,
@@ -154,9 +154,8 @@ const SCOUT_FILTERS = z.object({
   r.post(
     "/fantasy/advice",
     validate("json", z.object({ question: z.string().min(3).max(500) })),
-    consumeQuota("ai_requests"),
     async (c) => {
-      await gate(c.get("services"), "ai_scout");
+      await gate(c.get("services"), "experimental_ai"); // not called by the frontend
       const question = cleanText(c.req.valid("json").question, 500);
       const [{ data: board }, { data: players }] = await Promise.all([catalog.fantasy(), catalog.players()]);
       const picks = players
@@ -164,7 +163,7 @@ const SCOUT_FILTERS = z.object({
         .sort((a, b) => b.fantasy.expectedPoints - a.fantasy.expectedPoints)
         .slice(0, 12)
         .map((p) => ({ name: p.name, position: p.role, teamId: p.teamId, ...p.fantasy }));
-      return ok(c, await c.get("services").ai.run(prompts.fantasy_advice({ gameweek: board.gameweek, picks, question })));
+      return ok(c, await generate(c, prompts.fantasy_advice({ gameweek: board.gameweek, picks, question })));
     },
   );
 
@@ -176,7 +175,6 @@ const SCOUT_FILTERS = z.object({
   r.post(
     "/ask",
     validate("json", z.object({ question: z.string().min(2).max(500) })),
-    consumeQuota("ai_requests"),
     async (c) => {
       await gate(c.get("services"), "ai_scout");
       const held = <T>(p: Promise<T>) => p.catch(() => null);
@@ -191,7 +189,8 @@ const SCOUT_FILTERS = z.object({
         });
       return ok(
         c,
-        await c.get("services").ai.run(
+        await generate(
+          c,
           prompts.concierge_answer({
             question: cleanText(c.req.valid("json").question, 500),
             teams: teamList,
@@ -213,14 +212,14 @@ const SCOUT_FILTERS = z.object({
         notes: z.string().max(1000).default(""),
       }),
     ),
-    consumeQuota("ai_requests"),
     async (c) => {
-      await gate(c.get("services"), "ai_scout");
+      await gate(c.get("services"), "experimental_ai"); // not called by the frontend
       const body = c.req.valid("json");
       const team = body.teamId ? await teamOrNull(catalog, body.teamId) : null;
       return ok(
         c,
-        await c.get("services").ai.run(
+        await generate(
+          c,
           prompts.tactical_feedback({
             formation: cleanText(body.formation, 20),
             teamName: team?.name ?? null,
@@ -235,11 +234,10 @@ const SCOUT_FILTERS = z.object({
   r.post(
     "/compare",
     validate("json", z.object({ playerIds: z.array(id).min(2).max(4) })),
-    consumeQuota("ai_requests"),
     async (c) => {
-      await gate(c.get("services"), "ai_scout");
+      await gate(c.get("services"), "experimental_ai"); // not called by the frontend
       const players = await Promise.all(c.req.valid("json").playerIds.map((pid) => catalog.player(pid)));
-      return ok(c, await c.get("services").ai.run(prompts.player_comparison(players)));
+      return ok(c, await generate(c, prompts.player_comparison(players)));
     },
   );
 

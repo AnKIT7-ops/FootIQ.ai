@@ -26,11 +26,13 @@ Apply: paste `supabase/migrations/0001_init.sql` into the Supabase SQL editor (o
 | user_settings | typed prefs + extras JSONB (≤16KB) | PK=user_id |
 | feature_flags | runtime flags (+rollout_pct 0-100) | PK=key; seeded with 8 flags |
 | usage_quotas | per-user per-day metering | PK(user,metric,day) |
+| global_quotas | app-wide per-day metering (AI generation ceiling), service role only | PK(metric,day) |
 | audit_logs | append-only security/admin trail | identity PK; idx (actor, created), (action, created) |
 
 ## Functions
 - `handle_new_user()` — trigger on auth.users insert → provisions profile row (security definer).
 - `increment_quota(user, metric, limit) → int` — atomic check-and-increment, returns -1 when over limit; EXECUTE revoked from client roles (server-only RPC).
+- `increment_global_quota(metric, limit) → int` — same contract on `global_quotas` (migration 0005); backs `AI_GLOBAL_DAILY_LIMIT`.
 - `set_updated_at()` — shared updated_at trigger.
 
 ## Post-migration checklist (Supabase dashboard)

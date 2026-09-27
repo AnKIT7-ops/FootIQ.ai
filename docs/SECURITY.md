@@ -20,8 +20,11 @@
 - [x] User free-text only ever enters AI prompts in the user turn, never the system prompt (prompt-injection containment).
 
 **Abuse & rate limiting**
-- [x] Layered fixed-window limits on the shared cache: global 300/min, writes 60/min, auth 10/min, AI 10/min, public forms 5/min — keyed by user id or salted-hash IP. 429 + Retry-After. Tested.
-- [x] Daily quotas per plan on AI (atomic Postgres RPC; fail closed on DB error).
+- [x] Layered fixed-window limits on the shared cache: global 300/min, writes 60/min, auth 10/min, AI 10/min, public forms 5/min — keyed by user id or salted-hash IP; the AI scope counts user id AND IP, so rotating (anonymous) identities share one budget. 429 + Retry-After. Tested.
+- [x] Client IP: `cf-connecting-ip` on Workers; socket peer on Node unless `TRUST_PROXY` (then the proxy-appended, rightmost X-Forwarded-For entry). Client-supplied headers are never trusted by default.
+- [x] Daily quotas per plan on AI (atomic Postgres RPC; fail closed on DB error); guest (anonymous) sessions get 3/day. Charged only on a real generation — cache hits are free.
+- [x] Global ceiling on real AI generations per day (`AI_GLOBAL_DAILY_LIMIT`, default 200, `increment_global_quota` RPC) so no volume of accounts can exhaust the shared provider key.
+- [ ] Turnstile/CAPTCHA on anonymous sign-in (Supabase dashboard + site key) — recommended next step.
 
 **Secrets & data hygiene**
 - [x] All secrets in env, validated at boot; frontend holds only public VITE_ values; service-role key server-only.
