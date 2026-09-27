@@ -39,7 +39,7 @@ export function TopBar({ onOpenSearch }: { onOpenSearch: () => void }) {
         </button>
 
         <div className="ml-auto flex shrink-0 items-center gap-1.5">
-          <DataFreshness className="mr-1 hidden md:inline-flex" />
+          <DataFreshness className="mr-1 max-md:hidden" />
           {bellReady ? (
             <Suspense
               fallback={

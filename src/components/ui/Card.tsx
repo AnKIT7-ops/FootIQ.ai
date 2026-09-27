@@ -66,12 +66,14 @@ export function SectionHeader({
 }) {
   const Heading = `h${level}` as const;
   return (
-    <div className={cn("mb-4 flex items-end justify-between gap-4", className)}>
+    <div className={cn("mb-4 flex flex-wrap items-end justify-between gap-4", className)}>
       <div>
         {eyebrow && <p className="eyebrow mb-1">{eyebrow}</p>}
         <Heading className="display text-xl font-bold text-ink md:text-2xl">{title}</Heading>
       </div>
-      {action && <div className="shrink-0">{action}</div>}
+      {/* min-w-0, not shrink-0: a wide action (Tabs) must scroll inside its own
+          box — a non-shrinking one widens the mobile layout viewport. */}
+      {action && <div className="min-w-0 max-w-full">{action}</div>}
     </div>
   );
 }
