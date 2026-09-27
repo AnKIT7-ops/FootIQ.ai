@@ -64,7 +64,7 @@ function SimilarView({ all }: { all: Player[] }) {
       <SectionHeader level={1} eyebrow="Statistical likeness" title="Similar Players" />
 
       <Card className="flex flex-wrap items-end gap-x-5 gap-y-4 p-4">
-        <label className="block">
+        <label className="block max-w-full">
           <span className="eyebrow mb-1.5 block">Base player</span>
           <select
             value={base.id}
@@ -72,7 +72,7 @@ function SimilarView({ all }: { all: Player[] }) {
               setBaseId(e.target.value);
               setSelectedId(null);
             }}
-            className="h-10 max-w-[18rem] rounded-xl border border-line bg-surface-2 px-3 text-ui font-medium text-ink outline-none focus:border-accent"
+            className="h-10 max-w-[min(18rem,100%)] rounded-xl border border-line bg-surface-2 px-3 text-ui font-medium text-ink outline-none focus:border-accent"
           >
             {pool.map((p) => (
               <option key={p.id} value={p.id}>
@@ -99,8 +99,8 @@ function SimilarView({ all }: { all: Player[] }) {
       )}
 
       {hasSample(base) && (
-        <div className="grid gap-6 lg:grid-cols-[1.05fr_1.5fr]">
-          <div className="space-y-2.5">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1.5fr)]">
+          <div className="min-w-0 space-y-2.5">
             {results.map(({ p, sim }) => (
               <button
                 key={p.id}
@@ -129,7 +129,7 @@ function SimilarView({ all }: { all: Player[] }) {
           </div>
 
           {selected && (
-            <div className="space-y-4">
+            <div className="min-w-0 space-y-4">
               <Card className="p-4 md:p-5">
                 <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
                   <SectionHeader title={`${base.name.split(" ").slice(-1)[0]} vs ${selected.p.name.split(" ").slice(-1)[0]}`} className="mb-0" />
