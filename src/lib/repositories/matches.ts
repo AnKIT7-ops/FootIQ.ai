@@ -19,6 +19,7 @@ import { matches as demoMatches, matchById as demoMatchById, matchDetail as demo
 import { getTeam } from "./teams";
 import type { Match, MatchDetail, MatchStatus } from "@/data/types";
 import { createRepoStore } from "./store";
+import { demoContentAllowed } from "@/lib/freshness";
 
 export type MatchesGrouped = Record<MatchStatus, Match[]>;
 
@@ -64,13 +65,13 @@ store.onChange((next) => {
  * /api/matches/:id can still replace this body without changing call sites.
  */
 export function matchDetail(id: string): MatchDetail {
-  if (demoMatchById.has(id)) return demoMatchDetail(id);
+  if (demoContentAllowed() && demoMatchById.has(id)) return demoMatchDetail(id);
   const synced = matchById.get(id);
   // Resolve against the TEAMS REPOSITORY, not the demo team map: a synced
   // fixture's clubs ("fd-78") exist only there. Passing the demo lookup threw
   // "Unknown team" and blanked the page.
   if (synced) return matchDetailFor(synced, getTeam);
-  return demoMatchDetail(id); // unknown id: keep the original throwing behavior (pages catch)
+  throw new Error(`Unknown match: ${id}`); // pages catch → "not found"
 }
 
 /**
@@ -84,7 +85,7 @@ export function matchDetail(id: string): MatchDetail {
  * so a genuinely unknown fixture can be skipped instead of crashing a page.
  */
 export function findMatch(id: string): Match | undefined {
-  return matchById.get(id) ?? demoMatchById.get(id);
+  return matchById.get(id) ?? (demoContentAllowed() ? demoMatchById.get(id) : undefined);
 }
 
 /**
@@ -92,8 +93,13 @@ export function findMatch(id: string): Match | undefined {
  * doesn't cover. For slug/id RESOLUTION only — never for listing. `matches`
  * stays synced-only on purpose, and folding demo fixtures into it would put the
  * permanently-live 67th-minute demo match back on every list in the app.
+ *
+ * Demo fixtures join only in demo mode. On live data a URL like
+ * /matches/manchester-city-vs-chelsea must be "not found", not a fictional
+ * kickoff tomorrow that the real schedule contradicts.
  */
 export function resolutionPool(): Match[] {
+  if (!demoContentAllowed()) return matches;
   return [...matches, ...demoMatches.filter((d) => !matchById.has(d.id))];
 }
 

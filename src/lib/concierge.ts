@@ -36,7 +36,7 @@ export function answer(raw: string): string {
         return `${h.short} vs ${a.short}: model says ${pred.homeWin}% home / ${pred.draw}% draw / ${pred.awayWin}% away, expected ${pred.expectedHome.toFixed(1)}–${pred.expectedAway.toFixed(1)}. Key factor: ${pred.reasoning[0]} These are probabilities, not promises — full breakdown → /predictions`;
       }
     }
-    return "I model every upcoming fixture with outcome probabilities and score distributions — open Predictions (→ /predictions) or name a fixture like 'predict City vs Chelsea'.";
+    return "I model every upcoming league fixture with outcome probabilities and score distributions — open Predictions → /predictions";
   }
 
   const team = teams.find((t) => q.includes(t.short.toLowerCase()) || q.includes(t.name.toLowerCase()));
@@ -53,7 +53,7 @@ export function answer(raw: string): string {
   if (q.includes("hello") || q.includes("hi") || q.length < 8) {
     return "I'm the FootIQ concierge — ask me about any Premier League player, team, prediction or fantasy call. My answers are generated from FootIQ's data (that's why I wear amber).";
   }
-  return "I can answer from FootIQ data: try a player ('Bukayo Saka'), a team ('Arsenal form'), a fixture ('predict City vs Chelsea') or fantasy ('who to captain?').";
+  return "I can answer from FootIQ data: try a player ('Bukayo Saka'), a team ('Arsenal form'), a scouting brief ('find a young playmaker') or fantasy ('who to captain?').";
 }
 
 function ordinal(n: number): string {

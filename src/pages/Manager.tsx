@@ -9,6 +9,7 @@ import { ShareBar } from "@/components/ui/ShareBar";
 import { playersOf, usePlayers } from "@/lib/repositories/players";
 import { managerPath, managerSlug, playerPath, resolveManager, teamPath } from "@/lib/slugs";
 import { personJsonLd, usePageMeta } from "@/lib/seo";
+import { useDataMode } from "@/lib/freshness";
 
 const DIALS: Array<{ key: "tempo" | "width" | "directness" | "pressIntensity"; label: string }> = [
   { key: "tempo", label: "Tempo" },
@@ -20,6 +21,7 @@ const DIALS: Array<{ key: "tempo" | "width" | "directness" | "pressIntensity"; l
 export default function Manager() {
   const { slug } = useParams();
   usePlayers(); // re-render when players arrive from the API
+  const mode = useDataMode();
   const team = resolveManager(slug);
 
   usePageMeta(
@@ -105,12 +107,15 @@ export default function Manager() {
           <IQInsight title="FootIQ tactical read" compact>
             {team.aiReport[0]}
           </IQInsight>
-          <Link
-            to={`/intelligence/manager-${managerSlug(team)}`}
-            className="mt-4 inline-flex items-center gap-1.5 font-mono text-label uppercase tracking-wider text-accent-ink transition-colors hover:text-ink"
-          >
-            <Sparkles className="size-3.5" aria-hidden /> Full tactical DNA report <ArrowRight className="size-3.5" aria-hidden />
-          </Link>
+          {/* The report lives in the demo-only Intelligence library. */}
+          {mode === "demo" && (
+            <Link
+              to={`/intelligence/manager-${managerSlug(team)}`}
+              className="mt-4 inline-flex items-center gap-1.5 font-mono text-label uppercase tracking-wider text-accent-ink transition-colors hover:text-ink"
+            >
+              <Sparkles className="size-3.5" aria-hidden /> Full tactical DNA report <ArrowRight className="size-3.5" aria-hidden />
+            </Link>
+          )}
         </Card>
       </div>
 
