@@ -14,6 +14,10 @@ import { GeminiProvider } from "./providers/gemini";
 import { OllamaProvider } from "./providers/ollama";
 import { MockAiProvider } from "./providers/mock";
 
+/** Shown when the day's AI budget is gone — the provider's, or our own global ceiling. */
+const ALLOWANCE_USED_UP =
+  "FootIQ's daily AI allowance is used up. Everything else on the page is unaffected — AI answers return tomorrow.";
+
 /**
  * AiService = provider selection + response caching + failure mapping.
  * Callers hand it a RenderedPrompt from the registry; they never talk to a
@@ -31,13 +35,22 @@ export class AiService {
      * Gemini quota ran out (429s for all users). Null in tests / no-DB dev.
      */
     private db: SupabaseClient | null = null,
+    /** Real generations per UTC day across all users (AI_GLOBAL_DAILY_LIMIT). Unset = unlimited (tests, evals). */
+    private globalDailyLimit = Number.POSITIVE_INFINITY,
   ) {}
 
   get providerName(): string {
     return this.provider.name;
   }
 
-  async run(rendered: RenderedPrompt, opts?: { bypassCache?: boolean }): Promise<AiResult> {
+  /**
+   * `charge` is the caller's per-user metering. It runs only on a cache miss,
+   * right before the upstream call, so cached answers cost nobody anything.
+   */
+  async run(
+    rendered: RenderedPrompt,
+    opts?: { bypassCache?: boolean; charge?: () => Promise<void> },
+  ): Promise<AiResult> {
     const key = cacheKeys.ai(
       rendered.task,
       `${rendered.version}:${this.provider.name}:${await sha1(rendered.cacheSeed)}`,
@@ -46,6 +59,14 @@ export class AiService {
     if (!opts?.bypassCache) {
       const cached = (await this.cache.get<AiResult>(key)) ?? (await this.readDb(key));
       if (cached) return { ...cached, cached: true };
+    }
+
+    // User first: someone over their own allowance must not spend the global one.
+    // ponytail: a failed upstream call still spends both units — no refund RPC.
+    await opts?.charge?.();
+    if (!(await this.withinGlobalCeiling())) {
+      this.logger.warn("ai.global_ceiling", { task: rendered.task, limit: this.globalDailyLimit });
+      throw new ApiError("rate_limited", ALLOWANCE_USED_UP);
     }
 
     const started = Date.now();
@@ -86,11 +107,7 @@ export class AiService {
         // free quotas are per model and reset at midnight US Pacific; reaching
         // here means every model in AI_MODEL's fallback list is spent.)
         if (/\b429\b/.test(err.message)) {
-          throw new ApiError(
-            "rate_limited",
-            "FootIQ's daily AI allowance is used up. Everything else on the page is unaffected — AI answers return tomorrow.",
-            { internal: err },
-          );
+          throw new ApiError("rate_limited", ALLOWANCE_USED_UP, { internal: err });
         }
         throw new ApiError("upstream_error", "The AI engine is unavailable right now. Try again shortly.", {
           internal: err,
@@ -99,6 +116,26 @@ export class AiService {
       throw err;
     }
   }
+  /**
+   * Spend one unit of the global daily ceiling. Postgres counter when a DB is
+   * configured (true across isolates); cache counter otherwise, and also on a
+   * DB error, so a missing migration degrades to per-isolate limits, not AI-off.
+   */
+  private async withinGlobalCeiling(): Promise<boolean> {
+    if (!Number.isFinite(this.globalDailyLimit)) return true;
+    if (this.db) {
+      const { data, error } = await this.db.rpc("increment_global_quota", {
+        p_metric: "ai_generations",
+        p_limit: this.globalDailyLimit,
+      });
+      if (!error) return typeof data === "number" && data !== -1;
+      this.logger.warn("ai.global_quota_failed", { message: error.message });
+    }
+    const day = new Date().toISOString().slice(0, 10);
+    const used = await this.cache.increment(cacheKeys.quota("global", "ai_generations", day), 60 * 60 * 26);
+    return used <= this.globalDailyLimit;
+  }
+
   /** Best-effort persistent tier: a DB blip degrades to "generate again", never to an error. */
   private async readDb(key: string): Promise<AiResult | null> {
     if (!this.db) return null;

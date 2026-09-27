@@ -85,7 +85,8 @@ request → requestId + child logger → secure headers → CORS allowlist
         → 256KB body cap → access log → optionalAuth (JWT verify, never rejects)
         → global rate limit (300/min) → route
 route   → scope rate limit → requireUser/requireRole → validate (zod, 422)
-        → requirePlan/consumeQuota → service → ok()/ApiError
+        → requirePlan → service → ok()/ApiError
+        (AI: AiService charges the user's quota + global ceiling on cache miss only)
 error   → onError: ApiError => safe envelope; unknown => captured + opaque 500
 ```
 
