@@ -29,6 +29,14 @@ Write in a sharp, factual scouting-desk tone. British football vocabulary.
 Ground every claim in the data provided; if the data doesn't support a claim, don't make it.
 No preamble, no meta commentary about being an AI. Markdown allowed: short paragraphs and "-" bullets only.`;
 
+/** Premier League top 10 by goals or assists (FPL season stats), zero-counts left out. */
+const leaders = (players: Player[], stat: "goals" | "assists", teamName: Map<string, string>) =>
+  players
+    .filter((p) => p.stats[stat] > 0)
+    .sort((a, b) => b.stats[stat] - a.stats[stat] || a.stats.minutes - b.stats.minutes)
+    .slice(0, 10)
+    .map((p) => ({ name: p.name, team: teamName.get(p.teamId) ?? p.teamId, [stat]: p.stats[stat], minutes: p.stats.minutes }));
+
 /** The real facts we hold on a player (FPL): nothing the model could mistake for a scouting grade. */
 const playerFacts = (p: Player, teamName?: string) => ({
   name: p.name,
@@ -292,18 +300,22 @@ Structure: verdict up front (who and in which context), then per-dimension compa
         .sort((a, b) => b.fantasy.expectedPoints - a.fantasy.expectedPoints)
         .slice(0, 8)
         .map((p) => ({ name: p.name, team: teamName.get(p.teamId) ?? p.teamId, expectedPoints: p.fantasy.expectedPoints, selectedByPercent: p.fantasy.selectedBy })),
+      // "Who's the top scorer?" is a question about the whole squad list, which
+      // never reaches the model — so rank it here. Ties go to fewer minutes.
+      topScorers: leaders(ctx.players, "goals", teamName),
+      topAssisters: leaders(ctx.players, "assists", teamName),
       playersNamedInQuestion: named.map((p) => playerFacts(p, teamName.get(p.teamId))),
     };
     return {
       task: "concierge_answer",
-      version: 1,
+      version: 2,
       system: BASE_SYSTEM,
       maxTokens: 700,
       // The same question tomorrow sits on a new table and new fixtures.
       cacheSeed: JSON.stringify([q.trim().slice(0, 200), new Date().toISOString().slice(0, 10)]),
       prompt: `Answer a fan's question as FootIQ's assistant.
 
-FOOTIQ DATA (JSON — league tables, the next fixtures with FootIQ's Poisson forecast, FPL's own points projections, and any Premier League players named in the question; the ONLY information you have):
+FOOTIQ DATA (JSON — league tables, the next fixtures with FootIQ's Poisson forecast, FPL's own points projections, the Premier League's top scorers and assisters this season, and any Premier League players named in the question; the ONLY information you have):
 ${JSON.stringify(facts)}
 
 FAN'S QUESTION: ${ctx.question}
@@ -330,7 +342,7 @@ export const promptCatalog = [
   { task: "player_comparison", version: 2, hasVariant: false, description: "Head-to-head comparison on real season stats" },
   { task: "scout_query", version: 3, hasVariant: false, description: "Plain-English scouting request to structured filters (JSON)" },
   { task: "fixture_preview", version: 2, hasVariant: false, description: "Real-fixture preview grounded in the table and the Poisson forecast" },
-  { task: "concierge_answer", version: 1, hasVariant: false, description: "Chat answer grounded in tables, next fixtures, FPL projections and named players" },
+  { task: "concierge_answer", version: 2, hasVariant: false, description: "Chat answer grounded in tables, next fixtures, FPL projections, scoring leaders and named players" },
 ] as const;
 
 /**
