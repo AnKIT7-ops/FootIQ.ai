@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { motion } from "motion/react";
 import { ArrowLeftRight, CircleAlert, Goal, RectangleVertical, Repeat, Sparkles, Timer } from "lucide-react";
 import { Card, SectionHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -134,7 +133,7 @@ function MatchBody({ detail }: { detail: MatchDetail }) {
   return (
     <div className="space-y-6">
       {/* header */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="floodlight card relative overflow-hidden p-5 md:p-7">
+      <div className="floodlight card relative overflow-hidden p-5 md:p-7">
         {/* The score is rendered as a figure, not a heading — screen readers get the fixture as the page's h1. */}
         <h1 className="sr-only">
           {detail.homeScore != null && detail.awayScore != null
@@ -183,7 +182,7 @@ function MatchBody({ detail }: { detail: MatchDetail }) {
             </Link>
           )}
         </div>
-      </motion.div>
+      </div>
 
       {/* Momentum, stats, lineups and the event feed all describe play that
           happened. Before kickoff there is none, so those tabs are withheld

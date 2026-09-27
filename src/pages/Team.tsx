@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { motion } from "motion/react";
 import { Activity, BriefcaseMedical, Loader2 } from "lucide-react";
 import type { SquadMember, Team } from "@/data/types";
 import type { RepoStatus } from "@/lib/repositories/store";
@@ -100,9 +99,7 @@ function TeamView({ team }: { team: Team }) {
 
   return (
     <div className="space-y-6">
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
+      <div
         className="card relative overflow-hidden p-5 md:p-7"
         style={{
           background: `radial-gradient(900px 380px at 12% -20%, ${team.colors[0]}2e, transparent 60%), var(--surface)`,
@@ -141,7 +138,7 @@ function TeamView({ team }: { team: Team }) {
             stat={`${team.position}ᵗʰ · ${team.points} pts · ${team.form}`}
           />
         </div>
-      </motion.div>
+      </div>
 
       <Tabs
         id="team"

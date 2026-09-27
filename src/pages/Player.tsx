@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { motion } from "motion/react";
 import { BriefcaseMedical } from "lucide-react";
 import { Card, SectionHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -70,7 +69,7 @@ function PlayerView({ player, all }: { player: Player; all: Player[] }) {
 
   return (
     <div className="space-y-6">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="floodlight card relative overflow-hidden p-5 md:p-7">
+      <div className="floodlight card relative overflow-hidden p-5 md:p-7">
         <div className="flex flex-wrap items-start gap-5">
           <Avatar name={player.name} photoUrl={player.photoUrl} size={84} ringColor={team.colors[0]} />
           <div className="min-w-0 flex-1">
@@ -119,7 +118,7 @@ function PlayerView({ player, all }: { player: Player; all: Player[] }) {
           <StatTile label="Clean sheets" value={s.cleanSheets} />
         </div>
         <p className="mt-3 font-mono text-micro uppercase tracking-wider text-ink-3">Premier League season to date · source: official FPL data</p>
-      </motion.div>
+      </div>
 
       <Tabs
         id="player"

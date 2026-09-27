@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AnimatePresence, motion } from "motion/react";
 import { Clock3, CornerDownLeft, Flame, Mic, MicOff, Search, Sparkles, UserRound, UsersRound, Shield, FileText, Compass } from "lucide-react";
 import { recentSearches, recordSearch, runSearch, trendingSearches, type SearchItem } from "@/lib/search";
 import { useVoiceInput } from "@/lib/hooks";
@@ -98,23 +97,13 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
     }
   };
 
+  // keyboard-summoned and used constantly: appears and leaves instantly, no animation
   return (
-    <AnimatePresence>
+    <>
       {open && (
         <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/55"
-            onClick={onClose}
-            aria-hidden
-          />
-          <motion.div
-            initial={{ opacity: 0, y: 14, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.98 }}
-            transition={{ duration: 0.18 }}
+          <div className="fixed inset-0 z-50 bg-black/55" onClick={onClose} aria-hidden />
+          <div
             className="fixed inset-x-3 top-[12vh] z-50 mx-auto max-w-xl"
             role="dialog"
             aria-modal="true"
@@ -232,9 +221,9 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
                 </ul>
               )}
             </div>
-          </motion.div>
+          </div>
         </>
       )}
-    </AnimatePresence>
+    </>
   );
 }

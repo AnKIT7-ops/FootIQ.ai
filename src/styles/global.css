@@ -266,13 +266,16 @@
     radial-gradient(900px 420px at 85% -18%, rgba(56, 189, 248, 0.07), transparent 55%);
 }
 
+/* ring = the dot's ::after scaled out to +7px (6px dot → 20px, ×3.33); compositor-only */
 @keyframes pulse-live {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.45);
+    transform: scale(1);
+    opacity: 0.45;
   }
   55% {
-    box-shadow: 0 0 0 7px rgba(52, 211, 153, 0);
+    transform: scale(3.33);
+    opacity: 0;
   }
 }
 
@@ -303,6 +306,16 @@
 }
 
 .animate-pulse-live {
+  position: relative;
+}
+.animate-pulse-live::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: inherit; /* the dot's own color, so the ring is invisible where it overlaps the dot */
+  opacity: 0; /* resting state (and reduced motion): no ring */
+  pointer-events: none;
   animation: pulse-live 2.2s ease-in-out infinite;
 }
 

@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { motion } from "motion/react";
+import { SPRING } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 /** Animated segmented control with roving-tabindex arrow-key navigation. */
@@ -58,7 +59,7 @@ export function Tabs({
               <motion.span
                 layoutId={`${id}-pill`}
                 className="absolute inset-0 rounded-full bg-surface-3"
-                transition={{ type: "spring", stiffness: 500, damping: 38 }}
+                transition={SPRING}
               />
             )}
             <span className="relative z-10">{t.label}</span>
