@@ -2,7 +2,7 @@ import { players } from "@/lib/repositories/players";
 import { teams, teamById } from "@/lib/repositories/teams";
 import type { Player } from "@/data/types";
 import { contentLibrary, contentKindLabels } from "@/lib/repositories/content";
-import { legalEntries, pageEntries } from "@/lib/nav";
+import { legalEntries, pageEntries, type NavEntry } from "@/lib/nav";
 import { managerPathFor, playerPathFor, teamPathFor } from "@/lib/slug-builders";
 import { bump, top } from "@/lib/metrics";
 import { track } from "@/lib/analytics";
@@ -35,6 +35,15 @@ function currentPlayerItems(): SearchItem[] {
   return playerItems;
 }
 
+const pageItem = (p: NavEntry): SearchItem => ({
+  id: `page-${p.to}`,
+  kind: "page",
+  label: p.label,
+  sub: p.sub,
+  to: p.to,
+  keywords: `${p.label} ${p.keywords}`.toLowerCase(),
+});
+
 export const searchIndex: SearchItem[] = [
   ...teams.map((t) => ({
     id: `team-${t.id}`,
@@ -52,25 +61,31 @@ export const searchIndex: SearchItem[] = [
     to: managerPathFor(t),
     keywords: `${t.manager} manager coach ${t.name} tactics`.toLowerCase(),
   })),
-  ...[...pageEntries, ...legalEntries].map((p) => ({
-    id: `page-${p.to}`,
-    kind: "page" as const,
-    label: p.label,
-    sub: p.sub,
-    to: p.to,
-    keywords: `${p.label} ${p.keywords}`.toLowerCase(),
-  })),
+  ...[...pageEntries, ...legalEntries].filter((p) => p.to !== "/intelligence").map(pageItem),
   // Demo news articles are retired (invented quotes about real people); real
   // headlines live on /news and link out, so they aren't indexed here.
-  ...contentLibrary().map((a) => ({
-    id: `intel-${a.slug}`,
-    kind: "intel" as const,
-    label: a.title.length > 64 ? a.title.slice(0, 61) + "…" : a.title,
-    sub: `Intelligence · ${contentKindLabels[a.kind]}`,
-    to: `/intelligence/${a.slug}`,
-    keywords: `${a.title} ${a.tags.join(" ")} ${a.kind}`.toLowerCase(),
-  })),
 ];
+
+/**
+ * Intelligence reports exist in demo mode only (see repositories/content.ts),
+ * and the mode is settled after this module loads — so they're gated per
+ * query, along with the /intelligence page entry, instead of baked in above.
+ */
+function currentIntelItems(): SearchItem[] {
+  const library = contentLibrary();
+  if (!library.length) return [];
+  return [
+    ...pageEntries.filter((p) => p.to === "/intelligence").map(pageItem),
+    ...library.map((a) => ({
+      id: `intel-${a.slug}`,
+      kind: "intel" as const,
+      label: a.title.length > 64 ? a.title.slice(0, 61) + "…" : a.title,
+      sub: `Intelligence · ${contentKindLabels[a.kind]}`,
+      to: `/intelligence/${a.slug}`,
+      keywords: `${a.title} ${a.tags.join(" ")} ${a.kind}`.toLowerCase(),
+    })),
+  ];
+}
 
 // ---- typo tolerance ---------------------------------------------------------
 
@@ -108,7 +123,7 @@ export function runSearch(query: string, limit = 9): SearchItem[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
   const words = q.split(/\s+/);
-  return [...currentPlayerItems(), ...searchIndex]
+  return [...currentPlayerItems(), ...searchIndex, ...currentIntelItems()]
     .map((item) => {
       let score = 0;
       const label = item.label.toLowerCase();

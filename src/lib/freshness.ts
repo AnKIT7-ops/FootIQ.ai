@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import type { ApiMeta } from "@shared/contracts";
+import { backendConfigured } from "@/lib/config";
 
 /**
  * Data-provenance signal — the API client reports every response's `meta` here
@@ -69,6 +70,26 @@ export function useFreshness(): Freshness {
     () => state,
     () => state,
   );
+}
+
+/**
+ * The one answer to "live or demo?" — the top-bar chip, the sidebar label and
+ * every demo-content gate read this rather than guessing on their own.
+ *
+ * No backend at all is demo. A backend that hasn't answered yet is "unknown",
+ * and demo content stays hidden until it says "demo": in production that
+ * answer is "provider", and a demo fixture flashing up first is exactly the
+ * contradiction this exists to prevent.
+ */
+export function dataMode(f: Freshness = state): Freshness["source"] {
+  return f.source === "unknown" && !backendConfigured ? "demo" : f.source;
+}
+
+/** Demo-only content (bundled fixtures, the generated Intelligence library) may render. */
+export const demoContentAllowed = (): boolean => dataMode() === "demo";
+
+export function useDataMode(): Freshness["source"] {
+  return dataMode(useFreshness());
 }
 
 /**

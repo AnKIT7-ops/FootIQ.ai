@@ -24,6 +24,7 @@ All optional — validated by zod at boot (`server/src/config/env.ts`); a malfor
 | AI_PROVIDER | mock | claude · openai · gemini · ollama · mock |
 | AI_MODEL | claude-opus-4-8 | model id passed to the provider |
 | AI_MAX_TOKENS | 2048 | per-completion cap (prompts define their own lower caps) |
+| AI_GLOBAL_DAILY_LIMIT | 200 | real (uncached) AI generations per UTC day across all users; over it ⇒ the "daily AI allowance is used up" error. DB-backed (migration 0005) when Supabase is configured |
 | ANTHROPIC_API_KEY / OPENAI_API_KEY / GEMINI_API_KEY / OLLAMA_BASE_URL | — | credentials per provider; missing key ⇒ mock fallback + warning log |
 | UPSTASH_REDIS_REST_URL + _TOKEN | — | shared cache/rate-limit backend; unset ⇒ in-memory (remote backends get a 30s memory front) |
 | DATA_PROVIDER | demo | football-data · api-football · demo — live football data source |
@@ -32,6 +33,7 @@ All optional — validated by zod at boot (`server/src/config/env.ts`); a malfor
 | SYNC_ENABLED / SYNC_INTERVAL_MINUTES | false / 30 | Node-runtime sync loop (Workers use the wrangler cron instead) |
 | IP_HASH_SALT | dev value | REQUIRED to change in prod — salts IP hashes in logs/audit |
 | RATE_LIMIT_DISABLED | false | tests only |
+| TRUST_PROXY | false | Node behind a reverse proxy: client IP = rightmost X-Forwarded-For entry. Unset = socket peer. Ignored on Workers (cf-connecting-ip) |
 | RATE_LIMIT_API/_WRITES/_AUTH/_AI/_FORMS | presets | per-scope requests/minute overrides |
 | SENTRY_DSN | — | reserved hook for the error-reporter adapter |
 | FLAG_* | — | e.g. `FLAG_AI_SCOUT=false` — ops kill-switch, beats DB and defaults |

@@ -11,11 +11,13 @@ const BASE = (process.env.VERIFY_BASE ?? "http://localhost:5173").replace(/\/$/,
 const routes = [
   ["home", "/"],
   ["matches", "/matches"],
+  ["schedule", "/schedule"],
   ["match", "/match/ars-liv"],
   ["news", "/news"],
   ["player-slug", "/players/bukayo-saka"],
   ["player-legacy-id", "/player/fpl-223340"],
   ["similar", "/similar/fpl-223340"],
+  ["similar-index", "/similar"],
   ["compare", "/compare"],
   ["team", "/team/ars"],
   ["team-slug", "/teams/arsenal"],
@@ -81,22 +83,52 @@ for (const [name, route] of routes) {
   }
 }
 
-// mobile pass on key pages
-await page.setViewport({ width: 390, height: 844 });
-for (const [name, route] of [
-  ["home-mobile", "/"],
-  ["match-mobile", "/match/ars-liv"],
-  ["tactics-mobile", "/tactics"],
-  ["compare-mobile", "/compare"],
-  ["contact-mobile", "/contact"],
-]) {
+// Mobile pass: a real touch-phone emulation, every route. body{overflow-x:hidden}
+// hides overflow from scrollWidth, but a phone still grows its layout viewport to
+// fit the widest box — every fixed layer (bottom nav) then lays out off-screen.
+// So check innerWidth and element right edges instead, and fail the run.
+const MOBILE = { width: 375, height: 812 };
+await page.setViewport({ ...MOBILE, isMobile: true, hasTouch: true });
+let mobileFailures = 0;
+for (const [name, route] of routes) {
   problems.length = 0;
-  await page.goto(`${BASE}${route}`, { waitUntil: "networkidle0", timeout: 30000 });
-  await new Promise((r) => setTimeout(r, 900));
-  await page.screenshot({ path: path.join(OUT, `${name}.png`) });
-  const horiz = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-  console.log(`${name}: OK${horiz > 2 ? ` !! horizontal overflow ${horiz}px` : ""}${problems.length ? "\n  " + problems.join("\n  ") : ""}`);
+  try {
+    await page.goto(`${BASE}${route}`, { waitUntil: "networkidle0", timeout: 30000 });
+    await new Promise((r) => setTimeout(r, 900));
+    await page.screenshot({ path: path.join(OUT, `${name}-mobile.png`) });
+    const { innerWidth, offenders } = await page.evaluate((vw) => {
+      // An element inside a horizontal scroller (or clipper) can't widen the page.
+      const contained = (el) => {
+        for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+          if (getComputedStyle(p).overflowX !== "visible") return true;
+        }
+        return false;
+      };
+      const offenders = [];
+      for (const el of document.body.querySelectorAll("*")) {
+        const r = el.getBoundingClientRect();
+        if (r.width === 0 || r.right <= vw + 1 || contained(el)) continue;
+        if (offenders.some((o) => o.el.contains(el))) continue; // report the outermost box only
+        const cls = typeof el.className === "string" ? el.className.trim().split(/\s+/).slice(0, 4).join(".") : "";
+        offenders.push({ el, desc: `${el.tagName.toLowerCase()}${cls ? "." + cls : ""} (right ${Math.round(r.right)}px)` });
+      }
+      return { innerWidth: window.innerWidth, offenders: offenders.slice(0, 3).map((o) => o.desc) };
+    }, MOBILE.width);
+    const bad = innerWidth > MOBILE.width || offenders.length > 0;
+    if (bad) mobileFailures++;
+    const detail = bad
+      ? ` !! layout viewport ${innerWidth}px on a ${MOBILE.width}px phone${offenders.length ? `; past the edge: ${offenders.join(", ")}` : ""}`
+      : "";
+    console.log(`${name}-mobile: ${bad ? "FAIL" : "OK"}${detail}${problems.length ? "\n  " + problems.join("\n  ") : ""}`);
+  } catch (e) {
+    mobileFailures++;
+    console.log(`${name}-mobile: FAILED — ${String(e).slice(0, 200)}`);
+  }
 }
 
 await browser.close();
+if (mobileFailures) {
+  console.log(`MOBILE OVERFLOW on ${mobileFailures} route(s)`);
+  process.exitCode = 1;
+}
 console.log("DONE");

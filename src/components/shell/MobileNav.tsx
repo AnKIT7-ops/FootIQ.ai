@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { pageEntries, legalEntries } from "@/lib/nav";
+import { useDataMode } from "@/lib/freshness";
 
 const primary = [
   { to: "/", label: "Home", icon: LayoutDashboard },
@@ -14,6 +15,7 @@ const primary = [
 
 export function MobileNav() {
   const [moreOpen, setMoreOpen] = useState(false);
+  const mode = useDataMode();
   const moreButtonRef = useRef<HTMLButtonElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
 
@@ -96,7 +98,8 @@ export function MobileNav() {
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                {pageEntries.map((p) => (
+                {/* The Intelligence library is demo-only — see repositories/content.ts. */}
+                {pageEntries.filter((p) => p.to !== "/intelligence" || mode === "demo").map((p) => (
                   <Link
                     key={p.to}
                     to={p.to}

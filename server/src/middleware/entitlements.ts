@@ -1,7 +1,7 @@
-import type { MiddlewareHandler } from "hono";
+import type { Context, MiddlewareHandler } from "hono";
 import type { AppEnv } from "../types";
 import { ApiError } from "../lib/errors";
-import { PLAN_LIMITS, type Plan } from "../../../shared/contracts";
+import { GUEST_AI_REQUESTS_PER_DAY, PLAN_LIMITS, type Plan, type SessionUser } from "../../../shared/contracts";
 
 const PLAN_ORDER: Record<Plan, number> = { free: 0, pro: 1, club: 2 };
 
@@ -22,30 +22,21 @@ export function requirePlan(min: Plan): MiddlewareHandler<AppEnv> {
 }
 
 /**
- * Consume one unit of a metered quota (per user, per UTC day) before the
- * handler runs. Backed by Postgres when available (atomic RPC), cache-counter
- * otherwise. Throws quota_exceeded when spent.
+ * Per-user daily AI allowance, as a charge for `ai.run(prompt, { charge })`.
+ * AiService calls it only on a cache miss, so cached answers are free. Backed
+ * by Postgres when available (atomic RPC), cache-counter otherwise. Throws
+ * quota_exceeded when spent.
  */
-export function consumeQuota(metric: "ai_requests" | "searches" | "exports"): MiddlewareHandler<AppEnv> {
-  return async (c, next) => {
+export function aiCharge(c: Context<AppEnv>): () => Promise<void> {
+  return async () => {
     const user = c.get("user");
     if (!user) throw ApiError.unauthorized();
-    const { quota } = c.get("services");
-    const limit = quotaLimitFor(metric, user.plan);
-    const allowed = await quota.consume(user.id, metric, limit);
+    const allowed = await c.get("services").quota.consume(user.id, "ai_requests", aiRequestsPerDay(user));
     if (!allowed) throw ApiError.quota();
-    await next();
   };
 }
 
-function quotaLimitFor(metric: "ai_requests" | "searches" | "exports", plan: Plan): number {
-  const limits = PLAN_LIMITS[plan];
-  switch (metric) {
-    case "ai_requests":
-      return limits.aiRequestsPerDay;
-    case "searches":
-      return 500; // generous; exists to stop scripted abuse, not users
-    case "exports":
-      return 20;
-  }
+function aiRequestsPerDay(user: SessionUser): number {
+  const limit = PLAN_LIMITS[user.plan].aiRequestsPerDay;
+  return user.isAnonymous ? Math.min(limit, GUEST_AI_REQUESTS_PER_DAY) : limit;
 }

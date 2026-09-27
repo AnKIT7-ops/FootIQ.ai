@@ -37,6 +37,14 @@ export const envSchema = z.object({
   OPENAI_API_KEY: z.string().optional(),
   GEMINI_API_KEY: z.string().optional(),
   OLLAMA_BASE_URL: z.string().url().optional(),
+  /**
+   * Ceiling on REAL upstream generations per UTC day, across every user
+   * (cache hits are free). One shared free Gemini key serves everyone, so this
+   * is what stops a script from switching AI off for all readers. 200 sits well
+   * under the Flash-Lite models' free daily quotas even though a 429 fallback
+   * can spend 2-4 upstream calls on one generation.
+   */
+  AI_GLOBAL_DAILY_LIMIT: z.coerce.number().int().min(0).default(200),
 
   // --- Cache
   /** Upstash Redis REST endpoint (free tier) — fetch-based, Workers-safe. */
@@ -82,6 +90,13 @@ export const envSchema = z.object({
   /** Salt for hashing IPs in logs/audit — never store raw IPs. */
   IP_HASH_SALT: z.string().default("footiq-dev-salt-change-in-prod"),
   RATE_LIMIT_DISABLED: boolFromString,
+  /**
+   * Node runtime behind a reverse proxy (Railway, Render): take the client IP
+   * from the proxy-appended (rightmost) X-Forwarded-For entry. Unset = the
+   * socket peer; the header is client-controlled without a proxy rewriting it.
+   * Workers ignore this and use cf-connecting-ip.
+   */
+  TRUST_PROXY: boolFromString,
   // Per-scope overrides (requests/minute); unset = built-in defaults.
   RATE_LIMIT_API: z.coerce.number().int().min(1).optional(),
   RATE_LIMIT_WRITES: z.coerce.number().int().min(1).optional(),

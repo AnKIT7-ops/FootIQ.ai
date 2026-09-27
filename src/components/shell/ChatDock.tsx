@@ -29,13 +29,14 @@ async function loadAnswerEngine(): Promise<AnswerFn> {
   return answerFn;
 }
 
-const starters = ["How good is Yamal?", "Predict City vs Chelsea", "Who should I captain?", "Arsenal form"];
+// Each starter must answer from live data — no named fixture, which may not exist on the real schedule.
+const starters = ["How good is Yamal?", "Find a young playmaker", "Who should I captain?", "Arsenal form"];
 
 export function ChatDock() {
   const { authEnabled, user } = useAuth();
   const [open, setOpen] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([
-    { from: "iq", text: "Evening. Matchday is live — ask me about any player, fixture, transfer or fantasy call." },
+    { from: "iq", text: "Ask me about any player, team, fixture, transfer or fantasy call." },
   ]);
   const [draft, setDraft] = useState("");
   const [thinking, setThinking] = useState(false);

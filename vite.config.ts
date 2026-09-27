@@ -1,5 +1,5 @@
 /// <reference types="vitest" />
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig, loadEnv, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "node:path";
@@ -23,11 +23,13 @@ function sitemapPlugin(): Plugin {
           import("./src/lib/nav"),
         ]);
 
-      const site = (process.env.VITE_SITE_URL ?? "https://footiq.ai").replace(/\/$/, "");
+      const site = process.env.VITE_SITE_URL as string; // validated + normalised in defineConfig
       const noIndex = new Set(["/profile", "/insights"]);
       const paths = [
-        ...[...nav.pageEntries, ...nav.legalEntries].map((e) => e.to),
-        "/intelligence",
+        // Not listed: /intelligence and its articles. The library is generated from
+        // demo data and gated off on live data (src/lib/repositories/content.ts);
+        // this build is the live deploy.
+        ...[...nav.pageEntries, ...nav.legalEntries].map((e) => e.to).filter((p) => p !== "/intelligence"),
         // Not listed: players. They sync from FPL at runtime, so the build can't
         // see them; a sitemap route on the API is the upgrade path.
         ...teams.map(slugs.teamPathFor),
@@ -37,7 +39,6 @@ function sitemapPlugin(): Plugin {
         // engines must not index them as fact. Real fixtures change daily and are
         // reached through /matches and /predictions.
         ...historicalMoments.map(slugs.momentPathFor),
-        ...content.contentLibrary().map((a) => `/intelligence/${a.slug}`),
       ].filter((p) => !noIndex.has(p));
 
       const lastmod = content.weekStamp();
@@ -51,31 +52,59 @@ function sitemapPlugin(): Plugin {
 
       this.emitFile({ type: "asset", fileName: "sitemap.xml", source: xml });
       console.log(`\n[sitemap] ${new Set(paths).size} URLs → dist/sitemap.xml`);
+
+      this.emitFile({
+        type: "asset",
+        fileName: "robots.txt",
+        source: `User-agent: *\nAllow: /\nDisallow: /profile\nDisallow: /insights\n\nSitemap: ${site}/sitemap.xml\n`,
+      });
     },
   };
 }
 
-export default defineConfig({
-  plugins: [react(), tailwindcss(), sitemapPlugin()],
-  resolve: {
-    alias: {
-      "@": path.resolve(import.meta.dirname, "src"),
-      "@shared": path.resolve(import.meta.dirname, "shared"),
+export default defineConfig(({ command, mode }) => {
+  // The one public origin behind every absolute URL the build ships: index.html
+  // (%VITE_SITE_URL%), sitemap.xml, robots.txt and src/lib/seo.ts. Vercel previews
+  // don't get VITE_SITE_URL, so they use their own deploy URL; local dev uses localhost.
+  const preview =
+    process.env.VERCEL_ENV === "preview" && process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "";
+  const site = (
+    loadEnv(mode, import.meta.dirname, "VITE_").VITE_SITE_URL ||
+    preview ||
+    (command === "serve" ? "http://localhost:5173" : "")
+  ).replace(/\/$/, "");
+  if (!site) {
+    throw new Error(
+      "VITE_SITE_URL is not set. Production builds need the site's public origin " +
+        "(e.g. VITE_SITE_URL=https://footiq-omega.vercel.app) for canonical, Open Graph, sitemap and robots URLs.",
+    );
+  }
+  // Normalised (no trailing slash) and handed back: Vite's env loading prefers
+  // process.env over .env files, so index.html, import.meta.env and sitemapPlugin all see this value.
+  process.env.VITE_SITE_URL = site;
+
+  return {
+    plugins: [react(), tailwindcss(), sitemapPlugin()],
+    resolve: {
+      alias: {
+        "@": path.resolve(import.meta.dirname, "src"),
+        "@shared": path.resolve(import.meta.dirname, "shared"),
+      },
     },
-  },
-  build: {
-    rollupOptions: {
-      output: {
-        // long-cache vendor chunks: app code changes shouldn't bust react/motion in users' caches
-        manualChunks: {
-          "vendor-react": ["react", "react-dom", "react-router-dom"],
-          "vendor-motion": ["motion"],
+    build: {
+      rollupOptions: {
+        output: {
+          // long-cache vendor chunks: app code changes shouldn't bust react/motion in users' caches
+          manualChunks: {
+            "vendor-react": ["react", "react-dom", "react-router-dom"],
+            "vendor-motion": ["motion"],
+          },
         },
       },
     },
-  },
-  test: {
-    environment: "node",
-    include: ["src/**/*.test.ts"],
-  },
+    test: {
+      environment: "node",
+      include: ["src/**/*.test.ts"],
+    },
+  };
 });

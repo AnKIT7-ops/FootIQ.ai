@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
-/** Canonical origin for absolute URLs (OG, canonical). Override with VITE_SITE_URL at build time. */
-export const SITE_URL: string = (import.meta.env.VITE_SITE_URL as string | undefined)?.replace(/\/$/, "") ?? "https://footiq.ai";
+/** Canonical origin for absolute URLs (OG, canonical). Set by VITE_SITE_URL at build time (vite.config.ts requires it). */
+export const SITE_URL: string = (import.meta.env.VITE_SITE_URL as string | undefined)?.replace(/\/$/, "") ?? window.location.origin;
 
 export const SITE_NAME = "FootIQ";
 const DEFAULT_DESCRIPTION =

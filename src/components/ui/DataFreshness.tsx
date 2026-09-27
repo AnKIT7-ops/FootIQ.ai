@@ -1,5 +1,4 @@
-import { relativeTime, useFreshness } from "@/lib/freshness";
-import { backendConfigured } from "@/lib/config";
+import { dataMode, relativeTime, useFreshness } from "@/lib/freshness";
 import { cn } from "@/lib/utils";
 
 /**
@@ -8,8 +7,9 @@ import { cn } from "@/lib/utils";
  * freshness signal (no requests of its own).
  */
 export function DataFreshness({ className }: { className?: string }) {
-  const { source, syncedAt } = useFreshness();
-  const resolved = source === "unknown" && !backendConfigured ? "demo" : source;
+  const freshness = useFreshness();
+  const { syncedAt } = freshness;
+  const resolved = dataMode(freshness);
   if (resolved === "unknown") return null; // backend configured but no response yet — say nothing rather than guess
 
   const live = resolved === "provider";

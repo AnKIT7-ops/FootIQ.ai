@@ -12,6 +12,8 @@ import { predictionByMatch } from "@/lib/repositories/predictions";
 import { matchPath, matchSlug, predictionPath, resolveMatch, teamPath } from "@/lib/slugs";
 import { usePageMeta } from "@/lib/seo";
 import { weekStamp } from "@/lib/repositories/content";
+import { useMatchesState } from "@/lib/repositories/matches";
+import { DataState } from "@/components/ui/DataState";
 
 function Bar({ label, value, tone }: { label: string; value: number; tone: "home" | "draw" | "away" }) {
   const color = tone === "home" ? "bg-accent" : tone === "away" ? "bg-chart-2" : "bg-surface-3";
@@ -30,6 +32,9 @@ function Bar({ label, value, tone }: { label: string; value: number; tone: "home
 
 export default function PredictionDetail() {
   const { slug } = useParams();
+  // Resolution depends on the fixtures AND the live/demo answer that rides on
+  // them: re-render when they land, and don't redirect before they have.
+  const { status } = useMatchesState();
   const match = resolveMatch(slug);
   const pred = match ? predictionByMatch.get(match.id) : undefined;
   const home = match ? getTeam(match.homeId) : null;
@@ -62,6 +67,7 @@ export default function PredictionDetail() {
     }
   }, [match, pred, home, away]);
 
+  if (!match && status === "loading") return <DataState status={status} empty={false} emptyTitle="" emptyBody="" />;
   // Real fixtures have no demo report — send them to the live forecast for that match.
   if (match && !pred) return <Navigate to={`/predictions?match=${encodeURIComponent(match.id)}`} replace />;
   if (!match || !pred || !home || !away) return <Navigate to="/predictions" replace />;

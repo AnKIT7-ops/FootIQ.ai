@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import type { AppEnv } from "../types";
 import { ok } from "../lib/respond";
 import { requireUser } from "../middleware/auth";
-import { rateLimit, rateLimits } from "../middleware/rate-limit";
+import { clientIp, rateLimit, rateLimits } from "../middleware/rate-limit";
 import { hashIp } from "../lib/sanitize";
 
 /**
@@ -22,7 +22,7 @@ export function authRoutes() {
   r.post("/session", requireUser(), async (c) => {
     const user = c.get("user")!;
     const { audit, env } = c.get("services");
-    const ip = c.req.header("cf-connecting-ip") ?? c.req.header("x-forwarded-for") ?? "0.0.0.0";
+    const ip = clientIp(c);
     audit.log({
       actorId: user.id,
       action: "auth.session_started",

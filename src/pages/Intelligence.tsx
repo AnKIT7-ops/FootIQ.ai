@@ -4,7 +4,9 @@ import { Clock, Sparkles } from "lucide-react";
 import { Card, SectionHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { WaitlistForm } from "@/components/ui/Waitlist";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { contentKindLabels, contentLibrary, type ContentKind } from "@/lib/repositories/content";
+import { useDataMode } from "@/lib/freshness";
 import { cn } from "@/lib/utils";
 import { usePageMeta } from "@/lib/seo";
 
@@ -18,7 +20,10 @@ const FILTERS: Array<{ key: ContentKind | "all"; label: string }> = [
 
 export default function Intelligence() {
   const [filter, setFilter] = useState<ContentKind | "all">("all");
-  const library = useMemo(() => contentLibrary(), []);
+  const mode = useDataMode();
+  // Empty outside demo mode (see repositories/content.ts); re-read when the mode settles.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const library = useMemo(() => contentLibrary(), [mode]);
   const shown = useMemo(() => (filter === "all" ? library : library.filter((a) => a.kind === filter)), [library, filter]);
 
   usePageMeta({
@@ -26,10 +31,28 @@ export default function Intelligence() {
     description:
       "Algorithmically generated football analysis, regenerated weekly: match previews, team form checks, manager tactical DNA and the weekly digest.",
     path: "/intelligence",
+    noIndex: !library.length,
     breadcrumbs: [{ name: "Intelligence", path: "/intelligence" }],
   });
 
   const digest = library.find((a) => a.kind === "weekly-digest");
+
+  if (!library.length) {
+    return (
+      <div className="space-y-6">
+        <SectionHeader level={1} eyebrow="The IQ Library" title="Football Intelligence" />
+        <EmptyState
+          icon={Sparkles}
+          title="Intelligence reports are on hold"
+          body="They return once they're built from live data. Until then, Predictions and team pages carry this season's real numbers."
+        >
+          <Link to="/predictions" className="rounded-full border border-line bg-surface-2 px-3 py-1.5 text-xs font-medium text-ink-2 transition-colors hover:text-ink">
+            Open Predictions
+          </Link>
+        </EmptyState>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
