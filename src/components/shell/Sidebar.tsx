@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { motion } from "motion/react";
 import { ArrowLeftRight, CalendarDays, ClipboardList, GitCompareArrows, Landmark, LayoutDashboard, Newspaper, Radio, Search, Sparkles, Trophy, UserRound, Users } from "lucide-react";
+import { SPRING } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { useDataMode } from "@/lib/freshness";
 import { Logo } from "./Logo";
@@ -66,7 +67,7 @@ export function Sidebar() {
                           <motion.span
                             layoutId="sidebar-active"
                             className="absolute inset-0 rounded-xl bg-surface-3"
-                            transition={{ type: "spring", stiffness: 480, damping: 38 }}
+                            transition={SPRING}
                           />
                         )}
                         <item.icon className={cn("relative z-10 size-4", isActive && "text-accent-ink")} aria-hidden />

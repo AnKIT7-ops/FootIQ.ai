@@ -254,7 +254,7 @@ Tactile and confident. Controls answer immediately — a spring on press, a lift
 
 ### Chips / Badges
 - **Style:** pill, mono uppercase 11px, tinted fill at ~10–12% of the semantic hue with the matching `-ink` text color. Variants: `accent`/`live`/`good` (emerald), `iq`/`warn` (amber), `bad` (rose at 10%), `neutral` (surface-3), `outline` (hairline only).
-- **State:** the `live` variant carries a 6px emerald dot running `pulse-live` (2.2s, box-shadow ring, reduced-motion safe).
+- **State:** the `live` variant carries a 6px emerald dot running `pulse-live` (2.2s, `::after` ring on transform + opacity, reduced-motion safe).
 
 ### Cards / Containers
 - **Corner Style:** 20px (`1.25rem`) — the largest radius in the system, and what makes a card a card.

@@ -7,6 +7,8 @@ import { api, ApiRequestError, ApiUnavailableError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { AiText } from "@/components/ui/AiText";
 import { DemoEngineChip } from "@/components/ui/DemoEngineChip";
+import { usePrefersReducedMotion } from "@/lib/hooks";
+import { EASE_OUT } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 interface Msg {
@@ -40,6 +42,7 @@ export function ChatDock() {
   ]);
   const [draft, setDraft] = useState("");
   const [thinking, setThinking] = useState(false);
+  const reduceMotion = usePrefersReducedMotion();
   const listRef = useRef<HTMLDivElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
 
@@ -105,7 +108,7 @@ export function ChatDock() {
             initial={{ opacity: 0, y: 16, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.97 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.2, ease: EASE_OUT }}
             className="panel-float fixed bottom-36 right-4 z-40 flex h-[26rem] w-[min(24rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl shadow-2xl lg:bottom-22 lg:right-6"
             role="dialog"
             aria-label="FootIQ AI assistant"
@@ -139,8 +142,9 @@ export function ChatDock() {
                         <motion.span
                           key={i}
                           className="size-1.5 rounded-full bg-iq"
-                          animate={{ opacity: [0.25, 1, 0.25] }}
-                          transition={{ repeat: Infinity, duration: 1.1, delay: i * 0.18 }}
+                          // reduced motion: three static dots instead of an endless loop
+                          animate={{ opacity: reduceMotion ? 0.6 : [0.25, 1, 0.25] }}
+                          transition={reduceMotion ? { duration: 0 } : { repeat: Infinity, duration: 1.1, delay: i * 0.18 }}
                         />
                       ))}
                     </span>

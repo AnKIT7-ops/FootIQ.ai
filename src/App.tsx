@@ -1,12 +1,13 @@
 import { Suspense, lazy, useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
-import { AnimatePresence, motion } from "motion/react";
+import { MotionConfig, motion } from "motion/react";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { TopBar } from "@/components/shell/TopBar";
 import { MobileNav } from "@/components/shell/MobileNav";
 import { ChatDock } from "@/components/shell/ChatDock";
 import { Onboarding, shouldShowOnboarding } from "@/components/shell/Onboarding";
-import { useHotkey } from "@/lib/hooks";
+import { useHotkey, usePrefersReducedMotion } from "@/lib/hooks";
+import { EASE_OUT } from "@/lib/motion";
 import { trackPageView } from "@/lib/analytics";
 import { bump } from "@/lib/metrics";
 import { AuthProvider, RequireAuth } from "@/lib/auth/AuthContext";
@@ -48,6 +49,7 @@ function Shell() {
   const [paletteMounted, setPaletteMounted] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
   const location = useLocation();
+  const reduceMotion = usePrefersReducedMotion();
   useHotkey("k", true, () => openSearch());
 
   // first visit: open the tour once the page has settled; afterwards any part
@@ -95,65 +97,63 @@ function Shell() {
             </div>
           }
         >
-          <AnimatePresence mode="wait">
-            <motion.main
-              id="main"
-              tabIndex={-1}
-              key={location.pathname}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.22, ease: "easeOut" }}
-              className="mx-auto max-w-7xl px-4 pb-32 pt-6 outline-none md:px-6 lg:pb-16"
-            >
-              <Routes location={location}>
-                <Route path="/" element={<Home />} />
-                <Route path="/matches" element={<Matches />} />
-                <Route path="/schedule" element={<Schedule />} />
-                <Route path="/match/:id" element={<MatchCenter />} />
-                <Route path="/matches/:id" element={<MatchCenter />} />
-                <Route path="/news" element={<News />} />
-                {/* Demo articles (invented quotes about real people) are retired; old links land on real news. */}
-                <Route path="/news/:id" element={<Navigate to="/news" replace />} />
-                <Route path="/player/:id" element={<PlayerPage />} />
-                <Route path="/players/:id" element={<PlayerPage />} />
-                <Route path="/similar" element={<SimilarPlayers />} />
-                <Route path="/similar/:id" element={<SimilarPlayers />} />
-                <Route path="/compare" element={<Compare />} />
-                <Route path="/team/:id" element={<TeamPage />} />
-                <Route path="/teams/:id" element={<TeamPage />} />
-                <Route path="/transfers" element={<Transfers />} />
-                <Route path="/predictions" element={<Predictions />} />
-                <Route path="/predictions/:slug" element={<PredictionDetail />} />
-                <Route path="/scout" element={<Scout />} />
-                <Route path="/tactics" element={<TacticalBoard />} />
-                <Route path="/fantasy" element={<Fantasy />} />
-                <Route path="/highlights" element={<Navigate to="/" replace />} />
-                <Route path="/history" element={<History />} />
-                <Route path="/history/:slug" element={<HistoryMoment />} />
-                <Route path="/intelligence" element={<Intelligence />} />
-                <Route path="/intelligence/:slug" element={<IntelligenceArticle />} />
-                <Route path="/managers/:slug" element={<Manager />} />
-                <Route path="/insights" element={<Insights />} />
-                {/* Protected when auth is configured; open in demo mode. */}
-                <Route
-                  path="/profile"
-                  element={
-                    <RequireAuth fallback={<Navigate to="/signin?next=/profile" replace />}>
-                      <Profile />
-                    </RequireAuth>
-                  }
-                />
-                <Route path="/signin" element={<SignIn />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/terms" element={<Terms />} />
-                <Route path="/disclaimer" element={<Disclaimer />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </motion.main>
-          </AnimatePresence>
+          {/* enter-only fade: no exit, so the previous page never blanks out first */}
+          <motion.main
+            id="main"
+            tabIndex={-1}
+            key={location.pathname}
+            initial={reduceMotion ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.12, ease: EASE_OUT }}
+            className="mx-auto max-w-7xl px-4 pb-32 pt-6 outline-none md:px-6 lg:pb-16"
+          >
+            <Routes location={location}>
+              <Route path="/" element={<Home />} />
+              <Route path="/matches" element={<Matches />} />
+              <Route path="/schedule" element={<Schedule />} />
+              <Route path="/match/:id" element={<MatchCenter />} />
+              <Route path="/matches/:id" element={<MatchCenter />} />
+              <Route path="/news" element={<News />} />
+              {/* Demo articles (invented quotes about real people) are retired; old links land on real news. */}
+              <Route path="/news/:id" element={<Navigate to="/news" replace />} />
+              <Route path="/player/:id" element={<PlayerPage />} />
+              <Route path="/players/:id" element={<PlayerPage />} />
+              <Route path="/similar" element={<SimilarPlayers />} />
+              <Route path="/similar/:id" element={<SimilarPlayers />} />
+              <Route path="/compare" element={<Compare />} />
+              <Route path="/team/:id" element={<TeamPage />} />
+              <Route path="/teams/:id" element={<TeamPage />} />
+              <Route path="/transfers" element={<Transfers />} />
+              <Route path="/predictions" element={<Predictions />} />
+              <Route path="/predictions/:slug" element={<PredictionDetail />} />
+              <Route path="/scout" element={<Scout />} />
+              <Route path="/tactics" element={<TacticalBoard />} />
+              <Route path="/fantasy" element={<Fantasy />} />
+              <Route path="/highlights" element={<Navigate to="/" replace />} />
+              <Route path="/history" element={<History />} />
+              <Route path="/history/:slug" element={<HistoryMoment />} />
+              <Route path="/intelligence" element={<Intelligence />} />
+              <Route path="/intelligence/:slug" element={<IntelligenceArticle />} />
+              <Route path="/managers/:slug" element={<Manager />} />
+              <Route path="/insights" element={<Insights />} />
+              {/* Protected when auth is configured; open in demo mode. */}
+              <Route
+                path="/profile"
+                element={
+                  <RequireAuth fallback={<Navigate to="/signin?next=/profile" replace />}>
+                    <Profile />
+                  </RequireAuth>
+                }
+              />
+              <Route path="/signin" element={<SignIn />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/disclaimer" element={<Disclaimer />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </motion.main>
         </Suspense>
       </div>
       <MobileNav />
@@ -172,7 +172,10 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Shell />
+        {/* reducedMotion="user" drops transform/layout animation; opacity fades still need their own guard */}
+        <MotionConfig reducedMotion="user">
+          <Shell />
+        </MotionConfig>
       </BrowserRouter>
     </AuthProvider>
   );
