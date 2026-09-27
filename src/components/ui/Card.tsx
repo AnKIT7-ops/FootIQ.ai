@@ -1,5 +1,6 @@
 import { type ReactNode } from "react";
 import { motion } from "motion/react";
+import { SPRING } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 export function Card({
@@ -34,7 +35,7 @@ export function Card({
       <motion.div
         whileHover={{ y: -3 }}
         whileTap={onClick ? { scale: 0.985 } : undefined}
-        transition={{ type: "spring", stiffness: 420, damping: 28 }}
+        transition={SPRING}
         onClick={onClick}
         {...interactive}
         className={cn(

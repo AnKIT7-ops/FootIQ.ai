@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { motion } from "motion/react";
 import { Activity, BriefcaseMedical, Loader2 } from "lucide-react";
 import type { SquadMember, Team } from "@/data/types";
 import type { RepoStatus } from "@/lib/repositories/store";
@@ -100,9 +99,7 @@ function TeamView({ team }: { team: Team }) {
 
   return (
     <div className="space-y-6">
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
+      <div
         className="card relative overflow-hidden p-5 md:p-7"
         style={{
           background: `radial-gradient(900px 380px at 12% -20%, ${team.colors[0]}2e, transparent 60%), var(--surface)`,
@@ -141,7 +138,7 @@ function TeamView({ team }: { team: Team }) {
             stat={`${team.position}ᵗʰ · ${team.points} pts · ${team.form}`}
           />
         </div>
-      </motion.div>
+      </div>
 
       <Tabs
         id="team"
@@ -292,9 +289,9 @@ function TeamView({ team }: { team: Team }) {
               <SectionHeader eyebrow={`${team.style.formation}`} title="Style DNA" className="mb-4" />
               <div className="grid gap-x-8 gap-y-3.5 sm:grid-cols-2">
                 <Meter label="Tempo" value={team.style.tempo} color="var(--chart-1)" />
-                <Meter label="Width" value={team.style.width} color="var(--chart-2)" />
-                <Meter label="Directness" value={team.style.directness} color="var(--chart-3)" />
-                <Meter label="Press intensity" value={team.style.pressIntensity} color="var(--chart-4)" />
+                <Meter label="Width" value={team.style.width} color="var(--chart-1)" />
+                <Meter label="Directness" value={team.style.directness} color="var(--chart-1)" />
+                <Meter label="Press intensity" value={team.style.pressIntensity} color="var(--chart-1)" />
               </div>
               <dl className="mt-5 space-y-2 border-t border-line pt-4 text-ui">
                 <div className="flex justify-between gap-6"><dt className="shrink-0 text-ink-3">Build-up</dt><dd className="text-right text-ink-2">{team.style.buildUp}</dd></div>
@@ -306,7 +303,7 @@ function TeamView({ team }: { team: Team }) {
           <div className="space-y-4">
             <Card className="flex flex-col items-center p-5">
               <p className="eyebrow mb-3 self-start">Squad chemistry</p>
-              <DonutGauge value={team.chemistry} label="Cohesion index" size={150} color={team.chemistry >= 85 ? "var(--chart-1)" : "var(--chart-3)"} />
+              <DonutGauge value={team.chemistry} label="Cohesion index" size={150} color="var(--chart-1)" />
               <p className="mt-3 text-center text-caption leading-relaxed text-ink-3">
                 Minutes shared, pass-network density and lineup stability, rolled into one number.
               </p>

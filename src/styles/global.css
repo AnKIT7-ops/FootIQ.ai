@@ -5,7 +5,7 @@
 /*
   FootIQ token system — "floodlit night"
   Dual semantic accents: emerald = live / on-pitch fact, amber = AI inference (the IQ layer).
-  Chart categorical palette validated (dataviz six checks) against #11161f dark and #f7f6f3 light.
+  Chart categorical palette validated (dataviz checks) against #11161f / #0a0e16 dark and #f7f6f3 / #f2f3ef light.
 */
 
 :root {
@@ -33,17 +33,23 @@
   --warn: #fbbf24;
   --bad: #fb7185;
 
-  --chart-1: #10b981;
-  --chart-2: #38bdf8;
-  --chart-3: #fbbf24;
-  --chart-4: #a78bfa;
-  --chart-5: #fb7185;
-  /* fill steps for chart marks on dark surfaces (validated set) */
-  --chart-1-deep: #059669;
-  --chart-2-deep: #0284c7;
-  --chart-3-deep: #d97706;
-  --chart-4-deep: #8b5cf6;
-  --chart-5-deep: #f43f5e;
+  /*
+    Categorical series: blue · magenta · indigo · pink · sky. No slot sits in the
+    emerald (fact), amber (inference) or rose (bad) family, so a series colour
+    never claims to be a fact or a guess. Adjacent pairs + 1↔4 (the A-vs-B pair)
+    validated — see DESIGN.md "Chart palette" for the numbers.
+  */
+  --chart-1: #4b8efe;
+  --chart-2: #a738a2;
+  --chart-3: #8080fc;
+  --chart-4: #bc2b74;
+  --chart-5: #009edb;
+  /* one step darker, same hue: fills that carry a white label (≥4.6:1) */
+  --chart-1-deep: #2e70dd;
+  --chart-2-deep: #9a2a95;
+  --chart-3-deep: #6965df;
+  --chart-4-deep: #ae1968;
+  --chart-5-deep: #0b7cac;
 
   --pitch: #0d1a17;
   --pitch-line: rgba(148, 233, 199, 0.28);
@@ -80,16 +86,16 @@
   --warn: #d97706;
   --bad: #d11b43;
 
-  --chart-1: #059669;
-  --chart-2: #0284c7;
-  --chart-3: #d97706;
-  --chart-4: #8b5cf6;
-  --chart-5: #f43f5e;
-  --chart-1-deep: #047857;
-  --chart-2-deep: #0369a1;
-  --chart-3-deep: #b45309;
-  --chart-4-deep: #7c3aed;
-  --chart-5-deep: #e11d48;
+  --chart-1: #1961d4;
+  --chart-2: #871082;
+  --chart-3: #5952d2;
+  --chart-4: #960157;
+  --chart-5: #01729f;
+  --chart-1-deep: #0251c3;
+  --chart-2-deep: #74046f;
+  --chart-3-deep: #4d42c1;
+  --chart-4-deep: #7f0049;
+  --chart-5-deep: #00638b;
 
   --pitch: #e4f0e6;
   --pitch-line: rgba(5, 105, 74, 0.35);
@@ -266,13 +272,16 @@
     radial-gradient(900px 420px at 85% -18%, rgba(56, 189, 248, 0.07), transparent 55%);
 }
 
+/* ring = the dot's ::after scaled out to +7px (6px dot → 20px, ×3.33); compositor-only */
 @keyframes pulse-live {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.45);
+    transform: scale(1);
+    opacity: 0.45;
   }
   55% {
-    box-shadow: 0 0 0 7px rgba(52, 211, 153, 0);
+    transform: scale(3.33);
+    opacity: 0;
   }
 }
 
@@ -303,6 +312,16 @@
 }
 
 .animate-pulse-live {
+  position: relative;
+}
+.animate-pulse-live::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: inherit; /* the dot's own color, so the ring is invisible where it overlaps the dot */
+  opacity: 0; /* resting state (and reduced motion): no ring */
+  pointer-events: none;
   animation: pulse-live 2.2s ease-in-out infinite;
 }
 

@@ -2,66 +2,254 @@ import { Link } from "react-router-dom";
 import { ProsePage, ProseSection, ProseList } from "@/components/ui/Prose";
 import { usePageMeta } from "@/lib/seo";
 
+// Same inbox as the Contact page (src/pages/Contact.tsx) — change both together.
+const CONTACT_EMAIL = "hello@footiq.ai";
+
+const link = "text-accent-ink underline underline-offset-2 hover:text-ink";
+const key = "font-mono text-caption text-ink";
+
+function Mail() {
+  return (
+    <a href={`mailto:${CONTACT_EMAIL}`} className={link}>
+      {CONTACT_EMAIL}
+    </a>
+  );
+}
+
 export default function Privacy() {
   usePageMeta({
     title: "Privacy Policy",
-    description: "How FootIQ handles data during the beta: local-first storage, no accounts, optional privacy-respecting analytics.",
+    description:
+      "What FootIQ collects, where it lives (Supabase, Cloudflare, Vercel), what goes to Google Gemini, what stays in your browser, and how to get your data deleted.",
     path: "/privacy",
   });
 
   return (
-    <ProsePage eyebrow="Local-first by design" title="Privacy Policy" updated="July 10, 2026">
+    <ProsePage eyebrow="What we keep, and where" title="Privacy Policy" updated="September 27, 2026">
       <ProseSection title="The short version">
-        <p>
-          The FootIQ beta has <strong className="text-ink">no accounts and no server-side database</strong>. Your preferences never leave
-          your device. If analytics are enabled on a deployment, they are aggregate and anonymous.
-        </p>
-      </ProseSection>
-
-      <ProseSection title="1. Data stored on your device">
-        <p>FootIQ keeps a small amount of data in your browser's local storage so the product remembers you between visits:</p>
         <ProseList
           items={[
-            "Theme choice (dark or light).",
-            "Favorite teams, followed players and alert preferences from your Profile.",
-            "Waitlist email, if you join the waitlist during the beta.",
-          ]}
-        />
-        <p>
-          This data stays in your browser. It is not transmitted to FootIQ. Clearing your browser's site data removes it completely.
-        </p>
-      </ProseSection>
-
-      <ProseSection title="2. Analytics (optional)">
-        <p>
-          Deployments of FootIQ may enable Google Analytics 4 and/or Microsoft Clarity to understand aggregate usage — pages visited,
-          approximate region, device class. When enabled these tools may set cookies; when not configured, no analytics code loads at all.
-          We never sell data, and we collect no names, emails or payment details through analytics.
-        </p>
-      </ProseSection>
-
-      <ProseSection title="3. Third-party content">
-        <p>
-          Club crests, player portraits and national flags load from public content delivery networks (FotMob and flagcdn). Your browser
-          requests those images directly, which exposes your IP address to those CDNs the same way any image on the web does. Their own
-          privacy policies apply to those requests.
-        </p>
-      </ProseSection>
-
-      <ProseSection title="4. Your choices">
-        <ProseList
-          items={[
-            "Use the site without joining the waitlist — every feature works either way.",
-            "Block analytics with any standard content blocker; the product functions identically.",
-            "Clear site data at any time to reset FootIQ to a fresh state.",
+            <>
+              You can browse FootIQ without signing in. If you sign in, even as a guest, we create an{" "}
+              <strong className="text-ink">account in our database</strong> (hosted by Supabase) and store what you follow there.
+            </>,
+            <>
+              Questions you type into the assistant or AI Scout are sent to <strong className="text-ink">Google's Gemini API</strong> to
+              generate an answer. Your name, email and account ID are not sent with them.
+            </>,
+            "Some things, like recently viewed pages and recent searches, are only ever stored in your browser.",
+            "The live site sets no analytics or advertising cookies. We don't sell your data.",
+            <>
+              Want your data deleted? Email <Mail /> and we'll remove it.
+            </>,
           ]}
         />
       </ProseSection>
 
-      <ProseSection title="5. Changes and contact">
+      <ProseSection title="1. Who we are">
         <p>
-          When live data, accounts or a backend arrive, this policy will be updated before those features ship. Questions about privacy —{" "}
-          <Link to="/contact" className="text-accent-ink underline underline-offset-2 hover:text-ink">contact us</Link>.
+          FootIQ is a football analysis site in public beta. For anything about this policy or your data, contact us at <Mail /> (also
+          listed on the <Link to="/contact" className={link}>contact page</Link>).
+        </p>
+      </ProseSection>
+
+      <ProseSection title="2. What we collect when you sign in">
+        <p>Signing in is optional. There are three ways to do it, and each creates an account in our database:</p>
+        <ProseList
+          items={[
+            <>
+              <strong className="text-ink">Email link:</strong> your email address. We email you a one-time sign-in link, so there is
+              no password.
+            </>,
+            <>
+              <strong className="text-ink">Continue with Google</strong> (where offered): the name, email address and profile picture
+              Google shares when you approve the sign-in.
+            </>,
+            <>
+              <strong className="text-ink">Guest:</strong> a random account ID with no email or name attached.
+            </>,
+          ]}
+        />
+        <p>
+          Your profile holds a display name (your Google name, or the part of your email before the @), whether it's a guest account,
+          your plan (everyone is on the free plan during the beta), and the date it was created. If you set a favourite team or country,
+          those are stored too.
+        </p>
+      </ProseSection>
+
+      <ProseSection title="3. What you save to your account">
+        <p>While you're signed in, including as a guest, these are copied to your account:</p>
+        <ProseList
+          items={[
+            "Teams and players you follow.",
+            "Articles you bookmark.",
+            "Two notification settings: the weekly digest and match reminders.",
+          ]}
+        />
+        <p>
+          FootIQ also counts how many AI answers each account generates per day, to enforce the daily allowance. Other features, such as
+          tactical boards and your prediction history, stay in your browser (see section 6).
+        </p>
+      </ProseSection>
+
+      <ProseSection title="4. Newsletter, feedback and feature requests">
+        <ProseList
+          items={[
+            <>
+              <strong className="text-ink">Newsletter / waitlist:</strong> your email address, where you signed up, and when. You don't
+              need an account to join.
+            </>,
+            <>
+              <strong className="text-ink">Feedback</strong> (the contact form and the thumbs up/down on AI answers): your message, its
+              category, and the page you were on. If you're signed in, it's linked to your account ID.
+            </>,
+            <>
+              <strong className="text-ink">Feature requests:</strong> the title and description you write, linked to your account ID if
+              you're signed in.
+            </>,
+          ]}
+        />
+      </ProseSection>
+
+      <ProseSection title="5. AI features and Google Gemini">
+        <p>
+          FootIQ's AI answers are generated by Google's Gemini models through the Gemini API. What gets sent depends on the feature:
+        </p>
+        <ProseList
+          items={[
+            <>
+              <strong className="text-ink">The assistant (chat) and AI Scout:</strong> the question you type, plus public football data
+              such as league tables, fixtures and player statistics.
+            </>,
+            <>
+              <strong className="text-ink">Player reports and match previews:</strong> public football data only. Nothing you typed is
+              included.
+            </>,
+          ]}
+        />
+        <p>
+          We don't send your name, email, account ID or IP address to Google with these requests. You need to be signed in (a guest
+          account counts) to use AI features, and they are rate-limited per account. FootIQ uses the Gemini API's free tier. Under
+          Google's terms for unpaid use, Google may use what's sent to improve its products, and people at Google may review it.{" "}
+          <strong className="text-ink">Please don't put personal information in your questions.</strong>
+        </p>
+        <p>
+          To save cost, answers are cached in our database for up to 24 hours and shown to anyone who asks the same thing in that time.
+          The cache stores the answer under a one-way fingerprint of the question. It doesn't store your question as typed, and it isn't
+          linked to you or your account.
+        </p>
+        <p>
+          AI answers are model inferences, not verified facts, and they can be wrong. On the site they're marked in amber. See the{" "}
+          <Link to="/disclaimer" className={link}>Disclaimer</Link>.
+        </p>
+      </ProseSection>
+
+      <ProseSection title="6. What stays in your browser">
+        <p>
+          These are kept in your browser's local storage. They are never sent to FootIQ, apart from the items listed in section 3 when
+          you're signed in:
+        </p>
+        <ProseList
+          items={[
+            <>Theme (dark or light): <code className={key}>footiq-theme</code></>,
+            <>Follows, bookmarks, prediction history and notification settings: <code className={key}>footiq-user</code></>,
+            <>Recently viewed pages and recent searches: <code className={key}>footiq-recent</code>, <code className={key}>footiq-recent-searches</code></>,
+            <>Saved tactical boards: <code className={key}>footiq-boards</code></>,
+            <>Usage counts behind the Insights page: <code className={key}>footiq-metrics</code></>,
+            <>Which notifications you've read, and whether you've seen the intro tour: <code className={key}>footiq-notifications-read</code>, <code className={key}>footiq-onboarded</code></>,
+            <>
+              An email you entered in the waitlist form, but only if our server couldn't be reached at the time:{" "}
+              <code className={key}>footiq-waitlist</code>
+            </>,
+            <>
+              Your sign-in session. Supabase keeps a login token in local storage (a key starting with <code className={key}>sb-</code>)
+              so you stay signed in. Signing out removes it.
+            </>,
+          ]}
+        />
+        <p>Clearing this site's data in your browser deletes all of it.</p>
+      </ProseSection>
+
+      <ProseSection title="7. Cookies and analytics">
+        <p>
+          The live site runs <strong className="text-ink">no analytics</strong> and sets no analytics or advertising cookies. The code
+          can support Google Analytics 4 and Microsoft Clarity, but both are switched off. Before we turn either on, we'll update this
+          policy and ask for your consent where the law requires it.
+        </p>
+      </ProseSection>
+
+      <ProseSection title="8. Security logs">
+        <ProseList
+          items={[
+            "Our server logs each request: the address requested, the result, how long it took, and your account ID if you're signed in. They don't include your IP address.",
+            "Account and admin events go into an append-only security log with your account ID and a salted one-way hash of your IP address. The raw IP is never stored.",
+            "Rate limiting uses the same kind of hashed IP, held in server memory for about a minute.",
+          ]}
+        />
+      </ProseSection>
+
+      <ProseSection title="9. Services that process your data">
+        <p>We use these providers to run FootIQ. Each handles data only to provide its service to us:</p>
+        <ProseList
+          items={[
+            <>
+              <strong className="text-ink">Supabase:</strong> sign-in (including sending sign-in link emails) and our database, which
+              holds everything in sections 2 to 5 and 8. As our sign-in provider, Supabase keeps its own authentication logs, which can
+              include technical details such as IP address.
+            </>,
+            <>
+              <strong className="text-ink">Cloudflare:</strong> hosts the FootIQ API (Cloudflare Workers). Every API request passes
+              through Cloudflare, which sees your IP address as any web host does.
+            </>,
+            <>
+              <strong className="text-ink">Vercel:</strong> hosts the website itself. It sees your IP address and page requests as any
+              web host does.
+            </>,
+            <>
+              <strong className="text-ink">Google:</strong> the Gemini API generates AI answers (section 5). If you choose
+              "Continue with Google", Google also handles that sign-in.
+            </>,
+          ]}
+        />
+        <p>
+          Club crests, player photos, flags and news thumbnails load straight from third-party image hosts (football-data.org, the
+          Premier League, FotMob, flagcdn and the news publishers). Your browser requests those images directly, so those hosts see your
+          IP address like any image on the web. Our football data comes from football-data.org, the official Fantasy Premier League API
+          and publishers' RSS feeds. None of it involves your personal data.
+        </p>
+        <p>These providers may process data in countries other than yours.</p>
+      </ProseSection>
+
+      <ProseSection title="10. How long we keep it, and deletion">
+        <ProseList
+          items={[
+            "Account data stays for as long as the account exists. Nothing is deleted on a schedule yet, and that includes guest accounts.",
+            <>
+              There's no self-serve delete button yet. Email <Mail /> from the address you signed in with and we'll delete your account.
+            </>,
+            "Deleting an account also deletes your profile, follows, bookmarks, settings and usage counts. Feedback and feature requests are kept but no longer linked to you. Security-log entries keep your account ID and hashed IP. Ask us and we'll delete either of those too.",
+            <>
+              <strong className="text-ink">Newsletter:</strong> email us to unsubscribe. We mark your address as unsubscribed, or delete
+              it entirely if you ask.
+            </>,
+            "Cached AI answers stop being served after 24 hours at most. They aren't linked to anyone.",
+            "Data in your browser stays until you clear this site's data. Signing out removes the session token.",
+          ]}
+        />
+      </ProseSection>
+
+      <ProseSection title="11. Your rights">
+        <p>
+          You can ask us to show you the personal data we hold about you, correct it, delete it, give you a copy, or stop using it.
+          Email <Mail />. We'll reply as soon as we can, and within the time the law allows. If you think we've handled your data wrongly,
+          you can also complain to your local data protection authority.
+        </p>
+      </ProseSection>
+
+      <ProseSection title="12. Changes">
+        <p>
+          If what we collect changes, for example when we enable analytics, add a data provider or start sending newsletters, we'll
+          update this page first and change the date at the top.
         </p>
       </ProseSection>
     </ProsePage>

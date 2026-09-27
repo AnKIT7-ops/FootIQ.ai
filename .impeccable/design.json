@@ -210,36 +210,28 @@
       },
       "chart-2": {
         "role": "tertiary",
-        "displayName": "Broadcast Sky",
-        "canonical": "#38bdf8",
-        "light": "#0284c7",
-        "purpose": "Categorical chart series 2. Data viz only.",
+        "displayName": "Analyst Magenta",
+        "canonical": "#a738a2",
+        "light": "#871082",
+        "purpose": "Categorical chart series 2. Data viz only. Never emerald/amber/rose family — series colour never implies fact or guess.",
         "tonalRamp": [
-          "#082f49",
-          "#0c4a6e",
-          "#075985",
-          "#0369a1",
-          "#0284c7",
-          "#0ea5e9",
-          "#38bdf8",
-          "#bae6fd"
+          "#74046f",
+          "#871082",
+          "#9a2a95",
+          "#a738a2"
         ]
       },
       "chart-4": {
         "role": "tertiary",
-        "displayName": "Analyst Violet",
-        "canonical": "#a78bfa",
-        "light": "#8b5cf6",
-        "purpose": "Categorical chart series 4. Data viz only — never UI chrome.",
+        "displayName": "Away Pink",
+        "canonical": "#bc2b74",
+        "light": "#960157",
+        "purpose": "Categorical chart series 4 — the B side opposite chart-1 blue in every comparison. Data viz only — never UI chrome.",
         "tonalRamp": [
-          "#2e1065",
-          "#4c1d95",
-          "#5b21b6",
-          "#6d28d9",
-          "#7c3aed",
-          "#8b5cf6",
-          "#a78bfa",
-          "#ddd6fe"
+          "#7f0049",
+          "#960157",
+          "#ae1968",
+          "#bc2b74"
         ]
       }
     },

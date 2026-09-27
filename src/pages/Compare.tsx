@@ -313,7 +313,7 @@ function ManagerCompare() {
               <div className="flex justify-between"><dt className="text-ink-3">Identity</dt><dd className="text-right text-ink-2">{t.styleTags.join(", ")}</dd></div>
             </dl>
             <div className="mt-4 space-y-1.5 border-t border-line pt-3.5">
-              <p className="flex items-start gap-2 text-caption text-ink-2"><CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-accent-ink" aria-hidden />{t.aiReport[0]}</p>
+              <p className="flex items-start gap-2 text-caption text-ink-2"><CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-iq-ink" aria-hidden />{t.aiReport[0]}</p>
               <p className="flex items-start gap-2 text-caption text-ink-2"><ShieldAlert className="mt-0.5 size-3.5 shrink-0 text-bad" aria-hidden />{t.aiReport[1]}</p>
             </div>
           </Card>

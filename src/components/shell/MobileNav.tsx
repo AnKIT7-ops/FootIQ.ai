@@ -2,6 +2,7 @@ import { NavLink, Link } from "react-router-dom";
 import { LayoutDashboard, Radio, Newspaper, Sparkles, Menu, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
+import { SPRING } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { pageEntries, legalEntries } from "@/lib/nav";
 import { useDataMode } from "@/lib/freshness";
@@ -84,7 +85,7 @@ export function MobileNav() {
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
-              transition={{ type: "spring", stiffness: 380, damping: 40 }}
+              transition={SPRING}
               className="fixed inset-x-0 bottom-0 z-50 max-h-[85dvh] overflow-y-auto rounded-t-3xl border-t border-line bg-surface p-5 pb-8 lg:hidden"
               style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}
               role="dialog"

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { motion } from "motion/react";
 import { ArrowLeftRight, CircleAlert, Goal, RectangleVertical, Repeat, Sparkles, Timer } from "lucide-react";
 import { Card, SectionHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -134,7 +133,7 @@ function MatchBody({ detail }: { detail: MatchDetail }) {
   return (
     <div className="space-y-6">
       {/* header */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="floodlight card relative overflow-hidden p-5 md:p-7">
+      <div className="floodlight card relative overflow-hidden p-5 md:p-7">
         {/* The score is rendered as a figure, not a heading — screen readers get the fixture as the page's h1. */}
         <h1 className="sr-only">
           {detail.homeScore != null && detail.awayScore != null
@@ -183,7 +182,7 @@ function MatchBody({ detail }: { detail: MatchDetail }) {
             </Link>
           )}
         </div>
-      </motion.div>
+      </div>
 
       {/* Momentum, stats, lineups and the event feed all describe play that
           happened. Before kickoff there is none, so those tabs are withheld
@@ -357,7 +356,8 @@ function MatchBody({ detail }: { detail: MatchDetail }) {
                   <span
                     className={cn(
                       "tabular rounded-lg px-2 py-0.5 font-mono text-caption font-bold",
-                      p.rating >= 7.5 ? "bg-accent-soft text-accent-ink" : "bg-surface-3 text-ink-2",
+                      // FootIQ's own rating is a computed score, not a measured stat: amber, not emerald.
+                      p.rating >= 7.5 ? "bg-iq-soft text-iq-ink" : "bg-surface-3 text-ink-2",
                     )}
                   >
                     {p.rating.toFixed(1)}
@@ -491,10 +491,11 @@ function PossessionBar({ homeName, awayName, home, away }: { homeName: string; a
 }
 
 function WinProb({ home, away, detail }: { home: string; away: string; detail: { h: number; d: number; a: number } }) {
+  // Model output wears amber (the honesty rule); the draw belongs to neither side.
   const rows = [
-    { label: home, v: detail.h, color: "var(--chart-1)" },
+    { label: home, v: detail.h, color: "var(--iq)" },
     { label: "Draw", v: detail.d, color: "var(--ink-3)" },
-    { label: away, v: detail.a, color: "var(--chart-4)" },
+    { label: away, v: detail.a, color: "var(--iq)" },
   ];
   return (
     <div className="space-y-3">
