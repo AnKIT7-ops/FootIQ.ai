@@ -36,6 +36,8 @@ npx wrangler deploy
 ```
 Optional KV cache: `npx wrangler kv namespace create CACHE` → uncomment the binding in `wrangler.toml`.
 
+**After the first deploy, merges deploy themselves.** `.github/workflows/deploy-worker.yml` runs typecheck → tests → `wrangler deploy` on every push to `main`, the same moment Vercel ships the site. It needs two repo secrets (Settings → Secrets and variables → Actions): `CLOUDFLARE_API_TOKEN` (dashboard → My Profile → API Tokens → "Edit Cloudflare Workers" template) and `CLOUDFLARE_ACCOUNT_ID`. Worker secrets set with `wrangler secret put` persist across deploys. Manual deploys still work; run one from an up-to-date `main` only.
+
 **Render / Railway (Node)**
 - Root directory `server`, build `npm install`, start `npm run start` (or `npx tsx src/index.ts`).
 - Set env vars from `server/.env.example`. Render free sleeps after idle — first request is slow; the frontend's demo fallback masks it.
