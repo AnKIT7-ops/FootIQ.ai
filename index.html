@@ -46,14 +46,8 @@
       }
     </script>
 
-    <script>
-      // Set theme before paint to avoid flash
-      (function () {
-        var t = localStorage.getItem("footiq-theme");
-        if (t === "light") document.documentElement.classList.add("light");
-        else document.documentElement.classList.add("dark");
-      })();
-    </script>
+    <!-- Sync (no defer/async) on purpose: sets the theme class before first paint. External so the CSP needs no inline hash. -->
+    <script src="/theme.js"></script>
   </head>
   <body>
     <div id="root"></div>
