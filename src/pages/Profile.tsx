@@ -260,7 +260,7 @@ export default function Profile() {
                 </p>
                 <p className="text-caption text-ink-3">
                   {account.isAnonymous
-                    ? "Guest data stays on this device. Sign in with email to use FootIQ across devices."
+                    ? "A guest account has no email attached, so you can't get back into it from another device. Sign in with email to use FootIQ across devices."
                     : "FootIQ is free during the beta."}
                 </p>
                 <div className="flex flex-wrap gap-2">

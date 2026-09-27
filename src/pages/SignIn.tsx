@@ -117,7 +117,8 @@ export default function SignIn() {
             )}
             {user?.isAnonymous && (
               <p className="text-caption text-ink-3">
-                You're browsing as a guest — guest data stays on this device. Sign in with email to use FootIQ across devices.
+                You're browsing as a guest. A guest account has no email attached, so you can't get back into it from another device. Sign
+                in with email to use FootIQ across devices.
               </p>
             )}
           </div>
