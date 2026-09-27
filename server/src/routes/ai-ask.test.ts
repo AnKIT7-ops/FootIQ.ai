@@ -71,6 +71,16 @@ describe("POST /api/ai/ask", () => {
     expect(named("bukayo saka form")).toEqual(["Bukayo Saka"]);
   });
 
+  it("ranks the season's scorers so 'who's top scorer?' has an answer", () => {
+    const scorer = (name: string, goals: number, minutes: number) =>
+      ({ id: name, name, teamId: "ars", role: "Forward", availability: "available", news: "", stats: { goals, assists: 0, minutes }, fantasy: { expectedPoints: 0, selectedBy: 0 } }) as unknown as Player;
+    const squad = [scorer("Late Sub", 5, 300), scorer("No Goals", 0, 900), scorer("Golden Boot", 9, 810), scorer("Workhorse", 5, 800)];
+    const facts = JSON.parse(prompts.concierge_answer({ question: "who's the top scorer", teams: [], upcoming: [], players: squad }).prompt.match(/^\{.*\}$/m)![0]);
+    // Most goals first; a tie goes to fewer minutes; nobody with zero.
+    expect(facts.topScorers.map((p: { name: string }) => p.name)).toEqual(["Golden Boot", "Late Sub", "Workhorse"]);
+    expect(facts.topAssisters).toEqual([]);
+  });
+
   it("requires sign-in, like every metered AI route", async () => {
     const { provider, seen } = recording();
     const res = await ask(appWith(provider), "Who is top of the league?", false);
