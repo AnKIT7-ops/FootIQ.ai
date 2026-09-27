@@ -13,7 +13,8 @@
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0e16" />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f3ef" />
     <title>FootIQ — AI Football Intelligence</title>
-    <link rel="canonical" href="https://footiq.ai/" />
+    <!-- absolute URLs below come from VITE_SITE_URL at build time (vite.config.ts): link unfurlers don't run JS -->
+    <link rel="canonical" href="%VITE_SITE_URL%/" />
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="FootIQ" />
@@ -22,8 +23,8 @@
       property="og:description"
       content="The AI intelligence layer for football: predictions, scouting, tactics and transfer probabilities — probabilities, not promises."
     />
-    <meta property="og:url" content="https://footiq.ai/" />
-    <meta property="og:image" content="https://footiq.ai/og.png" />
+    <meta property="og:url" content="%VITE_SITE_URL%/" />
+    <meta property="og:image" content="%VITE_SITE_URL%/og.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
 
@@ -33,14 +34,14 @@
       name="twitter:description"
       content="The AI intelligence layer for football: predictions, scouting, tactics and transfer probabilities."
     />
-    <meta name="twitter:image" content="https://footiq.ai/og.png" />
+    <meta name="twitter:image" content="%VITE_SITE_URL%/og.png" />
 
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "WebSite",
         "name": "FootIQ",
-        "url": "https://footiq.ai/",
+        "url": "%VITE_SITE_URL%/",
         "description": "The AI intelligence layer for football — predictions, scouting, tactics and transfer intelligence."
       }
     </script>

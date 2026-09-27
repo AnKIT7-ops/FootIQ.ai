@@ -98,7 +98,7 @@ export function shareCardSVG({ title, kind, stat, path }: ShareCardOpts): string
   <text x="80" y="230" font-family="${sans}" font-size="64" font-weight="800" fill="#f2f6fc">${titleSpans}</text>
   ${stat ? `<text x="80" y="${250 + lines.length * 76}" font-family="${mono}" font-size="30" fill="#fbbf24">✦ ${esc(stat)}</text>` : ""}
   <text x="80" y="556" font-family="${sans}" font-size="34" font-weight="800" fill="#f2f6fc">Foot<tspan fill="#10b981">IQ</tspan></text>
-  <text x="80" y="586" font-family="${mono}" font-size="20" fill="#8fa3c2">${esc(`footiq.ai${path}`)}</text>
+  <text x="80" y="586" font-family="${mono}" font-size="20" fill="#8fa3c2">${esc(`${SITE_URL.replace(/^https?:\/\//, "")}${path}`)}</text>
   <text x="1120" y="586" text-anchor="end" font-family="${mono}" font-size="18" fill="#5d6f8d">AI ANALYSIS — NOT VERIFIED FACT</text>
 </svg>`;
 }
