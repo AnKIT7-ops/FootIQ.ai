@@ -14,7 +14,8 @@ import { DemoDataNotice } from "@/components/ui/DemoDataNotice";
 
 const kindMeta = {
   match: { icon: Swords, label: "Iconic match", color: "text-chart-2" },
-  milestone: { icon: Trophy, label: "Milestone", color: "text-iq-ink" },
+  // A milestone is history, not a model guess — never amber.
+  milestone: { icon: Trophy, label: "Milestone", color: "text-chart-1" },
   rivalry: { icon: Landmark, label: "Rivalry", color: "text-chart-4" },
   moment: { icon: Zap, label: "Moment", color: "text-accent-ink" },
 } as const;

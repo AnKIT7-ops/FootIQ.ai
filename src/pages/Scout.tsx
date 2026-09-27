@@ -294,9 +294,10 @@ export default function Scout() {
                 <div className="w-full sm:w-44">
                   <div className="mb-1 flex items-center justify-between">
                     <IQTag>fit score</IQTag>
-                    <span className={cn("tabular font-display text-xl font-black", fit >= 75 ? "text-accent-ink" : "text-ink")}>{fit}</span>
+                    {/* A fit score is model output: amber at any value — a strong fit is louder amber, never emerald. */}
+                    <span className={cn("tabular font-display text-xl font-black", fit >= 75 ? "text-iq-ink" : "text-ink")}>{fit}</span>
                   </div>
-                  <Meter label="" value={fit} color={fit >= 75 ? "var(--chart-1)" : "var(--chart-3)"} className="[&_span]:hidden" />
+                  <Meter label="" value={fit} color="var(--iq)" className="[&_span]:hidden" />
                 </div>
               </Card>
             </motion.div>

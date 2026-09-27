@@ -357,7 +357,8 @@ function MatchBody({ detail }: { detail: MatchDetail }) {
                   <span
                     className={cn(
                       "tabular rounded-lg px-2 py-0.5 font-mono text-caption font-bold",
-                      p.rating >= 7.5 ? "bg-accent-soft text-accent-ink" : "bg-surface-3 text-ink-2",
+                      // FootIQ's own rating is a computed score, not a measured stat: amber, not emerald.
+                      p.rating >= 7.5 ? "bg-iq-soft text-iq-ink" : "bg-surface-3 text-ink-2",
                     )}
                   >
                     {p.rating.toFixed(1)}
@@ -491,10 +492,11 @@ function PossessionBar({ homeName, awayName, home, away }: { homeName: string; a
 }
 
 function WinProb({ home, away, detail }: { home: string; away: string; detail: { h: number; d: number; a: number } }) {
+  // Model output wears amber (the honesty rule); the draw belongs to neither side.
   const rows = [
-    { label: home, v: detail.h, color: "var(--chart-1)" },
+    { label: home, v: detail.h, color: "var(--iq)" },
     { label: "Draw", v: detail.d, color: "var(--ink-3)" },
-    { label: away, v: detail.a, color: "var(--chart-4)" },
+    { label: away, v: detail.a, color: "var(--iq)" },
   ];
   return (
     <div className="space-y-3">
