@@ -111,6 +111,52 @@ export function useHotkey(key: string, withCtrl: boolean, handler: () => void): 
   }, [key, withCtrl]);
 }
 
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+// Only the most recently opened trap handles Tab (e.g. Ctrl+K over the tour).
+const trapStack: object[] = [];
+
+/**
+ * Modal focus trap. While `active`: focus moves into `ref` (the container
+ * itself if it carries a tabindex, else its first focusable), Tab/Shift+Tab
+ * cycle inside it, and on deactivate focus returns to whatever had it before.
+ * Focusables are re-queried on every Tab, so content that changes while open
+ * (search results, tour steps) is handled.
+ */
+export function useFocusTrap(ref: React.RefObject<HTMLElement | null>, active: boolean): void {
+  useEffect(() => {
+    if (!active) return;
+    const token = {};
+    trapStack.push(token);
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const focusables = () =>
+      Array.from(ref.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []).filter((el) => el.getClientRects().length > 0);
+
+    const root = ref.current;
+    if (root && !root.contains(document.activeElement)) (root.hasAttribute("tabindex") ? root : focusables()[0])?.focus();
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Tab" || trapStack[trapStack.length - 1] !== token) return;
+      const els = focusables();
+      const at = document.activeElement as HTMLElement | null;
+      const first = els[0];
+      const last = els[els.length - 1];
+      if (!first) return e.preventDefault();
+      if (!at || !els.includes(at) || at === (e.shiftKey ? first : last)) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      trapStack.splice(trapStack.indexOf(token), 1);
+      if (opener && opener !== document.body && opener.isConnected) opener.focus();
+    };
+  }, [active, ref]);
+}
+
 /** IntersectionObserver-based reveal state for scroll animations. */
 export function useInView<T extends HTMLElement>(threshold = 0.15): [React.RefObject<T | null>, boolean] {
   const ref = useRef<T | null>(null);
