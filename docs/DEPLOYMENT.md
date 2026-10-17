@@ -48,6 +48,12 @@ Optional KV cache: `npx wrangler kv namespace create CACHE` → uncomment the bi
 - SPA rewrite: all routes → `/index.html` (Vercel auto-handles Vite SPAs; if 404s appear add a rewrite rule).
 - Then set the API's `CORS_ORIGINS` to the Vercel domain(s), comma-separated, and redeploy the API.
 
+### Request budgets and API caching (checked Oct 2026)
+- **Vercel Hobby is the first wall, not the Worker.** Hobby includes 1,000,000 CDN Requests per *month* (~33k/day), and every request counts — HTML, each JS/CSS/font asset, cache hits included; going over means waiting out 30 days ([Hobby plan](https://vercel.com/docs/plans/hobby), [CDN usage](https://vercel.com/docs/manage-cdn-usage)). A first visit costs ~12–15 Vercel requests vs ~5 Worker requests per *session* (repositories hydrate once per app load), against the Worker's 100k/*day*.
+- **So `/api` is NOT proxied through Vercel.** An external rewrite would be CDN-cached ([rewrites](https://vercel.com/docs/routing/rewrites#caching-rewrites-to-external-origins)), but every proxied call — hit or miss — would move from the 100k/day Worker budget to the 1M/month Vercel one. Revisit only on Vercel Pro. Prerequisites then: a rewrite `{"source": "/api/:path*", "destination": "https://footiq-api.footiq.workers.dev/api/:path*"}` placed before the SPA catch-all, a same-origin API base in `src/lib/config.ts`, and rate limiting keyed on a client IP that Vercel forwards. That IP must be authenticated with an origin-secret header: behind a proxy, `cf-connecting-ip` is Vercel's egress IP, so every visitor would share one bucket.
+- **Cloudflare-side caching does not save Worker requests.** The Cache API runs inside the Worker, and [Workers Cache](https://developers.cloudflare.com/workers/cache/) bills cache hits as requests.
+- The API is CDN-ready anyway. Public catalog GETs send `public, max-age=N, s-maxage=N, stale-while-revalidate=N, stale-if-error=86400` (via `publicCache()`), and everything else gets `private, no-store` (the default-deny middleware in `server/src/app.ts`). That covers user, AI, admin, export, writes, preflights and any 4xx/5xx.
+
 ## 5. Post-deploy smoke test
 ```sh
 curl https://<api>/api/health          # mode:"database", aiProvider as configured
