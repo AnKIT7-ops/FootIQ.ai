@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ProsePage, ProseSection, ProseList } from "@/components/ui/Prose";
 import { usePageMeta } from "@/lib/seo";
+import { staticPageMeta } from "@/lib/page-meta";
 
 // Same inbox as the Contact page (src/pages/Contact.tsx) — change both together.
 const CONTACT_EMAIL = "hello@footiq.ai";
@@ -17,12 +18,7 @@ function Mail() {
 }
 
 export default function Privacy() {
-  usePageMeta({
-    title: "Privacy Policy",
-    description:
-      "What FootIQ collects, where it lives (Supabase, Cloudflare, Vercel), what goes to Google Gemini, what stays in your browser, and how to get your data deleted.",
-    path: "/privacy",
-  });
+  usePageMeta(staticPageMeta["/privacy"]);
 
   return (
     <ProsePage eyebrow="What we keep, and where" title="Privacy Policy" updated="September 27, 2026">

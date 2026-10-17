@@ -2,13 +2,10 @@ import { AlertTriangle } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { ProsePage, ProseSection, ProseList } from "@/components/ui/Prose";
 import { usePageMeta } from "@/lib/seo";
+import { staticPageMeta } from "@/lib/page-meta";
 
 export default function Disclaimer() {
-  usePageMeta({
-    title: "Disclaimer",
-    description: "FootIQ beta disclaimer: demo platform, algorithmically generated insights, informational predictions only — not betting advice.",
-    path: "/disclaimer",
-  });
+  usePageMeta(staticPageMeta["/disclaimer"]);
 
   return (
     <ProsePage eyebrow="Read before you rely on anything" title="Disclaimer" updated="July 10, 2026">

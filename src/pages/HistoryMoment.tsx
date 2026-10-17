@@ -6,32 +6,14 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ShareBar } from "@/components/ui/ShareBar";
 import { historicalMoments } from "@/lib/repositories/history";
 import { momentPath, resolveMoment } from "@/lib/slugs";
-import { articleJsonLd, usePageMeta } from "@/lib/seo";
+import { usePageMeta } from "@/lib/seo";
+import { momentPageMeta } from "@/lib/page-meta";
 
 export default function HistoryMoment() {
   const { slug } = useParams();
   const moment = resolveMoment(slug);
 
-  usePageMeta(
-    moment
-      ? {
-          title: `${moment.title} (${moment.year})`,
-          description: `${moment.subtitle} — ${moment.detail.slice(0, 140)}`,
-          path: momentPath(moment),
-          type: "article",
-          jsonLd: articleJsonLd({
-            headline: `${moment.title} (${moment.year})`,
-            description: moment.subtitle,
-            path: momentPath(moment),
-            publishedAt: `${moment.year}-01-01`,
-          }),
-          breadcrumbs: [
-            { name: "History", path: "/history" },
-            { name: moment.title, path: momentPath(moment) },
-          ],
-        }
-      : { title: "History", path: "/history" },
-  );
+  usePageMeta(moment ? momentPageMeta(moment) : { title: "History", path: "/history" });
 
   if (!moment) return <Navigate to="/history" replace />;
 

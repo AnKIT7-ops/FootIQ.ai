@@ -1,7 +1,13 @@
 import { useEffect } from "react";
 
-/** Canonical origin for absolute URLs (OG, canonical). Set by VITE_SITE_URL at build time (vite.config.ts requires it). */
-export const SITE_URL: string = (import.meta.env.VITE_SITE_URL as string | undefined)?.replace(/\/$/, "") ?? window.location.origin;
+/**
+ * Canonical origin for absolute URLs (OG, canonical). Set by VITE_SITE_URL at build time (vite.config.ts requires it).
+ * The prerender plugin in vite.config.ts imports this module in plain Node, where `import.meta.env` doesn't exist
+ * and vite.config.ts has put the same normalised value on process.env.
+ */
+const env: Partial<Record<string, string>> =
+  import.meta.env ?? (globalThis as { process?: { env: Record<string, string> } }).process?.env ?? {};
+export const SITE_URL: string = env.VITE_SITE_URL?.replace(/\/$/, "") ?? window.location.origin;
 
 export const SITE_NAME = "FootIQ";
 const DEFAULT_DESCRIPTION =
@@ -12,7 +18,7 @@ export interface Crumb {
   path: string;
 }
 
-interface PageMeta {
+export interface PageMeta {
   /** Page title without the site suffix. */
   title: string;
   description?: string;
@@ -73,8 +79,19 @@ export function breadcrumbJsonLd(crumbs: Crumb[]): Record<string, unknown> {
   };
 }
 
-/** Apply document metadata for the current page (title, description, canonical, OG/Twitter, JSON-LD). */
-export function applyPageMeta({
+export interface PageHead {
+  title: string;
+  canonical: string;
+  meta: Array<{ attr: "name" | "property"; key: string; content: string }>;
+  /** Serialised JSON-LD (one block or an array), or null when the page has none. */
+  jsonLd: string | null;
+}
+
+/**
+ * Every head tag a page owns, as data. Pure — the browser applies it (applyPageMeta)
+ * and the build writes it into each prerendered dist/<path>/index.html (vite.config.ts).
+ */
+export function pageHead({
   title,
   description = DEFAULT_DESCRIPTION,
   path,
@@ -84,41 +101,55 @@ export function applyPageMeta({
   publishedAt,
   jsonLd,
   breadcrumbs,
-}: PageMeta): void {
+}: PageMeta & { path: string }): PageHead {
   const fullTitle = `${title} · ${SITE_NAME}`;
-  const url = `${SITE_URL}${path ?? window.location.pathname}`;
   const ogImage = abs(image ?? "/og.png");
-
-  document.title = fullTitle;
-  upsertMeta("name", "description", description);
-  upsertMeta("name", "robots", noIndex ? "noindex, nofollow" : "index, follow");
-  upsertLink("canonical", url);
-
-  upsertMeta("property", "og:title", fullTitle);
-  upsertMeta("property", "og:description", description);
-  upsertMeta("property", "og:url", url);
-  upsertMeta("property", "og:type", type);
-  upsertMeta("property", "og:site_name", SITE_NAME);
-  upsertMeta("property", "og:image", ogImage);
-  if (type === "article" && publishedAt) upsertMeta("property", "article:published_time", publishedAt);
-  else removeMeta("property", "article:published_time");
-
-  upsertMeta("name", "twitter:card", "summary_large_image");
-  upsertMeta("name", "twitter:title", fullTitle);
-  upsertMeta("name", "twitter:description", description);
-  upsertMeta("name", "twitter:image", ogImage);
-
-  // one managed JSON-LD script per page — replaced wholesale on navigation
+  const meta: PageHead["meta"] = [
+    { attr: "name", key: "description", content: description },
+    { attr: "name", key: "robots", content: noIndex ? "noindex, nofollow" : "index, follow" },
+    { attr: "property", key: "og:title", content: fullTitle },
+    { attr: "property", key: "og:description", content: description },
+    { attr: "property", key: "og:url", content: `${SITE_URL}${path}` },
+    { attr: "property", key: "og:type", content: type },
+    { attr: "property", key: "og:site_name", content: SITE_NAME },
+    { attr: "property", key: "og:image", content: ogImage },
+    ...(type === "article" && publishedAt
+      ? [{ attr: "property" as const, key: "article:published_time", content: publishedAt }]
+      : []),
+    { attr: "name", key: "twitter:card", content: "summary_large_image" },
+    { attr: "name", key: "twitter:title", content: fullTitle },
+    { attr: "name", key: "twitter:description", content: description },
+    { attr: "name", key: "twitter:image", content: ogImage },
+  ];
   const blocks: Record<string, unknown>[] = [
     ...(jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : []),
     ...(breadcrumbs?.length ? [breadcrumbJsonLd(breadcrumbs)] : []),
   ];
+  return {
+    title: fullTitle,
+    canonical: `${SITE_URL}${path}`,
+    meta,
+    jsonLd: blocks.length ? JSON.stringify(blocks.length === 1 ? blocks[0] : blocks) : null,
+  };
+}
+
+/** Apply document metadata for the current page (title, description, canonical, OG/Twitter, JSON-LD). */
+export function applyPageMeta(meta: PageMeta): void {
+  const head = pageHead({ ...meta, path: meta.path ?? window.location.pathname });
+
+  document.title = head.title;
+  upsertLink("canonical", head.canonical);
+  for (const m of head.meta) upsertMeta(m.attr, m.key, m.content);
+  if (!head.meta.some((m) => m.key === "article:published_time")) removeMeta("property", "article:published_time");
+
+  // one managed JSON-LD script per page — replaced wholesale on navigation. The
+  // prerendered page's static block carries the same id, so it's replaced too.
   document.getElementById("footiq-jsonld")?.remove();
-  if (blocks.length) {
+  if (head.jsonLd) {
     const script = document.createElement("script");
     script.type = "application/ld+json";
     script.id = "footiq-jsonld";
-    script.textContent = JSON.stringify(blocks.length === 1 ? blocks[0] : blocks);
+    script.textContent = head.jsonLd;
     document.head.appendChild(script);
   }
 }

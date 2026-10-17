@@ -8,7 +8,8 @@ import { IQInsight } from "@/components/ui/IQInsight";
 import { ShareBar } from "@/components/ui/ShareBar";
 import { playersOf, usePlayers } from "@/lib/repositories/players";
 import { managerPath, managerSlug, playerPath, resolveManager, teamPath } from "@/lib/slugs";
-import { personJsonLd, usePageMeta } from "@/lib/seo";
+import { usePageMeta } from "@/lib/seo";
+import { managerPageMeta } from "@/lib/page-meta";
 import { useDataMode } from "@/lib/freshness";
 
 const DIALS: Array<{ key: "tempo" | "width" | "directness" | "pressIntensity"; label: string }> = [
@@ -24,23 +25,7 @@ export default function Manager() {
   const mode = useDataMode();
   const team = resolveManager(slug);
 
-  usePageMeta(
-    team
-      ? {
-          title: `${team.manager} — Tactical Style & System`,
-          description: `${team.manager}'s game model at ${team.name}: formation, build-up, pressing scheme and the four dials that define the system.`,
-          path: managerPath(team),
-          jsonLd: personJsonLd(
-            { name: team.manager, role: "Manager" },
-            { teamName: team.name, path: managerPath(team) },
-          ),
-          breadcrumbs: [
-            { name: "Teams", path: "/matches" },
-            { name: team.manager, path: managerPath(team) },
-          ],
-        }
-      : { title: "Managers" },
-  );
+  usePageMeta(team ? managerPageMeta(team) : { title: "Managers" });
 
   if (!team) return <Navigate to="/" replace />;
 
