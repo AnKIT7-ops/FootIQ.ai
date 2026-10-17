@@ -18,80 +18,14 @@ import { bump } from "@/lib/metrics";
 import { track } from "@/lib/analytics";
 import type { Player } from "@/data/types";
 import { DataState } from "@/components/ui/DataState";
-import { MIN_MINUTES, TRAITS, hasSample, profile, traitScore, type Trait } from "@/lib/player-stats";
+import { MIN_MINUTES, hasSample, profile, traitScore } from "@/lib/player-stats";
 import { playerPathFor } from "@/lib/slug-builders";
 import type { ScoutFilters } from "@shared/contracts";
 import { api } from "@/lib/api/client";
 import { backendConfigured } from "@/lib/config";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { isDemoEngine } from "@/lib/ai-provenance";
-
-interface ParsedQuery {
-  maxAge?: number;
-  positions: Array<Player["position"]>;
-  traits: Trait[];
-  chips: string[];
-}
-
-function parse(q: string): ParsedQuery {
-  const s = q.toLowerCase();
-  const out: ParsedQuery = { positions: [], traits: [], chips: [] };
-
-  const age = s.match(/under\s*(\d{2})(?!\s*m)|younger than\s*(\d{2})|u(\d{2})\b/);
-  if (age) {
-    const v = Number(age[1] ?? age[2] ?? age[3]);
-    if (v >= 16 && v <= 40) {
-      out.maxAge = v;
-      out.chips.push(`age < ${v}`);
-    }
-  } else if (/\byoung\b/.test(s)) {
-    out.maxAge = 24;
-    out.chips.push("age < 24");
-  }
-
-  const posMap: Array<[RegExp, Player["position"], string]> = [
-    [/winger|wide|wing\b/, "FW", "wide forward"],
-    [/striker|forward|number 9|no9|goalscorer/, "FW", "forward"],
-    [/midfielder|pivot|number 8|playmaker|regista|ten\b/, "MF", "midfielder"],
-    [/defender|cent(?:re|er)[ -]?backs?|\bcbs?\b|(?:full|left|right)[ -]?backs?/, "DF", "defender"],
-    [/keeper|goalkeeper|gk\b/, "GK", "goalkeeper"],
-  ];
-  for (const [re, pos, label] of posMap) {
-    if (re.test(s) && !out.positions.includes(pos)) {
-      out.positions.push(pos);
-      out.chips.push(label);
-    }
-  }
-
-  const traitMap: Array<[RegExp, Trait]> = [
-    [/finish|scor|\bgoals\b|shooting|clinical/, "scoring"],
-    [/pass|creat|vision|playmak|assist|chance/, "creating"],
-    [/defend|tackl|block|intercept|in the air|aerial|header/, "defending"],
-    [/press|work rate|engine|recover|win(s|ning)? (the )?ball/, "ball_winning"],
-    [/sav(e|es|ing)|shot.?stop/, "shot_stopping"],
-  ];
-  for (const [re, key] of traitMap) {
-    if (re.test(s) && !out.traits.includes(key)) {
-      out.traits.push(key);
-      out.chips.push(`excels: ${TRAITS[key].label}`);
-    }
-  }
-  return out;
-}
-
-const POSITION_LABEL: Record<Player["position"], string> = { GK: "goalkeeper", DF: "defender", MF: "midfielder", FW: "forward" };
-
-/** The AI's validated filters in the same shape the keyword parser produces. */
-function fromAiFilters(f: ScoutFilters): ParsedQuery {
-  const out: ParsedQuery = { positions: [...f.positions], traits: [...f.traits], chips: [] };
-  if (f.maxAge) {
-    out.maxAge = f.maxAge;
-    out.chips.push(`age < ${f.maxAge}`);
-  }
-  for (const pos of f.positions) out.chips.push(POSITION_LABEL[pos]);
-  for (const t of f.traits) out.chips.push(`excels: ${TRAITS[t].label}`);
-  return out;
-}
+import { fromAiFilters, hasCriteria, parseScoutQuery, type ParsedQuery } from "@/lib/scout-query";
 
 /**
  * Fit = mean percentile on the requested traits (or on the position's whole
@@ -102,6 +36,7 @@ function scorePlayer(all: Player[], p: Player, q: ParsedQuery): number {
   if (!hasSample(p)) return 0;
   if (q.positions.length && !q.positions.includes(p.position)) return 0;
   if (q.maxAge && (p.age == null || p.age >= q.maxAge)) return 0;
+  if (q.maxPrice != null && p.fantasy.price >= q.maxPrice) return 0;
   const traits = q.traits.filter((t) => t !== "shot_stopping" || p.position === "GK");
   if (q.traits.length && traits.length === 0) return 0;
   const pcts = traits.length ? traits.map((t) => traitScore(all, p, t)) : profile(all, p).map((a) => a.pct);
@@ -155,7 +90,7 @@ export default function Scout() {
     api
       .post<{ filters: ScoutFilters; provider: string }>("/api/ai/scout/parse", { query: q })
       .then((r) => {
-        if (live && !isDemoEngine(r.provider)) setAi({ query: submitted, parsed: fromAiFilters(r.filters) });
+        if (live && !isDemoEngine(r.provider)) setAi({ query: submitted, parsed: fromAiFilters(r.filters, parseScoutQuery(q)) });
       })
       .catch(() => {}) // keyword parser stays in charge
       .finally(() => live && setAiBusy(false));
@@ -165,16 +100,37 @@ export default function Scout() {
     };
   }, [submitted, user]);
   const aiParsed = ai?.query === submitted ? ai.parsed : null;
-  const parsed = useMemo(() => aiParsed ?? parse(submitted), [aiParsed, submitted]);
+  const parsed = useMemo(() => aiParsed ?? parseScoutQuery(submitted), [aiParsed, submitted]);
+  // Whitespace-only counts as not asked: the page stays on its examples.
+  const asked = submitted.trim() !== "";
+  const understood = hasCriteria(parsed);
   const { data: players, status: playerStatus } = usePlayersState();
   const results = useMemo(() => {
-    if (!submitted.trim()) return [];
+    if (!asked || !understood) return [];
     return players
       .map((p) => ({ p, fit: scorePlayer(players, p, parsed) }))
       .filter((r) => r.fit > 0)
       .sort((a, b) => b.fit - a.fit)
       .slice(0, 8);
-  }, [submitted, parsed, players]);
+  }, [asked, understood, parsed, players]);
+
+  const exampleButtons = (
+    <div className="mt-4 flex flex-wrap gap-2">
+      {examples.map((ex) => (
+        <button
+          key={ex}
+          type="button"
+          onClick={() => {
+            setQuery(ex);
+            setSubmitted(ex);
+          }}
+          className="rounded-full border border-line bg-surface px-3.5 py-1.5 text-xs text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
+        >
+          {ex}
+        </button>
+      ))}
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -236,7 +192,7 @@ export default function Scout() {
           </button>
         </form>
 
-        {submitted && parsed.chips.length > 0 && (
+        {asked && parsed.chips.length > 0 && (
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 font-mono text-micro uppercase tracking-wider text-ink-3">
               <SlidersHorizontal className="size-3.5" aria-hidden />
@@ -248,25 +204,32 @@ export default function Scout() {
           </div>
         )}
 
-        {!submitted && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {examples.map((ex) => (
-              <button
-                key={ex}
-                onClick={() => {
-                  setQuery(ex);
-                  setSubmitted(ex);
-                }}
-                className="rounded-full border border-line bg-surface px-3.5 py-1.5 text-xs text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
-              >
-                {ex}
-              </button>
+        {/* Said, but not applied — listed so an ignored constraint never reads as a filter. */}
+        {asked && parsed.ignored.length > 0 && (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="font-mono text-micro uppercase tracking-wider text-ink-3">Not searchable yet</span>
+            {parsed.ignored.map((t) => (
+              <Badge key={t} variant="outline">{t}</Badge>
             ))}
+            <span className="text-caption text-ink-3">Not in the free FPL data, so not applied.</span>
           </div>
         )}
+
+        {!asked && exampleButtons}
       </Card>
 
-      {submitted && (
+      {asked && !understood && (
+        <Card className="p-6 md:p-8">
+          <p className="text-prose font-semibold text-ink">I couldn't find anything to search on in that query.</p>
+          <p className="mt-1.5 text-sm text-ink-2">
+            AI Scout filters on position, age, FPL price and what a player does well — scoring, chance creation, defending, winning the ball
+            back or making saves. Try one of these:
+          </p>
+          {exampleButtons}
+        </Card>
+      )}
+
+      {asked && understood && (
         <div className="space-y-3">
           {results.length > 0 && (
             <ShareBar
@@ -307,17 +270,18 @@ export default function Scout() {
               <DataState status={playerStatus} empty loadingLabel="Loading players…" emptyTitle="Players haven't synced yet" emptyBody="Player data comes from the Premier League's FPL feed and syncs hourly." />
             ) : (
               <Card className="p-8 text-center text-sm text-ink-2">
-                No Premier League player with enough minutes fits those constraints. Loosen the age or position filter and scout again.
+                No Premier League player with enough minutes fits all of those filters. Drop one and scout again.
               </Card>
             ))}
         </div>
       )}
 
-      {!submitted && (
+      {!asked && (
         <IQInsight title="How AI Scout reads you">
-          Plain language in, structured filters out: position, age and what you want the player to do well — scoring, chance creation,
-          defending, winning the ball back or making saves. Every Premier League player with {MIN_MINUTES}+ minutes is then ranked on their real
-          per-90 percentiles for exactly those things. Budget, preferred foot and pace aren't published anywhere free, so they're not guessed.
+          Plain language in, structured filters out: position, age, FPL price (“under £6m”) and what you want the player to do well — scoring,
+          chance creation, defending, winning the ball back or making saves. Every Premier League player with {MIN_MINUTES}+ minutes is then
+          ranked on their real per-90 percentiles for exactly those things. Transfer fees, preferred foot, pace and wide-vs-central role aren't
+          published anywhere free, so they're not guessed — Scout tells you when it skipped one.
         </IQInsight>
       )}
     </div>
