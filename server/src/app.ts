@@ -102,6 +102,20 @@ export function createServer(env: Env, opts?: { kv?: KVNamespaceLike; services?:
     await next();
   });
 
+  // 1b. cache policy — default deny. Only a successful GET/HEAD whose handler
+  // opted in via publicCache() may be stored by a browser or a shared cache;
+  // everything else (user data, AI, admin, writes, errors, 404s, preflights)
+  // is `private, no-store`, so no CDN placed in front of this API can ever
+  // serve one caller's response to another or pin an error.
+  app.use("*", async (c, next) => {
+    await next();
+    const shareable =
+      (c.req.method === "GET" || c.req.method === "HEAD") &&
+      c.res.status < 400 &&
+      c.res.headers.get("Cache-Control")?.startsWith("public,") === true;
+    if (!shareable) c.res.headers.set("Cache-Control", "private, no-store");
+  });
+
   // 2. security headers (API flavor: no sniff, no frame, cross-origin isolated)
   app.use(
     "*",

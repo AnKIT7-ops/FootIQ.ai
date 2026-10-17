@@ -9,6 +9,21 @@ export function ok<T>(c: Context, data: T, meta?: ApiMeta): Response {
   return c.json(body);
 }
 
+/**
+ * Mark a response shareable: browsers AND shared caches (a CDN in front of
+ * the Worker, e.g. a Vercel rewrite) may keep it for `seconds`, then serve it
+ * stale for as long again while refetching, and up to a day if the origin is
+ * failing. Only for payloads identical for every caller — anything else falls
+ * through to the `private, no-store` default in app.ts. Never call it on a
+ * route whose output depends on the user.
+ */
+export function publicCache(c: Context, seconds: number): void {
+  c.header(
+    "Cache-Control",
+    `public, max-age=${seconds}, s-maxage=${seconds}, stale-while-revalidate=${seconds}, stale-if-error=86400`,
+  );
+}
+
 /** Failure envelope from a typed ApiError. */
 export function fail(c: Context, err: ApiError, requestId?: string): Response {
   const body: ApiFailure = {
