@@ -5,7 +5,7 @@ import { Sidebar } from "@/components/shell/Sidebar";
 import { TopBar } from "@/components/shell/TopBar";
 import { MobileNav } from "@/components/shell/MobileNav";
 import { ChatDock } from "@/components/shell/ChatDock";
-import { Onboarding, shouldShowOnboarding } from "@/components/shell/Onboarding";
+import { X } from "lucide-react";
 import { useHotkey, usePrefersReducedMotion } from "@/lib/hooks";
 import { EASE_OUT } from "@/lib/motion";
 import { trackPageView } from "@/lib/analytics";
@@ -43,26 +43,74 @@ const Disclaimer = lazy(() => import("@/pages/Disclaimer"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 // palette carries the search index (players/teams/news) — load it on first open, not at boot
 const CommandPalette = lazy(() => import("@/components/shell/CommandPalette").then((m) => ({ default: m.CommandPalette })));
+// the tour only loads when someone asks for it
+const Onboarding = lazy(() => import("@/components/shell/Onboarding").then((m) => ({ default: m.Onboarding })));
+
+// Same key and meaning as Onboarding.tsx (set = tour seen or dismissed); read
+// here so the boot path never imports the tour module.
+const ONBOARDED_KEY = "footiq-onboarded";
+function tourSeen(): boolean {
+  try {
+    return localStorage.getItem(ONBOARDED_KEY) !== null;
+  } catch {
+    return true;
+  }
+}
+
+/**
+ * First-visit invitation on Home. Replaces the auto-opening modal: an
+ * interstitial over shared deep links, and the LCP element on mobile.
+ */
+function TourPrompt({ onStart, onDismiss }: { onStart: () => void; onDismiss: () => void }) {
+  return (
+    <div className="mx-auto mb-6 flex max-w-3xl items-center gap-2 rounded-2xl border border-line bg-surface py-2 pl-4 pr-2">
+      <p className="min-w-0 flex-1 text-ui text-ink-2">
+        New here?{" "}
+        <button type="button" onClick={onStart} className="py-1 font-semibold text-accent-ink underline-offset-4 hover:underline">
+          Take the 30-second tour
+        </button>
+      </p>
+      <button
+        type="button"
+        onClick={onDismiss}
+        aria-label="Dismiss the tour invitation"
+        className="flex size-9 shrink-0 items-center justify-center rounded-full text-ink-3 transition-colors hover:bg-surface-2 hover:text-ink"
+      >
+        <X className="size-4" aria-hidden />
+      </button>
+    </div>
+  );
+}
 
 function Shell() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [paletteMounted, setPaletteMounted] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
+  const [tourMounted, setTourMounted] = useState(false);
+  const [promptVisible, setPromptVisible] = useState(() => !tourSeen());
   const location = useLocation();
   const reduceMotion = usePrefersReducedMotion();
   useHotkey("k", true, () => openSearch());
 
-  // first visit: open the tour once the page has settled; afterwards any part
-  // of the app can re-launch it via the "footiq:tour" event (TopBar ?, /about)
+  // any part of the app can launch the tour via the "footiq:tour" event (TopBar ?, /about)
   useEffect(() => {
-    const openTour = () => setTourOpen(true);
-    window.addEventListener("footiq:tour", openTour);
-    const timer = shouldShowOnboarding() ? setTimeout(openTour, 900) : undefined;
-    return () => {
-      window.removeEventListener("footiq:tour", openTour);
-      if (timer) clearTimeout(timer);
+    const openTour = () => {
+      setPromptVisible(false);
+      setTourMounted(true);
+      setTourOpen(true);
     };
+    window.addEventListener("footiq:tour", openTour);
+    return () => window.removeEventListener("footiq:tour", openTour);
   }, []);
+
+  const dismissPrompt = () => {
+    setPromptVisible(false);
+    try {
+      localStorage.setItem(ONBOARDED_KEY, "1");
+    } catch {
+      /* best-effort */
+    }
+  };
 
   const openSearch = () => {
     setPaletteMounted(true);
@@ -107,6 +155,9 @@ function Shell() {
             transition={{ duration: 0.12, ease: EASE_OUT }}
             className="mx-auto max-w-7xl px-4 pb-32 pt-6 outline-none md:px-6 lg:pb-16"
           >
+            {promptVisible && location.pathname === "/" && (
+              <TourPrompt onStart={() => window.dispatchEvent(new Event("footiq:tour"))} onDismiss={dismissPrompt} />
+            )}
             <Routes location={location}>
               <Route path="/" element={<Home />} />
               <Route path="/matches" element={<Matches />} />
@@ -158,7 +209,11 @@ function Shell() {
       </div>
       <MobileNav />
       <ChatDock />
-      <Onboarding open={tourOpen} onClose={() => setTourOpen(false)} />
+      {tourMounted && (
+        <Suspense fallback={null}>
+          <Onboarding open={tourOpen} onClose={() => setTourOpen(false)} />
+        </Suspense>
+      )}
       {paletteMounted && (
         <Suspense fallback={null}>
           <CommandPalette open={searchOpen} onClose={() => setSearchOpen(false)} />
