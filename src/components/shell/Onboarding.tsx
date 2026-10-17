@@ -41,7 +41,7 @@ const steps = [
     icon: Search,
     eyebrow: "AI Scout",
     title: "Describe a player. We'll find them.",
-    body: "Type plain language — “left-footed winger under €30M who presses hard” — and get ranked matches with fit scores. Also works straight from search: type a question and press Enter.",
+    body: "Type plain language — “midfielder under 25 who presses hard” — and get ranked matches with fit scores. Also works straight from search: type a question and press Enter.",
     cta: { label: "Try AI Scout", to: "/scout" },
   },
   {
