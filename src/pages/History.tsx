@@ -9,6 +9,7 @@ import { historicalMoments, searchHistory } from "@/lib/repositories/history";
 import { useVoiceInput } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 import { usePageMeta } from "@/lib/seo";
+import { staticPageMeta } from "@/lib/page-meta";
 import { momentPath } from "@/lib/slugs";
 import { DemoDataNotice } from "@/components/ui/DemoDataNotice";
 
@@ -23,11 +24,7 @@ const kindMeta = {
 const examples = ["greatest comebacks", "last minute title", "messi records", "world cup collapse", "champions league finals"];
 
 export default function History() {
-  usePageMeta({
-    title: "Historical Explorer",
-    description: "A century of football, searchable — iconic matches, milestones, rivalries and moments with probability footnotes.",
-    path: "/history",
-  });
+  usePageMeta(staticPageMeta["/history"]);
   const [query, setQuery] = useState("");
   const { listening, supported, start, stop } = useVoiceInput((t) => setQuery(t));
   const results = useMemo(() => (query.trim() ? searchHistory(query) : historicalMoments), [query]);

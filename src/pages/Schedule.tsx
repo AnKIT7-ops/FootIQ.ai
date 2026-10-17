@@ -8,6 +8,7 @@ import { useMatchesState } from "@/lib/repositories/matches";
 import { nextSeasonStart, useCompetitions } from "@/lib/repositories/competitions";
 import { dayOffset, isThisWeek, isToday, isTomorrow, kickoffDayHeading, kickoffDayKey } from "@/lib/kickoff";
 import { usePageMeta } from "@/lib/seo";
+import { staticPageMeta } from "@/lib/page-meta";
 import type { Match } from "@/data/types";
 import type { CompetitionDto } from "@shared/contracts";
 
@@ -62,11 +63,7 @@ function offSeasonBody(next: CompetitionDto | null, fallback: string, nextKickof
  * were scheduled for; MatchCard labels them instead of showing a score.
  */
 export default function Schedule() {
-  usePageMeta({
-    title: "Schedule",
-    description: "Football fixtures by date — today, tomorrow and the week ahead across Europe's major competitions, with live scores and results.",
-    path: "/schedule",
-  });
+  usePageMeta(staticPageMeta["/schedule"]);
 
   const { data, status } = useMatchesState();
   const comps = useCompetitions();

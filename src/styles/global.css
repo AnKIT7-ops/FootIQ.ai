@@ -344,3 +344,35 @@
     scroll-behavior: auto;
   }
 }
+
+/*
+  Static page summary baked into each prerendered dist/<route>/index.html (vite.config.ts)
+  for clients that don't run JS: crawlers, link unfurlers, AI fetchers. When scripting is
+  on it never paints, and React's first render replaces it — no flash, no layout shift.
+*/
+@media (scripting: enabled) {
+  .prerender {
+    display: none;
+  }
+}
+.prerender {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+.prerender h1 {
+  color: var(--ink);
+  font-size: var(--text-figure);
+  font-weight: 800;
+  line-height: 1.2;
+}
+.prerender p,
+.prerender nav {
+  margin-top: 0.75rem;
+}
+.prerender a {
+  color: var(--accent-ink);
+  text-decoration: underline;
+}

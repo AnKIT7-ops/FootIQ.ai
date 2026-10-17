@@ -1,5 +1,6 @@
 import { SectionHeader } from "@/components/ui/Card";
 import { usePageMeta } from "@/lib/seo";
+import { staticPageMeta } from "@/lib/page-meta";
 import { DataState } from "@/components/ui/DataState";
 import { HeadlineCard } from "@/components/ui/HeadlineCard";
 import { useHeadlinesState } from "@/lib/repositories/headlines";
@@ -11,11 +12,7 @@ import { useHeadlinesState } from "@/lib/repositories/headlines";
  * player's move is exactly the guess-dressed-as-fact the product forbids.
  */
 export default function Transfers() {
-  usePageMeta({
-    title: "Transfer Center",
-    description: "The latest real transfer news from BBC Sport, the Guardian and Sky Sports, refreshed every 30 minutes.",
-    path: "/transfers",
-  });
+  usePageMeta(staticPageMeta["/transfers"]);
   const { data: headlineData, status } = useHeadlinesState();
   const transferNews = headlineData.filter((h) => h.category === "Transfers");
 

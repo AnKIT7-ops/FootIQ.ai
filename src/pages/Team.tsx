@@ -20,7 +20,8 @@ import { usePlayers } from "@/lib/repositories/players";
 import { teamMatches } from "@/lib/repositories/matches";
 import { cn } from "@/lib/utils";
 import { playerPathFor } from "@/lib/slug-builders";
-import { sportsTeamJsonLd, usePageMeta } from "@/lib/seo";
+import { usePageMeta } from "@/lib/seo";
+import { teamPageMeta } from "@/lib/page-meta";
 import { managerPath, resolveTeam, teamPath } from "@/lib/slugs";
 import { FavoriteButton } from "@/components/ui/FavoriteButton";
 import { ShareBar } from "@/components/ui/ShareBar";
@@ -83,13 +84,7 @@ function TeamView({ team }: { team: Team }) {
   useEffect(() => {
     recordView({ kind: "team", id: team.id, label: team.name, sub: team.league, path: teamPath(team) });
   }, [team]);
-  usePageMeta({
-    title: `${team.name} — Squad, Tactics & AI Analysis`,
-    description: `${team.name}: squad and minutes, fixtures and results, availability, tactical style DNA and the AI tactical report.`,
-    path: teamPath(team),
-    jsonLd: sportsTeamJsonLd(team, teamPath(team)),
-    breadcrumbs: [{ name: team.name, path: teamPath(team) }],
-  });
+  usePageMeta(teamPageMeta(team));
   // Real Premier League players (FPL); empty for clubs outside the Premier League.
   const allPlayers = usePlayers();
   const stars = useMemo(() => allPlayers.filter((p) => p.teamId === team.id).sort((a, b) => b.stats.minutes - a.stats.minutes), [allPlayers, team.id]);

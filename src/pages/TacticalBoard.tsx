@@ -13,6 +13,7 @@ import { teams, getTeam } from "@/lib/repositories/teams";
 import { isDarkHex } from "@/lib/utils";
 import { usePageMeta } from "@/lib/seo";
 import { clampToPitch, nudge } from "@/lib/pitch";
+import { staticPageMeta } from "@/lib/page-meta";
 
 type Zone = "GK" | "DF" | "MF" | "FW";
 type TeamKey = "A" | "B";
@@ -221,11 +222,7 @@ function h2hNotes(a: TeamMetrics, b: TeamMetrics, nameA: string, nameB: string):
 /* ---------- page ---------- */
 
 export default function TacticalBoard() {
-  usePageMeta({
-    title: "Tactical Board",
-    description: "Drag-and-drop formation builder with live AI structure analysis — line height, compactness, width and head-to-head matchup reads.",
-    path: "/tactics",
-  });
+  usePageMeta(staticPageMeta["/tactics"]);
   const [mode, setMode] = useState<"single" | "h2h">("single");
   const [formation, setFormation] = useState("4-3-3");
   const [teamAId, setTeamAId] = useState("mci");

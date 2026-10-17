@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/Card";
 import { IQInsight } from "@/components/ui/IQInsight";
 import { ProsePage, ProseSection } from "@/components/ui/Prose";
 import { usePageMeta } from "@/lib/seo";
+import { staticPageMeta } from "@/lib/page-meta";
 
 const pillars = [
   {
@@ -29,11 +30,7 @@ const pillars = [
 ];
 
 export default function About() {
-  usePageMeta({
-    title: "About",
-    description: "FootIQ is the AI intelligence layer for football — what it is, how the amber/emerald honesty system works, and where the beta is heading.",
-    path: "/about",
-  });
+  usePageMeta(staticPageMeta["/about"]);
 
   return (
     <ProsePage eyebrow="The AI intelligence layer for football" title="About FootIQ">

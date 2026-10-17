@@ -14,6 +14,7 @@ import { getTeam } from "@/lib/repositories/teams";
 import { useVoiceInput } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 import { usePageMeta } from "@/lib/seo";
+import { staticPageMeta } from "@/lib/page-meta";
 import { bump } from "@/lib/metrics";
 import { track } from "@/lib/analytics";
 import type { Player } from "@/data/types";
@@ -46,11 +47,7 @@ function scorePlayer(all: Player[], p: Player, q: ParsedQuery): number {
 const examples = ["Young midfielder who creates chances", "Clinical striker under 25", "Defender who wins the ball back", "Goalkeeper who makes saves"];
 
 export default function Scout() {
-  usePageMeta({
-    title: "AI Scout",
-    description: "Describe the player you need in plain language — position, age and what they do well — and get Premier League players ranked on their real per-90 output.",
-    path: "/scout",
-  });
+  usePageMeta(staticPageMeta["/scout"]);
   const [params] = useSearchParams();
   const [query, setQuery] = useState(params.get("q") ?? "");
   const [submitted, setSubmitted] = useState(params.get("q") ?? "");

@@ -5,16 +5,13 @@ import { DataState } from "@/components/ui/DataState";
 import { HeadlineCard } from "@/components/ui/HeadlineCard";
 import { useHeadlinesState } from "@/lib/repositories/headlines";
 import { usePageMeta } from "@/lib/seo";
+import { staticPageMeta } from "@/lib/page-meta";
 import type { NewsHeadline } from "@shared/contracts";
 
 const cats: Array<"All" | NewsHeadline["category"]> = ["All", "Transfers", "Injuries", "Results", "News"];
 
 export default function News() {
-  usePageMeta({
-    title: "Football News",
-    description: "The latest football headlines from BBC Sport, the Guardian and Sky Sports, refreshed every 30 minutes.",
-    path: "/news",
-  });
+  usePageMeta(staticPageMeta["/news"]);
   const { data, status } = useHeadlinesState();
   const [cat, setCat] = useState<(typeof cats)[number]>("All");
   const list = useMemo(() => (cat === "All" ? data : data.filter((h) => h.category === cat)), [cat, data]);

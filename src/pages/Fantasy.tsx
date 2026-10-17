@@ -15,17 +15,14 @@ import { playerPathFor, teamPathFor } from "@/lib/slug-builders";
 import { kickoffLabel } from "@/lib/kickoff";
 import { cn } from "@/lib/utils";
 import { usePageMeta } from "@/lib/seo";
+import { staticPageMeta } from "@/lib/page-meta";
 import type { FantasyBoard, Player } from "@/data/types";
 
 /** FPL's fixture difficulty scale: 1–2 easy, 3 neutral, 4–5 hard. */
 const fdrColor = (v: number) => (v <= 2 ? "bg-accent-soft text-accent-ink" : v === 3 ? "bg-surface-3 text-ink-2" : "bg-bad/12 text-bad");
 
 export default function Fantasy() {
-  usePageMeta({
-    title: "Fantasy Assistant",
-    description: "Fantasy Premier League from the official FPL data: FPL's projected points, transfer trends, injury flags and a five-gameweek fixture difficulty grid.",
-    path: "/fantasy",
-  });
+  usePageMeta(staticPageMeta["/fantasy"]);
   const { data: board, status: boardStatus } = useFantasyState();
   const { data: players, status: playerStatus } = usePlayersState();
 
