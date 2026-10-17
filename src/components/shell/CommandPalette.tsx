@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Clock3, CornerDownLeft, Flame, Mic, MicOff, Search, Sparkles, UserRound, UsersRound, Shield, FileText, Compass } from "lucide-react";
 import { recentSearches, recordSearch, runSearch, trendingSearches, type SearchItem } from "@/lib/search";
-import { useVoiceInput } from "@/lib/hooks";
+import { useFocusTrap, useVoiceInput } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 
 /** Highlight the matched part of a result label (whole query, else first word). */
@@ -38,23 +38,21 @@ const kindIcon = {
 export function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [query, setQuery] = useState("");
   const [cursor, setCursor] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const restoreFocusRef = useRef<HTMLElement | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { listening, supported, start, stop } = useVoiceInput((text) => setQuery(text));
 
   const results = useMemo(() => runSearch(query), [query]);
 
+  // focus lands on the search input (first focusable), stays inside, returns to the opener on close
+  useFocusTrap(dialogRef, open);
+
   useEffect(() => {
     if (open) {
-      restoreFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       setQuery("");
       setCursor(0);
-      setTimeout(() => inputRef.current?.focus(), 30);
     } else {
       stop();
-      restoreFocusRef.current?.focus();
-      restoreFocusRef.current = null;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -104,6 +102,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
         <>
           <div className="fixed inset-0 z-50 bg-black/55" onClick={onClose} aria-hidden />
           <div
+            ref={dialogRef}
             className="fixed inset-x-3 top-[12vh] z-50 mx-auto max-w-xl"
             role="dialog"
             aria-modal="true"
@@ -113,7 +112,6 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
               <div className="flex items-center gap-3 border-b border-line px-4">
                 <Search className="size-4 shrink-0 text-ink-3" aria-hidden />
                 <input
-                  ref={inputRef}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={onKeyDown}

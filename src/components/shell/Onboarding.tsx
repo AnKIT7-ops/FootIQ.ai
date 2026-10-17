@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight, BadgeCheck, ClipboardList, Search, Sparkles, X } from "lucide-react";
 import { track } from "@/lib/analytics";
+import { useFocusTrap } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 
 /**
@@ -71,11 +72,11 @@ export function Onboarding({ open, onClose }: { open: boolean; onClose: () => vo
     onClose();
   };
 
+  // focuses the panel on open, keeps Tab inside, returns focus to the opener on close
+  useFocusTrap(panelRef, open);
+
   useEffect(() => {
-    if (open) {
-      setStep(0);
-      setTimeout(() => panelRef.current?.focus(), 40);
-    }
+    if (open) setStep(0);
   }, [open]);
 
   useEffect(() => {
