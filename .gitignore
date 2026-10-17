@@ -24,6 +24,7 @@ Thumbs.db
 .claude/
 .codex/
 .cursor/
+.mcp.json
 
 .vercel
 .env*
