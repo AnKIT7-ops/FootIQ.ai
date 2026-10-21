@@ -12,7 +12,8 @@ import { MomentumRiver } from "@/components/charts/MomentumRiver";
 import { CompareBars } from "@/components/charts/CompareBars";
 import { Formation } from "@/components/charts/Formation";
 import { Heatmap } from "@/components/charts/Heatmap";
-import { matchDetail, useMatchesState } from "@/lib/repositories/matches";
+import { matchDetail, matches as allMatches, useMatchesState } from "@/lib/repositories/matches";
+import { FactsMain, HeadToHeadTab, MatchInfoCard, TableTab } from "@/components/match/MatchFacts";
 import { getTeam } from "@/lib/repositories/teams";
 import { heatmapFor } from "@/data/generators";
 import { cn } from "@/lib/utils";
@@ -92,7 +93,6 @@ export default function MatchCenter() {
 }
 
 function MatchBody({ detail }: { detail: MatchDetail }) {
-  const [tab, setTab] = useState("overview");
   const home = getTeam(detail.homeId);
   const away = getTeam(detail.awayId);
   const live = detail.status === "live";
@@ -101,6 +101,8 @@ function MatchBody({ detail }: { detail: MatchDetail }) {
   // Play detail (events, stats, lineups) exists only for demo fixtures; a real
   // result has the scoreline and nothing invented around it.
   const hasPlay = played && detail.events.length > 0;
+  // Demo fixtures keep the full event tabs; real fixtures get the facts we actually hold.
+  const [tab, setTab] = useState(hasPlay ? "overview" : "facts");
   const prediction = predictionByMatch.get(detail.id);
   // Real fixtures get the table-driven forecast; demo fixtures keep their labelled demo numbers.
   const teams = useTeams();
@@ -185,26 +187,21 @@ function MatchBody({ detail }: { detail: MatchDetail }) {
       </div>
 
       {/* Momentum, stats, lineups and the event feed all describe play that
-          happened. Before kickoff there is none, so those tabs are withheld
-          rather than filled with a plausible-looking invention about a real
-          fixture. FootIQ (preview inference) stays — it is amber-marked. */}
+          happened, and FootIQ has no events feed for real fixtures. Real
+          fixtures get the facts we do hold — form, table, head-to-head, season
+          stats — instead of a plausible-looking invention. */}
       {!hasPlay ? (
-        <div className="rounded-xl border border-line bg-surface-2 px-4 py-3.5">
-          <p className="text-caption leading-relaxed text-ink-3">
-            <span className="font-semibold text-ink-2">
-              {played
-                ? detail.status === "live" ? "Live score from our data provider." : "Final score from our data provider."
-                : detail.status === "postponed" ? "This match was postponed." : detail.status === "cancelled" ? "This match was cancelled." : detail.status === "unconfirmed" ? "Our data provider hasn't confirmed the result." : "This match hasn't kicked off yet."}
-            </span>{" "}
-            {played
-              ? "FootIQ has no event or statistics feed for real matches yet, so there's no timeline, xG or lineups here — rather than invented ones."
-              : detail.status === "upcoming"
-                ? isDemoMatch(detail.id)
-                  ? "Momentum, stats, lineups and the event feed appear once it's under way."
-                  : "Scorers, stats and lineups aren't shown for real fixtures — FootIQ has no event feed for them yet."
-                : "No stats or lineups exist for it."}
-          </p>
-        </div>
+        <Tabs
+          id="match"
+          className="w-full justify-start"
+          tabs={[
+            { value: "facts", label: "Facts" },
+            { value: "table", label: "Table" },
+            { value: "h2h", label: "Head-to-head" },
+          ]}
+          active={tab}
+          onChange={setTab}
+        />
       ) : (
         <Tabs
           id="match"
@@ -369,63 +366,11 @@ function MatchBody({ detail }: { detail: MatchDetail }) {
         </div>
       )}
 
-      {(!hasPlay || tab === "iq") && (
+      {!hasPlay && tab === "facts" && (
         <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+          <FactsMain detail={detail} matches={allMatches} teams={teams} />
           <div className="space-y-4">
-            {/*
-              Real fixtures: the tactical note and commentary were templates filled from
-              SYNTHESIZED team styles ("Leeds' mid-block press", "line up in a 4-3-3"),
-              asserting things nobody measured — and contradicting each other. Real
-              fixtures get the fact-grounded AI preview instead; demo fixtures keep theirs.
-            */}
-            {!isDemoMatch(detail.id) ? (
-              detail.status === "upcoming" ? (
-                <AiAnswer
-                  endpoint={`/api/ai/fixtures/${encodeURIComponent(detail.id)}/preview`}
-                  title="AI match preview"
-                  cta="Preview this match"
-                  feedback="Fixture preview"
-                />
-              ) : (
-                <Card className="p-4 md:p-5 text-caption text-ink-3">
-                  No tactical analysis for this match — FootIQ has no event or tracking data for real fixtures yet, and won't
-                  write a read it can't back up.
-                </Card>
-              )
-            ) : (
-            <>
-            <IQInsight title="Tactical read" feedback="Match tactical read">{detail.tacticalNote}</IQInsight>
-            <Card className="p-4 md:p-5">
-              <SectionHeader eyebrow={hasPlay ? "Live model feed" : "Pre-match read"} title="AI Commentary" className="mb-3" />
-              <ol className="space-y-4">
-                {[...detail.aiCommentary].reverse().map((c, i) => (
-                  <li key={i} className="flex gap-3">
-                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-iq-soft text-iq-ink">
-                      <Sparkles className="size-3.5" aria-hidden />
-                    </span>
-                    <div>
-                      <p className="font-mono text-micro uppercase tracking-wider text-ink-3">
-                        {c.minute > 0 ? `${c.minute}' · ` : ""}{c.kind}
-                      </p>
-                      <p className="mt-1 text-ui leading-relaxed text-ink-2">{c.text}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </Card>
-            </>
-            )}
-          </div>
-          <div className="space-y-4">
-            {/*
-              Win probability renders ONLY when a prediction actually exists for
-              this match. It used to pass `{ h: live ? 64 : 45, d: ..., a: ... }`
-              — two hardcoded triplets shown for every fixture in the app under
-              the label "Model estimate", captioned "updates every event". No
-              model produced them and they never updated. Same class of
-              fabrication as the confidence numbers deleted in chunk 1, so the
-              same treatment: delete the literals rather than dress them up.
-            */}
+            <MatchInfoCard detail={detail} />
             {forecast?.ok ? (
               <Card className="p-4 md:p-5">
                 <SectionHeader eyebrow="Model estimate" title="Win Probability" className="mb-4" />
@@ -445,13 +390,75 @@ function MatchBody({ detail }: { detail: MatchDetail }) {
                   <DemoEngineChip />
                 </div>
               </Card>
+            ) : forecast && !forecast.ok ? (
+              <Card className="p-4 md:p-5">
+                <SectionHeader eyebrow="Model estimate" title="Win Probability" className="mb-3" />
+                <p className="text-caption leading-relaxed text-ink-3">{forecast.reason}</p>
+              </Card>
+            ) : null}
+            {detail.status === "upcoming" && !isDemoMatch(detail.id) && (
+              <AiAnswer
+                endpoint={`/api/ai/fixtures/${encodeURIComponent(detail.id)}/preview`}
+                title="AI match preview"
+                cta="Preview this match"
+                feedback="Fixture preview"
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+      {!hasPlay && tab === "table" && <TableTab detail={detail} teams={teams} />}
+      {!hasPlay && tab === "h2h" && <HeadToHeadTab detail={detail} matches={allMatches} />}
+
+      {hasPlay && tab === "iq" && (
+        <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+          {/* Demo fixtures only (hasPlay): real fixtures get the Facts tab, never
+              templated reads built from synthesized team styles. */}
+          <div className="space-y-4">
+            <IQInsight title="Tactical read" feedback="Match tactical read">{detail.tacticalNote}</IQInsight>
+            <Card className="p-4 md:p-5">
+              <SectionHeader eyebrow="Live model feed" title="AI Commentary" className="mb-3" />
+              <ol className="space-y-4">
+                {[...detail.aiCommentary].reverse().map((c, i) => (
+                  <li key={i} className="flex gap-3">
+                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-iq-soft text-iq-ink">
+                      <Sparkles className="size-3.5" aria-hidden />
+                    </span>
+                    <div>
+                      <p className="font-mono text-micro uppercase tracking-wider text-ink-3">
+                        {c.minute > 0 ? `${c.minute}' · ` : ""}{c.kind}
+                      </p>
+                      <p className="mt-1 text-ui leading-relaxed text-ink-2">{c.text}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </Card>
+          </div>
+          <div className="space-y-4">
+            {/*
+              Win probability renders ONLY when a prediction actually exists for
+              this match. It used to pass `{ h: live ? 64 : 45, d: ..., a: ... }`
+              — two hardcoded triplets shown for every fixture in the app under
+              the label "Model estimate", captioned "updates every event". No
+              model produced them and they never updated. Same class of
+              fabrication as the confidence numbers deleted in chunk 1, so the
+              same treatment: delete the literals rather than dress them up.
+            */}
+            {prediction ? (
+              <Card className="p-4 md:p-5">
+                <SectionHeader eyebrow="Model estimate" title="Win Probability" className="mb-4" />
+                <WinProb home={home.short} away={away.short} detail={{ h: prediction.homeWin, d: prediction.draw, a: prediction.awayWin }} />
+                <div className="mt-3 border-t border-line pt-2.5">
+                  <DemoEngineChip />
+                </div>
+              </Card>
             ) : (
               <Card className="p-4 md:p-5">
                 <SectionHeader eyebrow="Model estimate" title="Win Probability" className="mb-3" />
                 <p className="text-caption leading-relaxed text-ink-3">
-                  {forecast && !forecast.ok
-                    ? forecast.reason
-                    : "Forecasts are made before kickoff only, so there's no pre-match number to show here."}
+                  Forecasts are made before kickoff only, so there&apos;s no pre-match number to show here.
                 </p>
               </Card>
             )}
