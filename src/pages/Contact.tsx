@@ -4,6 +4,7 @@ import { ProsePage, ProseSection } from "@/components/ui/Prose";
 import { WaitlistForm } from "@/components/ui/Waitlist";
 import { FeedbackForm } from "@/components/ui/FeedbackWidget";
 import { usePageMeta } from "@/lib/seo";
+import { staticPageMeta } from "@/lib/page-meta";
 
 const CONTACT_EMAIL = "hello@footiq.ai";
 
@@ -26,11 +27,7 @@ const channels = [
 ];
 
 export default function Contact() {
-  usePageMeta({
-    title: "Contact",
-    description: "Get in touch with the FootIQ team — feedback, bug reports, partnerships, or join the beta waitlist.",
-    path: "/contact",
-  });
+  usePageMeta(staticPageMeta["/contact"]);
 
   return (
     <ProsePage eyebrow="Talk to the team" title="Contact">

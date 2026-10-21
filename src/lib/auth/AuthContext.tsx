@@ -9,7 +9,7 @@ import {
 } from "react";
 import type { SessionUser } from "@shared/contracts";
 import { authConfigured } from "@/lib/config";
-import { getSupabase } from "./supabase";
+import { getSupabase, hasAuthEvidence, supabaseRequested } from "./supabase";
 import { registerAuthTokenGetter } from "@/lib/api/client";
 
 /**
@@ -39,8 +39,10 @@ export interface AuthState {
 const AuthContext = createContext<AuthState | null>(null);
 
 // Register the token getter at module scope so even pre-provider API calls
-// (repository hydration) pick up a persisted session token.
+// (repository hydration) pick up a persisted session token. No session
+// evidence and no SDK loaded yet = anonymous: answer null without the import.
 registerAuthTokenGetter(async () => {
+  if (!supabaseRequested() && !hasAuthEvidence()) return null;
   const supabase = await getSupabase();
   if (!supabase) return null;
   const { data } = await supabase.auth.getSession();
@@ -68,11 +70,20 @@ function mapUser(u: {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [ready, setReady] = useState(!authConfigured); // demo mode is ready immediately
+  // SDK wanted: a session may exist (restore it) or an auth action started.
+  const [active, setActive] = useState(hasAuthEvidence);
+  // demo mode and anonymous visitors are ready immediately; only a restore waits
+  const [ready, setReady] = useState(!active);
   const [user, setUser] = useState<SessionUser | null>(null);
 
+  /** Every auth action goes through here, so the session listener attaches before it resolves. */
+  const client = useCallback(() => {
+    setActive(true);
+    return getSupabase();
+  }, []);
+
   useEffect(() => {
-    if (!authConfigured) return;
+    if (!active) return;
     let unsubscribe = () => {};
     void getSupabase().then((supabase) => {
       if (!supabase) {
@@ -89,19 +100,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       unsubscribe = () => sub.subscription.unsubscribe();
     });
     return () => unsubscribe();
-  }, []);
+  }, [active]);
 
   const signInWithGoogle = useCallback(async () => {
-    const supabase = await getSupabase();
+    const supabase = await client();
     if (!supabase) return;
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: window.location.origin },
     });
-  }, []);
+  }, [client]);
 
   const signInWithEmailOtp = useCallback(async (email: string) => {
-    const supabase = await getSupabase();
+    const supabase = await client();
     if (!supabase) return { sent: false, message: "Sign-in isn't enabled on this deployment yet." };
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -110,16 +121,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return error
       ? { sent: false, message: "Couldn't send the sign-in link. Try again shortly." }
       : { sent: true, message: "Check your inbox for a sign-in link." };
-  }, []);
+  }, [client]);
 
   const signInAsGuest = useCallback(async () => {
-    const supabase = await getSupabase();
+    const supabase = await client();
     if (!supabase) return;
     await supabase.auth.signInAnonymously();
-  }, []);
+  }, [client]);
 
   const signOut = useCallback(async () => {
-    const supabase = await getSupabase();
+    // never loaded = no session to end; don't download the SDK just to say so
+    const supabase = supabaseRequested() ? await getSupabase() : null;
     await supabase?.auth.signOut();
     setUser(null);
   }, []);

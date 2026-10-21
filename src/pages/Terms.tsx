@@ -1,13 +1,10 @@
 import { Link } from "react-router-dom";
 import { ProsePage, ProseSection, ProseList } from "@/components/ui/Prose";
 import { usePageMeta } from "@/lib/seo";
+import { staticPageMeta } from "@/lib/page-meta";
 
 export default function Terms() {
-  usePageMeta({
-    title: "Terms of Service",
-    description: "Terms of use for the FootIQ beta — acceptable use, intellectual property, AI content limits and liability.",
-    path: "/terms",
-  });
+  usePageMeta(staticPageMeta["/terms"]);
 
   return (
     <ProsePage eyebrow="The rules of the pitch" title="Terms of Service" updated="July 10, 2026">

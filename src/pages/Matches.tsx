@@ -5,13 +5,10 @@ import { MatchCard } from "@/components/ui/MatchCard";
 import { DataState } from "@/components/ui/DataState";
 import { useMatchesState } from "@/lib/repositories/matches";
 import { usePageMeta } from "@/lib/seo";
+import { staticPageMeta } from "@/lib/page-meta";
 
 export default function Matches() {
-  usePageMeta({
-    title: "Matches",
-    description: "Live, upcoming and finished matches with expected goals, momentum and AI match reads.",
-    path: "/matches",
-  });
+  usePageMeta(staticPageMeta["/matches"]);
   const [tab, setTab] = useState("live");
   // Reactive on purpose: this page reads the store through the hook rather than
   // the module's live bindings. Fixtures now arrive asynchronously and start

@@ -6,6 +6,7 @@ import { SPRING } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { pageEntries, legalEntries } from "@/lib/nav";
 import { useDataMode } from "@/lib/freshness";
+import { useFocusTrap } from "@/lib/hooks";
 
 const primary = [
   { to: "/", label: "Home", icon: LayoutDashboard },
@@ -20,7 +21,10 @@ export function MobileNav() {
   const moreButtonRef = useRef<HTMLButtonElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
 
-  // Escape closes the sheet and returns focus to its trigger
+  useFocusTrap(sheetRef, moreOpen);
+
+  // Escape closes the sheet and returns focus to its trigger (explicitly: iOS
+  // Safari doesn't focus a tapped button, so the trap may have no opener)
   useEffect(() => {
     if (!moreOpen) return;
     const onKey = (e: KeyboardEvent) => {
@@ -30,7 +34,6 @@ export function MobileNav() {
       }
     };
     window.addEventListener("keydown", onKey);
-    sheetRef.current?.querySelector<HTMLElement>("a, button")?.focus();
     return () => window.removeEventListener("keydown", onKey);
   }, [moreOpen]);
 

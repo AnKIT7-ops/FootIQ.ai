@@ -12,6 +12,8 @@ import { Legend } from "@/components/charts/common";
 import { teams, getTeam } from "@/lib/repositories/teams";
 import { isDarkHex } from "@/lib/utils";
 import { usePageMeta } from "@/lib/seo";
+import { clampToPitch, nudge } from "@/lib/pitch";
+import { staticPageMeta } from "@/lib/page-meta";
 
 type Zone = "GK" | "DF" | "MF" | "FW";
 type TeamKey = "A" | "B";
@@ -102,6 +104,13 @@ function roleAt(tx: number, ty: number): { role: string; zone: Zone } {
   if (tx < 72) return { role: "AM", zone: "MF" };
   return { role: "ST", zone: "FW" };
 }
+
+/** Spoken names for the live region when a chip is moved by keyboard. */
+const ROLE_NAMES: Record<string, string> = {
+  GK: "goalkeeper", LB: "left back", CB: "centre back", RB: "right back", LWB: "left wing-back", RWB: "right wing-back",
+  LM: "left midfield", RM: "right midfield", LW: "left wing", RW: "right wing", DM: "defensive midfield",
+  CM: "central midfield", AM: "attacking midfield", ST: "striker",
+};
 
 /** Absolute board coords → team frame (away team B attacks right-to-left). */
 function teamFrame(chip: Chip): { tx: number; ty: number } {
@@ -213,11 +222,7 @@ function h2hNotes(a: TeamMetrics, b: TeamMetrics, nameA: string, nameB: string):
 /* ---------- page ---------- */
 
 export default function TacticalBoard() {
-  usePageMeta({
-    title: "Tactical Board",
-    description: "Drag-and-drop formation builder with live AI structure analysis — line height, compactness, width and head-to-head matchup reads.",
-    path: "/tactics",
-  });
+  usePageMeta(staticPageMeta["/tactics"]);
   const [mode, setMode] = useState<"single" | "h2h">("single");
   const [formation, setFormation] = useState("4-3-3");
   const [teamAId, setTeamAId] = useState("mci");
@@ -276,15 +281,36 @@ export default function TacticalBoard() {
     setChips(mode === "single" ? singleChips(formation) : h2hChips(teamAId, teamBId));
   };
 
+  // single position update for pointer drag and keyboard; roles and notes re-derive from chips
+  const moveTo = (id: string, x: number, y: number) => {
+    const p = clampToPitch(x, y);
+    if (id === "ball") setBall(p);
+    else setChips((cs) => cs.map((c) => (c.id === id ? { ...c, ...p } : c)));
+  };
+
   const setFromPointer = (clientX: number, clientY: number) => {
     const el = boardRef.current;
     if (el === null || dragId.current === null) return;
     const rect = el.getBoundingClientRect();
-    const x = Math.min(98, Math.max(2, ((clientX - rect.left) / rect.width) * 100));
-    const y = Math.min(96, Math.max(4, ((clientY - rect.top) / rect.height) * 100));
-    const id = dragId.current;
-    if (id === "ball") setBall({ x, y });
-    else setChips((cs) => cs.map((c) => (c.id === id ? { ...c, x, y } : c)));
+    moveTo(dragId.current, ((clientX - rect.left) / rect.width) * 100, ((clientY - rect.top) / rect.height) * 100);
+  };
+
+  const [announcement, setAnnouncement] = useState("");
+  const onArrowKey = (e: React.KeyboardEvent, id: string) => {
+    const cur = id === "ball" ? ball : chips.find((c) => c.id === id);
+    const next = cur && nudge(cur, e.key, e.shiftKey);
+    if (!cur || !next) return;
+    e.preventDefault(); // handled arrows only — keeps the page from scrolling
+    moveTo(id, next.x, next.y);
+    const edge = next.x === cur.x && next.y === cur.y ? " (edge of pitch)" : "";
+    if (id === "ball") {
+      setAnnouncement(`Ball moved to ${Math.round(next.x)}% along the pitch, ${Math.round(next.y)}% across${edge}`);
+    } else {
+      const chip = { ...(cur as Chip), ...next };
+      const { tx, ty } = teamFrame(chip);
+      const side = chip.team === "A" ? teamA.short : teamB.short;
+      setAnnouncement(`${side} player moved to ${ROLE_NAMES[roleAt(tx, ty).role]}${edge}`);
+    }
   };
 
   return (
@@ -385,9 +411,11 @@ export default function TacticalBoard() {
                 (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
                 dragId.current = "ball";
               }}
+              onKeyDown={(e) => onArrowKey(e, "ball")}
               className="absolute z-20 -translate-x-1/2 -translate-y-1/2 cursor-grab select-none text-lg leading-none transition-transform hover:scale-125 active:cursor-grabbing md:text-xl"
               style={{ left: `${ball.x}%`, top: `${ball.y}%` }}
-              aria-label="Drag the ball"
+              aria-label="Ball"
+              aria-describedby="board-move-hint"
             >
               ⚽
             </button>
@@ -404,9 +432,11 @@ export default function TacticalBoard() {
                     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
                     dragId.current = c.id;
                   }}
+                  onKeyDown={(e) => onArrowKey(e, c.id)}
                   className="absolute z-10 flex -translate-x-1/2 -translate-y-1/2 cursor-grab flex-col items-center active:cursor-grabbing"
                   style={{ left: `${c.x}%`, top: `${c.y}%` }}
-                  aria-label={`Drag ${c.team === "A" ? teamA.short : teamB.short} ${role}`}
+                  aria-label={`${c.team === "A" ? teamA.short : teamB.short} ${role}`}
+                  aria-describedby="board-move-hint"
                 >
                   <span
                     className="flex size-8 items-center justify-center rounded-full font-mono text-micro font-bold ring-2 transition-transform hover:scale-110 md:size-9"
@@ -422,6 +452,12 @@ export default function TacticalBoard() {
               );
             })}
           </div>
+          <p id="board-move-hint" className="sr-only">
+            Drag, or use arrow keys to move. Hold Shift for bigger steps.
+          </p>
+          <p className="sr-only" aria-live="polite" data-board-live>
+            {announcement}
+          </p>
           <p className="mt-2.5 text-center font-mono text-micro uppercase tracking-wider text-ink-3">
             {mode === "single" ? "Attacking → · drag any player — the position label follows the zone" : "Drag anyone on either side · labels re-read the zone as you move"}
           </p>

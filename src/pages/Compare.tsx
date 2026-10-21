@@ -13,6 +13,7 @@ import { Legend } from "@/components/charts/common";
 import { getPlayer, usePlayersState } from "@/lib/repositories/players";
 import { teams, getTeam } from "@/lib/repositories/teams";
 import { usePageMeta } from "@/lib/seo";
+import { staticPageMeta } from "@/lib/page-meta";
 import { ShareBar } from "@/components/ui/ShareBar";
 import { track } from "@/lib/analytics";
 import type { Player } from "@/data/types";
@@ -21,11 +22,7 @@ import { DataState } from "@/components/ui/DataState";
 import { AXES, METRICS, MIN_MINUTES, hasSample, percentile, type MetricKey } from "@/lib/player-stats";
 
 export default function Compare() {
-  usePageMeta({
-    title: "Compare Players, Teams & Managers",
-    description: "Head-to-head comparison on real Premier League per-90 percentiles and season totals — players, teams or managers side by side.",
-    path: "/compare",
-  });
+  usePageMeta(staticPageMeta["/compare"]);
   const [mode, setMode] = useState("players");
 
   return (

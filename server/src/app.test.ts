@@ -291,6 +291,61 @@ describe("CORS", () => {
   });
 });
 
+/**
+ * A CDN may sit in front of this API (a Vercel rewrite honours s-maxage), so
+ * the Cache-Control split is a security boundary: public catalog reads carry
+ * shared-cache directives, and everything user-specific, AI, admin, mutating
+ * or failed is `private, no-store` — never stored, never shared.
+ */
+describe("cache policy", () => {
+  const app = makeAppWithPlayers();
+  const SHARED = /^public, max-age=\d+, s-maxage=\d+, stale-while-revalidate=\d+/;
+  const NO_STORE = "private, no-store";
+
+  const cases: Array<[label: string, method: string, path: string, opts: { auth?: boolean; body?: unknown }, expected: RegExp | string]> = [
+    ["catalog players", "GET", "/api/players", {}, SHARED],
+    ["catalog player", "GET", "/api/players/fpl-1001", {}, SHARED],
+    ["catalog teams (v1 mount)", "GET", "/api/v1/teams", {}, SHARED],
+    ["catalog news", "GET", "/api/news", {}, SHARED],
+    ["catalog history", "GET", "/api/history", {}, SHARED],
+    ["catalog search", "GET", "/api/search?q=a", {}, SHARED],
+    ["catalog read, signed in (same bytes for all)", "GET", "/api/players", { auth: true }, SHARED],
+    ["catalog 503 before sync", "GET", "/api/matches", {}, NO_STORE],
+    ["catalog 404", "GET", "/api/players/does-not-exist", {}, NO_STORE],
+    ["catalog 400 (validation)", "GET", "/api/search", {}, NO_STORE],
+    ["unknown endpoint", "GET", "/api/nope", {}, NO_STORE],
+    ["health", "GET", "/api/health", {}, NO_STORE],
+    ["per-user flags", "GET", "/api/flags", { auth: true }, NO_STORE],
+    ["auth me", "GET", "/api/auth/me", { auth: true }, NO_STORE],
+    ["user profile", "GET", "/api/users/profile", { auth: true }, NO_STORE],
+    ["user favorites, anonymous 401", "GET", "/api/users/favorites", {}, NO_STORE],
+    ["settings", "GET", "/api/settings", { auth: true }, NO_STORE],
+    ["notifications", "GET", "/api/notifications", { auth: true }, NO_STORE],
+    ["admin, non-admin 403", "GET", "/api/admin/stats", { auth: true }, NO_STORE],
+    ["AI generation", "POST", "/api/ai/scout/fpl-1001/report", { auth: true }, NO_STORE],
+    ["AI ask", "POST", "/api/ai/ask", { auth: true, body: { question: "Who leads the league?" } }, NO_STORE],
+    ["export", "GET", "/api/export/players/fpl-1001", {}, NO_STORE],
+    ["public write", "POST", "/api/feedback", { body: { category: "bug", message: "hello there" } }, NO_STORE],
+  ];
+
+  it.each(cases)("%s: %s %s", async (_label, method, path, opts, expected) => {
+    const headers: Record<string, string> = {};
+    if (opts.auth) headers.Authorization = `Bearer ${await tokenFor("00000000-0000-4000-8000-000000000001")}`;
+    if (opts.body) headers["Content-Type"] = "application/json";
+    const res = await app.request(path, {
+      method,
+      headers,
+      ...(opts.body ? { body: JSON.stringify(opts.body) } : {}),
+    });
+    const cc = res.headers.get("Cache-Control");
+    if (typeof expected === "string") expect(cc).toBe(expected);
+    else {
+      expect(res.status).toBe(200);
+      expect(cc).toMatch(expected);
+    }
+  });
+});
+
 describe("meta stats", () => {
   const app = makeApp();
 

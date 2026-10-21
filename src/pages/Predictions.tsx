@@ -12,6 +12,7 @@ import { useTeams } from "@/lib/repositories/teams";
 import { forecastFixture, type Forecast } from "@/lib/forecast";
 import { cn } from "@/lib/utils";
 import { usePageMeta } from "@/lib/seo";
+import { staticPageMeta } from "@/lib/page-meta";
 import { kickoffLabel, kickoffTime } from "@/lib/kickoff";
 import type { Match, Team } from "@/data/types";
 
@@ -19,11 +20,7 @@ import type { Match, Team } from "@/data/types";
 const PER_COMPETITION = 12;
 
 export default function Predictions() {
-  usePageMeta({
-    title: "Match Predictions",
-    description: "Win/draw/loss probabilities, expected goals and likeliest scorelines for upcoming fixtures — computed from this season's league tables, with the inputs shown.",
-    path: "/predictions",
-  });
+  usePageMeta(staticPageMeta["/predictions"]);
   const { data: grouped, status } = useMatchesState();
   const teams = useTeams();
   const [params, setParams] = useSearchParams();
