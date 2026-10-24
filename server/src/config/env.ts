@@ -46,6 +46,12 @@ export const envSchema = z.object({
    */
   AI_GLOBAL_DAILY_LIMIT: z.coerce.number().int().min(0).default(200),
 
+  // --- Knowledge base (RAG). Both optional: absent => /ask answers from FootIQ data alone.
+  /** Guardian Open Platform developer key — the article source for sync_knowledge. */
+  GUARDIAN_API_KEY: z.string().optional(),
+  /** Gemini embedding model; uses GEMINI_API_KEY. Changing it means re-embedding kb_chunks. */
+  EMBED_MODEL: z.string().default("gemini-embedding-001"),
+
   // --- Cache
   /** Upstash Redis REST endpoint (free tier) — fetch-based, Workers-safe. */
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),

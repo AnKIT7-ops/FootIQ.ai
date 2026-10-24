@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "deploy:workers": "wrangler deploy"
+    "deploy:workers": "wrangler deploy",
+    "kb:ingest": "tsx src/scripts/kb-ingest.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.62.0",

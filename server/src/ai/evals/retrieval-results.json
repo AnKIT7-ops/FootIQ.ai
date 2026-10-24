@@ -1,0 +1,39 @@
+{
+  "at": "2026-10-24T19:51:13.296Z",
+  "settings": {
+    "k": 6,
+    "minSimilarity": 0.6,
+    "maxPerDoc": 2
+  },
+  "cases": 36,
+  "retrieval": {
+    "all": {
+      "answerable": 30,
+      "hitAt1": 0.8666666666666667,
+      "recallAtK": 1,
+      "mrr": 0.925,
+      "chunkHit": 0.9333333333333333,
+      "unanswerable": 6,
+      "abstention": 0.8333333333333334
+    },
+    "lexical": {
+      "answerable": 15,
+      "hitAt1": 1,
+      "recallAtK": 1,
+      "mrr": 1,
+      "chunkHit": 0.9333333333333333,
+      "unanswerable": 0,
+      "abstention": null
+    },
+    "paraphrase": {
+      "answerable": 15,
+      "hitAt1": 0.7333333333333333,
+      "recallAtK": 1,
+      "mrr": 0.85,
+      "chunkHit": 0.9333333333333333,
+      "unanswerable": 0,
+      "abstention": null
+    },
+    "misses": []
+  }
+}

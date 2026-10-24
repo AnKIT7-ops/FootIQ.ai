@@ -26,6 +26,8 @@ All optional — validated by zod at boot (`server/src/config/env.ts`); a malfor
 | AI_MAX_TOKENS | 2048 | per-completion cap (prompts define their own lower caps) |
 | AI_GLOBAL_DAILY_LIMIT | 200 | real (uncached) AI generations per UTC day across all users; over it ⇒ the "daily AI allowance is used up" error. DB-backed (migration 0005) when Supabase is configured |
 | ANTHROPIC_API_KEY / OPENAI_API_KEY / GEMINI_API_KEY / OLLAMA_BASE_URL | — | credentials per provider; missing key ⇒ mock fallback + warning log |
+| GUARDIAN_API_KEY | — | Guardian Open Platform developer key for `sync_knowledge` (RAG, see docs/RAG.md). Missing ⇒ the job skips and `/ask` answers from FootIQ data alone. Worker secret |
+| EMBED_MODEL | gemini-embedding-001 | embedding model (uses GEMINI_API_KEY). Changing it means re-embedding `kb_chunks` |
 | UPSTASH_REDIS_REST_URL + _TOKEN | — | shared cache/rate-limit backend; unset ⇒ in-memory (remote backends get a 30s memory front) |
 | DATA_PROVIDER | demo | football-data · api-football · demo — live football data source |
 | FOOTBALL_DATA_API_KEY / FOOTBALL_DATA_COMPETITION | — / PL | football-data.org (free 10 req/min; attribution required) |

@@ -34,8 +34,8 @@ export default {
     return boot(bindings).app.fetch(request);
   },
 
-  async scheduled(_event: unknown, bindings: WorkerBindings, ctx: { waitUntil(p: Promise<unknown>): void }): Promise<void> {
+  async scheduled(event: { cron?: string }, bindings: WorkerBindings, ctx: { waitUntil(p: Promise<unknown>): void }): Promise<void> {
     const { services } = boot(bindings);
-    ctx.waitUntil(services.jobs.runAll());
+    ctx.waitUntil(services.jobs.runCron(event.cron));
   },
 };

@@ -7,6 +7,7 @@ import { MemoryCache } from "../../cache/memory";
 import { createLogger } from "../../lib/logger";
 import { loadEnv } from "../../config/env";
 import { samplePlayers } from "../../test-fixtures";
+import type { RetrievedChunk } from "../rag/retrieve";
 
 /**
  * Prompt/eval harness — the MLOps offline gate.
@@ -49,6 +50,15 @@ function render(c: GoldenCase): RenderedPrompt {
     }
     case "player_comparison":
       return prompts.player_comparison((c.input.playerIds as string[]).map((id) => playerById.get(id)!));
+    case "concierge_answer":
+      // No tables, fixtures or players: the excerpts are the only thing it can answer from.
+      return prompts.concierge_answer({
+        question: c.input.question as string,
+        teams: [],
+        upcoming: [],
+        players: [],
+        sources: c.input.sources as RetrievedChunk[],
+      });
     default:
       throw new Error(`No renderer for golden task: ${c.task}`);
   }

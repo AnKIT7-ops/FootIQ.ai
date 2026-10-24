@@ -7,6 +7,10 @@ import { JobRegistry } from "../jobs/registry";
 import { mergeMatches, mergeStandings, mergeTeams, type MatchesGrouped } from "./normalize";
 import { fetchHeadlines } from "../providers/news-rss";
 import type { NewsHeadline } from "../../../shared/contracts";
+import { ingestKnowledge, type IngestDeps } from "../ai/rag/ingest";
+
+/** sync_knowledge's own tick — must match the second trigger in wrangler.toml. */
+export const KNOWLEDGE_CRON = "17 */3 * * *";
 
 export type { Job, JobRun } from "./registry";
 export { JobRegistry } from "./registry";
@@ -53,6 +57,8 @@ export function registerJobs(
     fetchNews?: () => Promise<NewsHeadline[]>;
     /** Player source; injectable so tests never hit FPL. */
     fetchPlayers?: (teams: Team[]) => Promise<FplSync>;
+    /** Knowledge-base ingest; unset (no DB, Guardian key or Gemini key) => the job reports itself unconfigured. */
+    knowledge?: IngestDeps | null;
   },
 ): void {
   const { provider, snapshots } = deps;
@@ -175,6 +181,16 @@ export function registerJobs(
       await snapshots.set<MatchesGrouped>("matches", grouped, provider.name);
       const kept = Object.values(grouped).reduce((n, list) => n + list.length, 0);
       return `${rows.length} rows → ${kept} fixtures (${grouped.live.length}L/${grouped.upcoming.length}U/${grouped.finished.length}F/${grouped.postponed.length}P/${grouped.unconfirmed.length}?), ${discoveredTeams.length} clubs discovered (${provider.name})`;
+    },
+  });
+
+  registry.register({
+    name: "sync_knowledge",
+    description: "Guardian football articles → validated, chunked, embedded → kb_documents/kb_chunks (own 3-hourly cron)",
+    cron: KNOWLEDGE_CRON,
+    async run() {
+      if (!deps.knowledge) return "skipped — needs Supabase, GUARDIAN_API_KEY and GEMINI_API_KEY";
+      return ingestKnowledge(deps.knowledge);
     },
   });
 

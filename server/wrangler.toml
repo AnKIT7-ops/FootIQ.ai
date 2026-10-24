@@ -13,8 +13,12 @@ compatibility_flags = ["nodejs_compat"]
 # configured competition (standings + fixtures), serialized ~7s apart. Six
 # competitions ≈ 90s of wall clock. Live scores stay fresh via the 30s
 # Cache-Control on /api/matches, not via a faster cron.
+#
+# The second trigger is sync_knowledge alone (KNOWLEDGE_CRON in jobs/index.ts
+# — keep the two in step). Its own tick gets its own 50-subrequest budget:
+# one Guardian call, one embed call and ~6 Supabase calls.
 [triggers]
-crons = ["*/30 * * * *"]
+crons = ["*/30 * * * *", "17 */3 * * *"]
 
 # REQUIRED for a working deployment (despite being commented out by default).
 #

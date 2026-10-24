@@ -301,6 +301,17 @@ export interface AiResult {
   cached: boolean;
   /** ISO 8601 — when the underlying completion was generated. */
   generatedAt: string;
+  /** Articles the answer cites, numbered as its [n] markers. Only on retrieval-backed answers (/ask). */
+  sources?: AiSource[];
+}
+
+/** A published article an AI answer drew on. Title and link only — the body is never served. */
+export interface AiSource {
+  n: number;
+  title: string;
+  url: string;
+  publisher: string;
+  publishedIso: string;
 }
 
 // ---------------------------------------------------------------------------

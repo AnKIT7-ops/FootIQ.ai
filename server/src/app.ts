@@ -15,6 +15,8 @@ import { ProviderTraceStore } from "./providers/trace";
 import { SnapshotStore } from "./services/snapshots";
 import { JobRegistry } from "./jobs/registry";
 import { registerJobs } from "./jobs";
+import { embedderFor } from "./ai/rag/embed";
+import { fetchGuardianFootball } from "./providers/guardian";
 import { FlagService } from "./services/flags";
 import { QuotaService } from "./services/quota";
 import { AuditService } from "./services/audit";
@@ -61,7 +63,11 @@ export function createServer(env: Env, opts?: { kv?: KVNamespaceLike; services?:
   const snapshots = opts?.services?.snapshots ?? new SnapshotStore(cache, db, logger);
   const ai = opts?.services?.ai ?? new AiService(createAiProvider(env, logger), cache, logger, db, env.AI_GLOBAL_DAILY_LIMIT);
   const jobs = opts?.services?.jobs ?? new JobRegistry(cache, db, logger);
-  if (!opts?.services?.jobs) registerJobs(jobs, { provider: dataProvider, snapshots, fetchNews: opts?.fetchNews });
+  const embedder = embedderFor(env);
+  const guardianKey = env.GUARDIAN_API_KEY;
+  const knowledge =
+    db && embedder && guardianKey ? { db, embed: embedder, fetchDocs: (fromIso: string) => fetchGuardianFootball(guardianKey, fromIso) } : null;
+  if (!opts?.services?.jobs) registerJobs(jobs, { provider: dataProvider, snapshots, fetchNews: opts?.fetchNews, knowledge });
 
   const services: Services = {
     env,

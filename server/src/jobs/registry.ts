@@ -27,6 +27,12 @@ export interface Job {
   /** Human line for docs/admin. */
   description: string;
   run(): Promise<string | void>;
+  /**
+   * Own cron expression (must match a wrangler.toml trigger). Such a job runs
+   * only on its own tick, never in runAll — keeping it off the main tick's
+   * 50-subrequest budget.
+   */
+  cron?: string;
 }
 
 const RETRIES = 3;
@@ -106,16 +112,25 @@ export class JobRegistry {
     return run;
   }
 
-  /** Run every registered job sequentially (providers are rate-limited upstream — no parallel hammering). */
+  /** Run every main-tick job sequentially (providers are rate-limited upstream — no parallel hammering). */
   async runAll(): Promise<JobRun[]> {
     if (this.running) return []; // overlapping cron tick — skip, the active pass owns it
     this.running = true;
     try {
       const out: JobRun[] = [];
-      for (const name of this.jobs.keys()) out.push(await this.runJob(name));
+      for (const job of this.jobs.values()) if (!job.cron) out.push(await this.runJob(job.name));
       return out;
     } finally {
       this.running = false;
     }
+  }
+
+  /** A cron tick: the jobs that own this expression, or the main pass when none do. */
+  async runCron(cron: string | undefined): Promise<JobRun[]> {
+    const own = [...this.jobs.values()].filter((j) => j.cron && j.cron === cron);
+    if (own.length === 0) return this.runAll();
+    const out: JobRun[] = [];
+    for (const job of own) out.push(await this.runJob(job.name));
+    return out;
   }
 }

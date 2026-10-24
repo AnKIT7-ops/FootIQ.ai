@@ -11,6 +11,9 @@ import { rateLimit, rateLimits } from "../middleware/rate-limit";
 import { ApiError } from "../lib/errors";
 import { cleanText } from "../lib/sanitize";
 import { forecastFixture } from "../../../shared/forecast";
+import { embedderFor } from "../ai/rag/embed";
+import { retrieve } from "../ai/rag/retrieve";
+import { resolveCitations } from "../ai/rag/citations";
 
 const id = z.string().min(1).max(64).regex(/^[\w.-]+$/);
 
@@ -176,9 +179,25 @@ const SCOUT_FILTERS = z.object({
     "/ask",
     validate("json", z.object({ question: z.string().min(2).max(500) })),
     async (c) => {
-      await gate(c.get("services"), "ai_scout");
+      const services = c.get("services");
+      await gate(services, "ai_scout");
+      const question = cleanText(c.req.valid("json").question, 500);
       const held = <T>(p: Promise<T>) => p.catch(() => null);
-      const [teams, matches, players] = await Promise.all([held(catalog.teams()), held(catalog.matches()), held(catalog.players())]);
+      // Retrieval degrades like the rest: no DB, no key or a failed lookup => no excerpts, never no answer.
+      const embedder = embedderFor(services.env);
+      const retrieval =
+        services.db && embedder
+          ? retrieve(services.db, embedder, question).catch((err) => {
+              services.logger.warn("rag.retrieve_failed", { error: err instanceof Error ? err.message : String(err) });
+              return [];
+            })
+          : Promise.resolve([]);
+      const [teams, matches, players, sources] = await Promise.all([
+        held(catalog.teams()),
+        held(catalog.matches()),
+        held(catalog.players()),
+        retrieval,
+      ]);
       const teamList = teams?.data ?? [];
       const upcoming = [...(matches?.data.upcoming ?? [])]
         .sort((a, b) => a.kickoffIso.localeCompare(b.kickoffIso))
@@ -187,18 +206,11 @@ const SCOUT_FILTERS = z.object({
           const f = forecastFixture(m, teamList);
           return { ...m, forecast: f.ok ? f.forecast : null };
         });
-      return ok(
+      const result = await generate(
         c,
-        await generate(
-          c,
-          prompts.concierge_answer({
-            question: cleanText(c.req.valid("json").question, 500),
-            teams: teamList,
-            upcoming,
-            players: players?.data ?? [],
-          }),
-        ),
+        prompts.concierge_answer({ question, teams: teamList, upcoming, players: players?.data ?? [], sources }),
       );
+      return ok(c, { ...result, ...resolveCitations(result.text, sources) });
     },
   );
 

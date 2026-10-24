@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { Send, Sparkles, X } from "lucide-react";
-import type { AiResult } from "@shared/contracts";
+import type { AiResult, AiSource } from "@shared/contracts";
 import { api, ApiRequestError, ApiUnavailableError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { AiText } from "@/components/ui/AiText";
@@ -18,7 +18,11 @@ interface Msg {
   provider?: string;
   /** Why a signed-in question fell back to the script (quota, outage). */
   note?: string;
+  /** Articles the answer's [n] markers cite. */
+  sources?: AiSource[];
 }
+
+const sourceDate = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
 /** The answer engine ships with the data bundle — pulled in on first open, not at boot. */
 type AnswerFn = (q: string) => string;
@@ -77,7 +81,7 @@ export function ChatDock() {
     // falls back to the script, which the chip then labels as the demo engine.
     const reply: Promise<Msg> = user
       ? api.post<AiResult>("/api/ai/ask", { question: t }).then(
-          (r) => ({ from: "iq", text: r.text, provider: r.provider }),
+          (r) => ({ from: "iq", text: r.text, provider: r.provider, sources: r.sources }),
           (err) => scripted(err instanceof ApiRequestError || err instanceof ApiUnavailableError ? err.message : "The AI model didn't answer."),
         )
       : scripted();
@@ -129,6 +133,30 @@ export function ChatDock() {
                     )}
                   >
                     {m.from === "iq" ? <AiText text={m.text} /> : m.text}
+                    {m.sources && m.sources.length > 0 && (
+                      <ol className="mt-2.5 space-y-1 border-t border-line pt-2" aria-label="Sources">
+                        {m.sources.map((s) => (
+                          <li key={s.n} className="flex gap-1.5 text-caption leading-snug text-ink-2">
+                            <span className="font-mono tabular-nums text-ink-3">[{s.n}]</span>
+                            <span>
+                              <a
+                                href={s.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="underline decoration-line underline-offset-2 hover:text-ink focus-visible:text-ink"
+                              >
+                                {s.title}
+                                <span className="sr-only"> (opens in a new tab)</span>
+                              </a>
+                              <span className="text-ink-3">
+                                {" "}
+                                · {s.publisher} · <span className="font-mono tabular-nums">{sourceDate(s.publishedIso)}</span>
+                              </span>
+                            </span>
+                          </li>
+                        ))}
+                      </ol>
+                    )}
                     {m.note && <p className="mt-2 text-caption text-ink-3">{m.note}</p>}
                     {m.provider !== undefined && <DemoEngineChip provider={m.provider} className="mt-2" />}
                   </div>

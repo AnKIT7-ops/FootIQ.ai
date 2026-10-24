@@ -1,0 +1,56 @@
+{
+  "description": "Retrieval golden set for the knowledge base (kb_documents/kb_chunks). Answerable cases name the Guardian content id that answers them; those documents are pinned (kb_documents.pinned = true) so the 90-day prune never removes them. Two questions per pinned doc: one reusing the article's wording (lexical), one that doesn't (paraphrase). expectChunkContains phrases were verified against the stored chunks on 2026-10-25; several also occur in a second article on purpose (Rice's 82nd-minute goal, Russo, Vivell, Penders, Jackson) — near-duplicate distractors. Unanswerable cases expect nothing above the similarity floor. Run: EVAL_LIVE=1 npx vitest run src/ai/evals/retrieval.test.ts",
+  "cases": [
+    { "question": "Who scored the own goal when Tottenham beat Chelsea at Stamford Bridge?", "expectDocId": "football/2026/oct/24/chelsea-tottenham-premier-league-match-report", "expectChunkContains": "Mike Penders", "kind": "lexical" },
+    { "question": "Which Chelsea player got a red card in the London derby loss to Spurs?", "expectDocId": "football/2026/oct/24/chelsea-tottenham-premier-league-match-report", "expectChunkContains": "Palmer was sent off", "kind": "paraphrase" },
+
+    { "question": "Why did Burnley sack Nicky Hayen?", "expectDocId": "football/2026/oct/24/burnley-sack-nicky-hayen-lincoln-rout-championship", "expectChunkContains": "4-1 defeat at Lincoln", "kind": "lexical" },
+    { "question": "Which Championship club fired its head coach after he managed only a single win?", "expectDocId": "football/2026/oct/24/burnley-sack-nicky-hayen-lincoln-rout-championship", "expectChunkContains": "won just one match", "kind": "paraphrase" },
+
+    { "question": "Who scored for Arsenal against Everton?", "expectDocId": "football/2026/oct/24/arsenal-everton-premier-league-match-report", "expectChunkContains": "Konsa slammed home", "kind": "lexical" },
+    { "question": "How did the Gunners open the scoring against Moyes's team?", "expectDocId": "football/2026/oct/24/arsenal-everton-premier-league-match-report", "expectChunkContains": "third corner in succession", "kind": "paraphrase" },
+
+    { "question": "Who scored twice as Aston Villa beat Manchester City?", "expectDocId": "football/2026/oct/24/aston-villa-manchester-city-premier-league-match-report", "expectChunkContains": "Nicolas Jackson", "kind": "lexical" },
+    { "question": "What defensive error by City led to the first goal at Villa Park?", "expectDocId": "football/2026/oct/24/aston-villa-manchester-city-premier-league-match-report", "expectChunkContains": "miscontrolling a Rúben Dias pass", "kind": "paraphrase" },
+
+    { "question": "Who scored the penalty for Arsenal in the WSL north London derby against Tottenham?", "expectDocId": "football/2026/oct/24/tottenham-arsenal-wsl-match-report", "expectChunkContains": "Alessia Russo", "kind": "lexical" },
+    { "question": "Why was the Spurs women's coach unhappy with the spot kick given against his side?", "expectDocId": "football/2026/oct/24/tottenham-arsenal-wsl-match-report", "expectChunkContains": "raised arm", "kind": "paraphrase" },
+
+    { "question": "How long could Saka be out with his thigh injury?", "expectDocId": "football/2026/oct/23/arsenal-arteta-concerned-saka-durability-six-week-absence", "expectChunkContains": "six weeks", "kind": "lexical" },
+    { "question": "How many separate fitness problems has Arsenal's England winger had in recent seasons?", "expectDocId": "football/2026/oct/23/arsenal-arteta-concerned-saka-durability-six-week-absence", "expectChunkContains": "11 different injuries", "kind": "paraphrase" },
+
+    { "question": "Who scored for Nottingham Forest against Ipswich?", "expectDocId": "football/2026/oct/23/ipswich-nottingham-forest-premier-league-match-report", "expectChunkContains": "Neco Williams", "kind": "lexical" },
+    { "question": "How many points has Glasner's side collected so far this season?", "expectDocId": "football/2026/oct/23/ipswich-nottingham-forest-premier-league-match-report", "expectChunkContains": "six points from eight matches", "kind": "paraphrase" },
+
+    { "question": "What did the NWSL settlement change about the High Impact Player rule?", "expectDocId": "football/2026/oct/23/nwsl-rodman-rule-hip-rule-changes", "expectChunkContains": "eligibility criteria were eliminated", "kind": "lexical" },
+    { "question": "From when can American women's clubs give their top salary status to any player they like?", "expectDocId": "football/2026/oct/23/nwsl-rodman-rule-hip-rule-changes", "expectChunkContains": "1 January 2027", "kind": "paraphrase" },
+
+    { "question": "Who is Jason Wilcox's preferred candidate to replace Michael Carrick at Manchester United?", "expectDocId": "football/2026/oct/23/eddie-howe-manchester-united-michael-carrick-jason-wilcox", "expectChunkContains": "current preferred candidate", "kind": "lexical" },
+    { "question": "Which United recruitment chief rates the former Germany coach most highly?", "expectDocId": "football/2026/oct/23/eddie-howe-manchester-united-michael-carrick-jason-wilcox", "expectChunkContains": "Christopher Vivell", "kind": "paraphrase" },
+
+    { "question": "Why was Mike Maignan sent off against Bournemouth?", "expectDocId": "football/2026/oct/22/bournemouth-milan-europa-league-match-report", "expectChunkContains": "rush of blood", "kind": "lexical" },
+    { "question": "Who curled in the late free-kick when the Cherries beat the Italian giants in Europe?", "expectDocId": "football/2026/oct/22/bournemouth-milan-europa-league-match-report", "expectChunkContains": "Amine Adli", "kind": "paraphrase" },
+
+    { "question": "How much preparation money will each team get at the 2027 Women's World Cup?", "expectDocId": "football/2026/oct/22/fifa-increase-funds-2027-womens-world-cup-teams", "expectChunkContains": "$2.5m", "kind": "lexical" },
+    { "question": "When will the first global club tournament for women's teams take place?", "expectDocId": "football/2026/oct/22/fifa-increase-funds-2027-womens-world-cup-teams", "expectChunkContains": "January 2028", "kind": "paraphrase" },
+
+    { "question": "Where will Haiti play their Nations League home game against the United States?", "expectDocId": "football/2026/oct/22/haiti-usa-concacaf-nations-league-miami-home-game-gang-violence", "expectChunkContains": "to Miami", "kind": "lexical" },
+    { "question": "Why can't the Caribbean team play at their own national stadium?", "expectDocId": "football/2026/oct/22/haiti-usa-concacaf-nations-league-miami-home-game-gang-violence", "expectChunkContains": "controlled by violent gangs", "kind": "paraphrase" },
+
+    { "question": "Why did Bruno Guimarães have sleepless nights before leaving Newcastle?", "expectDocId": "football/2026/oct/22/bruno-guimaraes-had-sleepless-nights-before-newcastle-exit-but-hopes-for-same-love-at-arsenal", "expectChunkContains": "lay awake at night", "kind": "lexical" },
+    { "question": "How much did Arsenal pay for the Brazilian midfielder they signed from the Magpies?", "expectDocId": "football/2026/oct/22/bruno-guimaraes-had-sleepless-nights-before-newcastle-exit-but-hopes-for-same-love-at-arsenal", "expectChunkContains": "£75m transfer", "kind": "paraphrase" },
+
+    { "question": "Who scored Arsenal's late equaliser against Bayern Munich?", "expectDocId": "football/2026/oct/21/bayern-munich-arsenal-champions-league-match-report", "expectChunkContains": "82nd minute", "kind": "lexical" },
+    { "question": "In how many European games in a row has the England captain now found the net?", "expectDocId": "football/2026/oct/21/bayern-munich-arsenal-champions-league-match-report", "expectChunkContains": "10 consecutive Champions League games", "kind": "paraphrase" },
+
+    { "question": "How did St Louis City beat Columbus Crew in the US Open Cup final?", "expectDocId": "football/2026/oct/21/history-comes-home-as-st-louis-city-top-columbus-crew-to-win-us-open-cup", "expectChunkContains": "5-4 on penalties", "kind": "lexical" },
+    { "question": "How long had the Missouri city gone without a major national soccer trophy?", "expectDocId": "football/2026/oct/21/history-comes-home-as-st-louis-city-top-columbus-crew-to-win-us-open-cup", "expectChunkContains": "38-year wait", "kind": "paraphrase" },
+
+    { "question": "What is the capital of Australia?", "expectDocId": null, "kind": "unanswerable" },
+    { "question": "How do I reset my router password?", "expectDocId": null, "kind": "unanswerable" },
+    { "question": "Who won the 1954 World Cup final?", "expectDocId": null, "kind": "unanswerable" },
+    { "question": "What was the score in the 2015 Copa del Rey final?", "expectDocId": null, "kind": "unanswerable" },
+    { "question": "Who won the 2019 Women's Super League title?", "expectDocId": null, "kind": "unanswerable" },
+    { "question": "How many runs did England score in the second Ashes Test?", "expectDocId": null, "kind": "unanswerable" }
+  ]
+}
