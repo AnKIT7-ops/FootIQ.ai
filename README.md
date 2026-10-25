@@ -145,6 +145,17 @@ flowchart LR
 
 The concierge chat answers from two kinds of material. The first is FootIQ's own data: tables, fixtures, forecasts and FPL stats. The second is published news. For news, it retrieves passages from Guardian match reports and articles, and every claim taken from them ends in a numbered citation that links to the article. If neither source covers the question, it says FootIQ doesn't hold that rather than guessing.
 
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/chat-cited.png" alt="Chat answering 'How did Arsenal get on against Everton?' with two bullet points, each ending in a [1] citation"></td>
+    <td width="50%"><img src="docs/screenshots/chat-abstain.png" alt="The [1] source line linking to the Guardian match report, then 'Who won the 1954 World Cup final?' answered with: FootIQ's database does not hold information regarding the 1954 World Cup final"></td>
+  </tr>
+  <tr>
+    <td>Each claim is cited to the match report it came from.</td>
+    <td>The source links out to the Guardian. A question the articles don't cover gets "doesn't hold", not a guess.</td>
+  </tr>
+</table>
+
 ```
 Guardian articles → validate → chunk (~150 words) → embed (Gemini, 768-d) → pgvector
 question → embed → nearest chunks (floor 0.6, ≤2 per article, top 6) → answer with [n] → checked citations
