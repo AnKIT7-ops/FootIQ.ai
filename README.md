@@ -41,12 +41,12 @@ Every AI output carries its date, its sources, and a chip when it comes from the
     <td width="50%">
       <h3>Match facts</h3>
       <p>Full-time score, each side's form going into the match, key players and venue info. Built from free data.</p>
-      <img src="docs/screenshots/match.png" alt="Match facts page for Man City 5–1 PAE AEK">
+      <img src="docs/screenshots/match.png" alt="Match facts page for Aston Villa 2–1 Manchester City">
     </td>
     <td width="50%">
       <h3>AI predictions</h3>
       <p>A Poisson goals model fed by this season's real tables. Probabilities sit beside the numbers they came from.</p>
-      <img src="docs/screenshots/predictions.png" alt="Predictions page: Ipswich vs Nottingham win/draw/loss probabilities and inputs">
+      <img src="docs/screenshots/predictions.png" alt="Predictions page: Liverpool vs Brighton win/draw/loss probabilities and inputs">
     </td>
   </tr>
   <tr>
@@ -115,27 +115,9 @@ The site has dark and light themes and a bottom nav on phones. It aims for WCAG 
 
 ## How it works
 
-```mermaid
-flowchart LR
-  subgraph Sources["Free data sources"]
-    FD["football-data.org<br/>fixtures · tables · squads"]
-    FPL["Fantasy Premier League<br/>players · fantasy"]
-    RSS["BBC · Guardian · Sky<br/>RSS news"]
-    GU["Guardian Open Platform<br/>full-text articles"]
-  end
-  subgraph Worker["API · Hono on Cloudflare Workers"]
-    CRON["Cron every 30 min<br/>sync jobs"] --> SNAP[("Snapshots<br/>Supabase Postgres")]
-    KCRON["Cron every 3 h<br/>validate · chunk · embed"] --> KB[("Knowledge base<br/>pgvector")]
-    API["/api/*"] --> SNAP
-    API --> KB
-    AI["AI explanations<br/>Gemini, cached"]
-  end
-  FD & FPL & RSS --> CRON
-  GU --> KCRON
-  WEB["React app<br/>Vercel"] --> API
-  WEB --> AUTH["Supabase Auth"]
-  API --> AI
-```
+<img src="docs/screenshots/how-it-works.png" alt="Architecture: free data sources (BBC, Guardian and Sky RSS; football-data.org; Fantasy Premier League) feed a 30-minute cron that writes snapshots to Supabase Postgres. Guardian Open Platform articles feed a 3-hourly knowledge sync that validates, chunks and embeds them into a pgvector knowledge base, measured by a 36-question retrieval eval. The /api/* routes read both stores and send the top-6 chunks to Gemini for cited answers. The React app on Vercel calls the API and Supabase Auth." width="100%">
+
+<sub>The diagram is code: <code>node scripts/how-it-works.mjs . &lt;chrome&gt; docs/screenshots/how-it-works.png</code> re-renders it.</sub>
 
 - **Live requests never hit external APIs.** Cron jobs sync providers into snapshots, and the API only serves those snapshots, so free-tier quotas depend on cron frequency, not traffic.
 - **Graceful degradation.** If a provider fails, the last snapshot stays. With no backend at all, the frontend falls back to bundled demo data.
