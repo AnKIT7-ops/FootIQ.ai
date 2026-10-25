@@ -101,10 +101,8 @@ export function Sidebar() {
             </NavLink>
           ))}
         </div>
-        {/* Same signal as the top-bar chip; says nothing until the backend has answered. */}
-        <p className="font-mono text-micro uppercase tracking-widest text-ink-3">
-          FootIQ · Beta{mode === "provider" ? " · Live data" : mode === "demo" ? " · Demo data" : ""}
-        </p>
+        {/* Same rule as the top-bar chip: live data is the normal state and goes unlabelled; demo data is always disclosed. */}
+        <p className="font-mono text-micro uppercase tracking-widest text-ink-3">FootIQ · Beta{mode === "demo" ? " · Demo data" : ""}</p>
       </div>
     </aside>
   );
