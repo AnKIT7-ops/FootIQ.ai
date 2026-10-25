@@ -28,12 +28,15 @@ Apply: paste `supabase/migrations/0001_init.sql` into the Supabase SQL editor (o
 | usage_quotas | per-user per-day metering | PK(user,metric,day) |
 | global_quotas | app-wide per-day metering (AI generation ceiling), service role only | PK(metric,day) |
 | audit_logs | append-only security/admin trail | identity PK; idx (actor, created), (action, created) |
+| kb_documents | RAG knowledge source: Guardian articles (body kept for retrieval/evals only), `pinned` = golden set, service role only | PK=Guardian id; unique content_hash; idx published_at (migration 0006) |
+| kb_chunks | ~150-word passages with `vector(768)` embeddings, service role only | identity PK; unique (doc_id, ord); HNSW cosine on embedding; FK cascade to kb_documents |
 
 ## Functions
 - `handle_new_user()` — trigger on auth.users insert → provisions profile row (security definer).
 - `increment_quota(user, metric, limit) → int` — atomic check-and-increment, returns -1 when over limit; EXECUTE revoked from client roles (server-only RPC).
 - `increment_global_quota(metric, limit) → int` — same contract on `global_quotas` (migration 0005); backs `AI_GLOBAL_DAILY_LIMIT`.
 - `set_updated_at()` — shared updated_at trigger.
+- `match_kb_chunks(query_embedding, match_count, min_similarity)` — nearest chunks by cosine with their article metadata (migration 0006); EXECUTE revoked from client roles. See [RAG](RAG.md).
 
 ## Post-migration checklist (Supabase dashboard)
 1. Auth → Providers: enable Email (OTP/magic link), Google (add OAuth client), Anonymous sign-ins.
