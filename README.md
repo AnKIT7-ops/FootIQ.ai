@@ -99,7 +99,7 @@ Every AI output carries its date, its sources, and a chip when it comes from the
   </tr>
 </table>
 
-Also included: schedule, transfer centre, similar players, intelligence articles, universal search (<kbd>Ctrl</kbd>+<kbd>K</kbd>), an AI concierge chat dock, notifications and watchlists.
+Also included: schedule, transfer centre, similar players, intelligence articles, universal search (<kbd>Ctrl</kbd>+<kbd>K</kbd>), an AI concierge chat that cites the news articles it answers from ([how](#cited-answers-rag)), notifications and watchlists.
 
 ### Light theme and mobile
 
@@ -121,13 +121,17 @@ flowchart LR
     FD["football-data.org<br/>fixtures · tables · squads"]
     FPL["Fantasy Premier League<br/>players · fantasy"]
     RSS["BBC · Guardian · Sky<br/>RSS news"]
+    GU["Guardian Open Platform<br/>full-text articles"]
   end
   subgraph Worker["API · Hono on Cloudflare Workers"]
     CRON["Cron every 30 min<br/>sync jobs"] --> SNAP[("Snapshots<br/>Supabase Postgres")]
+    KCRON["Cron every 3 h<br/>validate · chunk · embed"] --> KB[("Knowledge base<br/>pgvector")]
     API["/api/*"] --> SNAP
+    API --> KB
     AI["AI explanations<br/>Gemini, cached"]
   end
-  Sources --> CRON
+  FD & FPL & RSS --> CRON
+  GU --> KCRON
   WEB["React app<br/>Vercel"] --> API
   WEB --> AUTH["Supabase Auth"]
   API --> AI
@@ -136,6 +140,26 @@ flowchart LR
 - **Live requests never hit external APIs.** Cron jobs sync providers into snapshots, and the API only serves those snapshots, so free-tier quotas depend on cron frequency, not traffic.
 - **Graceful degradation.** If a provider fails, the last snapshot stays. With no backend at all, the frontend falls back to bundled demo data.
 - **Competitions:** Premier League, La Liga, Bundesliga, Serie A, Ligue 1, Eredivisie, Primeira Liga and the Champions League.
+
+## Cited answers (RAG)
+
+The concierge chat answers from two kinds of material. The first is FootIQ's own data: tables, fixtures, forecasts and FPL stats. The second is published news. For news, it retrieves passages from Guardian match reports and articles, and every claim taken from them ends in a numbered citation that links to the article. If neither source covers the question, it says FootIQ doesn't hold that rather than guessing.
+
+```
+Guardian articles → validate → chunk (~150 words) → embed (Gemini, 768-d) → pgvector
+question → embed → nearest chunks (floor 0.6, ≤2 per article, top 6) → answer with [n] → checked citations
+```
+
+- **Validated source.** Each article is either indexed or rejected for a named reason: empty, too short, too old, a TV-listing page, already held, or a duplicate of text already stored. The reason counts are logged on every run.
+- **Citations that can't lie.** A citation pointing at a passage that wasn't retrieved is deleted before the answer reaches you. The chat shows the title, publisher and a link, never the article text.
+- **Measured, not guessed.** The test set has 30 hand-checked questions over 15 pinned articles, plus 6 unanswerable ones. Both settings were tuned by sweeping them against that set:
+
+| Setting | hit@1 | recall@6 | MRR | Off-topic questions retrieving nothing |
+|---|---|---|---|---|
+| First guess (floor 0.5, no cap) | 86.7% | 96.7% | 0.917 | 0% |
+| Shipped (floor 0.6, ≤2 chunks per article) | 86.7% | **100%** | **0.925** | **83%** |
+
+Method, sweeps and known limits: [`docs/RAG.md`](docs/RAG.md).
 
 ## Quick start
 
@@ -190,10 +214,12 @@ src/
   data/         demo dataset + image resolvers
   styles/       design tokens
 server/src/
-  providers/    football-data.org, FPL, RSS news, demo
-  jobs/         sync jobs and registry (retry, overlap guard)
+  providers/    football-data.org, FPL, RSS news, Guardian, demo
+  jobs/         sync jobs and registry (retry, overlap guard, per-job cron)
   routes/       /api/* endpoints
   ai/           AI providers, prompts, cache
+  ai/rag/       knowledge base: validate, chunk, embed, retrieve, citations
+  ai/evals/     prompt golden set + retrieval eval (hit@1, recall@k, MRR)
 shared/         request/response contracts shared by app and API
 supabase/       SQL migrations
 docs/           architecture, API, data, deployment, security…
@@ -210,6 +236,7 @@ The visual system is called **"The Floodlit Instrument"**: deep indigo night sur
 | [ARCHITECTURE](docs/ARCHITECTURE.md) | System overview, start here |
 | [API](docs/API.md) | Endpoint reference |
 | [DATA](docs/DATA.md) | Providers, sync pipeline, caching, jobs |
+| [RAG](docs/RAG.md) | Knowledge source and its validation, retrieval pipeline, eval results |
 | [DATABASE](docs/DATABASE.md) | Schema and RLS |
 | [ENVIRONMENT](docs/ENVIRONMENT.md) | All env vars and the mode matrix |
 | [DEPLOYMENT](docs/DEPLOYMENT.md) · [RUNBOOK](docs/RUNBOOK.md) | Shipping and operating it |
@@ -218,4 +245,4 @@ The visual system is called **"The Floodlit Instrument"**: deep indigo night sur
 
 ## Data and attribution
 
-Football data provided by the [Football-Data.org](https://www.football-data.org) API. Player and fantasy data come from the official Fantasy Premier League API. News headlines link back to their publishers. Club crests and player photos belong to their respective owners. FootIQ is an independent beta and is not affiliated with any league, club or publisher. Predictions are probabilities, not betting advice.
+Football data provided by the [Football-Data.org](https://www.football-data.org) API. Player and fantasy data come from the official Fantasy Premier League API. News headlines link back to their publishers. Cited chat answers draw on articles from the [Guardian Open Platform](https://open-platform.theguardian.com) under a non-commercial developer key: article text is used only for retrieval, and every citation links to theguardian.com. Club crests and player photos belong to their respective owners. FootIQ is an independent beta and is not affiliated with any league, club or publisher. Predictions are probabilities, not betting advice.
